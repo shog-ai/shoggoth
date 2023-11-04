@@ -1,0 +1,55 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: #ff4bff;
+  text-decoration: none;
+  overflow-wrap: break-word;
+}
+
+p {
+  width: 100%;
+}
+
+body {
+	color: white;
+	background: rgb(21, 11, 6);
+	
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+	flex-direction: column;
+	
+  width: 100vw;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+code {
+  font-size: 20px;
+  background: #401e01 !important;
+  overflow-wrap: break-word;
+}
+
+ol, ul {
+  list-style-position: inside;
+}
+
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F2F2F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #BDBDBD;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6E6E6E;
+}

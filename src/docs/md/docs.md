@@ -90,7 +90,7 @@ Choose one of the following options to download the source code:
 Using git:
 
 ```bash
-git clone https://github.com/shoggoth-systems/shoggoth
+git clone -b 0.1.5 https://github.com/shoggoth-systems/shoggoth shoggoth-source
 ```
 
 Or download the source code:

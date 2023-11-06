@@ -27,11 +27,11 @@ version:
 downstream:
 	git fetch && git pull
 	
-upstream:
-	git add .
-	@read -p "Enter commit message: " message; \
-	git commit -m "$$message"
-	git push
+# upstream:
+# git add .
+# @read -p "Enter commit message: " message; \
+# git commit -m "$$message"
+# git push
 
 
 sync: sync-camel sync-sonic sync-tuwi sync-libs-headers

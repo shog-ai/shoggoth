@@ -11,8 +11,15 @@ build-sanitized: ./target/libsonic-sanitized.a
 
 OBJS = ./target/sonic.o ./target/utils.o ./target/server.o ./target/client.o ./target/rate_limiter.o
 
-CFLAGS += -g -std=c11
-LDFLAGS += -lssl -lcrypto
+ifdef OPENSSL_PREFIX
+	OPENSSL_CFLAGS=-I$(OPENSSL_PREFIX)/include
+	OPENSSL_LDFLAGS=-L$(OPENSSL_PREFIX)/lib
+	# Also export OPENSSL_PREFIX so it ends up in deps sub-Makefiles
+	export OPENSSL_PREFIX
+endif
+
+CFLAGS += -g -std=c11 $(OPENSSL_CFLAGS)
+LDFLAGS += -lssl -lcrypto $(OPENSSL_LDFLAGS)
 
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds
 

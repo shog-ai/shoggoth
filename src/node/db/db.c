@@ -8,7 +8,7 @@
  *
  ****/
 
-#include "../../include/netlibc.h"
+#include <netlibc.h>
 
 #include "../../include/redis.h"
 #include "../../include/sonic.h"
@@ -21,10 +21,10 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
 
 result_t kill_redis_db(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];

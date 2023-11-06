@@ -454,13 +454,13 @@ result_t read_response(sonic_client_request_t *req,
       result_t res_should_break = process_read_buffer(&read_struct);
       bool should_break = false;
 
-      if (sonic_is_err(res_should_break)) {
+      if (is_err(res_should_break)) {
         should_break = true;
       } else {
         should_break = res_should_break.ok_bool;
       }
 
-      sonic_free_result(res_should_break);
+      free_result(res_should_break);
 
       if (should_break) {
         break;
@@ -479,13 +479,13 @@ result_t read_response(sonic_client_request_t *req,
       result_t res_should_break = process_read_buffer(&read_struct);
       bool should_break = false;
 
-      if (sonic_is_err(res_should_break)) {
+      if (is_err(res_should_break)) {
         should_break = true;
       } else {
         should_break = res_should_break.ok_bool;
       }
 
-      sonic_free_result(res_should_break);
+      free_result(res_should_break);
 
       if (should_break) {
         break;
@@ -757,13 +757,13 @@ sonic_client_response_t *client_send_request(sonic_client_request_t *req) {
   result_t res_resp = actually_send_request(req, server_addr);
   sonic_client_response_t *resp = NULL;
 
-  if (sonic_is_err(res_resp)) {
+  if (is_err(res_resp)) {
     resp = fail_response(res_resp.error_message);
   } else {
     resp = VALUE(res_resp);
   }
 
-  sonic_free_result(res_resp);
+  free_result(res_resp);
 
   assert(resp != NULL);
 

@@ -12,7 +12,7 @@ build-sanitized: ./target/libsonic-sanitized.a
 OBJS = ./target/sonic.o ./target/utils.o ./target/server.o ./target/client.o ./target/rate_limiter.o
 
 CFLAGS += -g -std=c11
-LDFLAGS += -lssl -lcrypto
+LDFLAGS += -lssl -lcrypto -lnetlibc
 
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds
 

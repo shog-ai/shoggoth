@@ -558,7 +558,7 @@ sonic_route_t *server_add_route(sonic_server_t *server, char *path,
 
   result_t res_path = raw_path_to_sonic_path(path);
   new_route->path = res_path.ok_ptr;
-  sonic_free_result(res_path);
+  free_result(res_path);
 
   new_route->method = method;
   new_route->route_func = route_func;
@@ -713,12 +713,12 @@ result_t parse_request_headers(sonic_server_request_t *req, char *head_buffer) {
   extract_request_path(head_buffer, request_path);
 
   result_t res_path = raw_path_to_sonic_path(request_path);
-  if (sonic_is_err(res_path)) {
+  if (is_err(res_path)) {
     return res_path;
   }
 
   req->path = res_path.ok_ptr;
-  sonic_free_result(res_path);
+  free_result(res_path);
 
   const char *header_start =
       strstr(head_buffer, "\r\n") + 2; // Skip the first line
@@ -883,11 +883,11 @@ void *handle_request(void *thread_args) {
         headers_done = true;
 
         result_t res_parse = parse_request_headers(req, head_buffer);
-        if (sonic_is_err(res_parse)) {
+        if (is_err(res_parse)) {
           parse_headers_error = strdup(res_parse.error_message);
         }
 
-        sonic_free_result(res_parse);
+        free_result(res_parse);
 
         // calculate content length
         char *content_length_str = utils_get_header_value(

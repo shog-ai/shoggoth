@@ -25,60 +25,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-result_t __sonic_err(const char *file, int line, const char *format, ...) {
-  char *error_message = NULL;
-
-  va_list args;
-  va_start(args, format);
-
-  char buf[512];
-  vsprintf(buf, format, args);
-
-  if (error_message == NULL) {
-    error_message = malloc((strlen(buf) + 1) * sizeof(char));
-    strcpy(error_message, buf);
-  } else {
-    error_message =
-        realloc(error_message,
-                (strlen(error_message) + strlen(buf) + 1) * sizeof(char));
-    strcat(error_message, buf);
-  }
-
-  va_end(args);
-
-  assert(error_message != NULL);
-
-  return (result_t){.failed = true,
-                    .ok_ptr = NULL,
-                    .error_message = error_message,
-                    .file = strdup(file),
-                    .line = line};
-}
-
-bool sonic_is_ok(result_t res) {
-  if (res.failed) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-bool sonic_is_err(result_t res) {
-  if (!res.failed) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-void sonic_free_result(result_t res) {
-  if (!sonic_is_ok(res)) {
-    free(res.error_message);
-  }
-
-  free(res.file);
-}
-
 /****
  * Helper function to concatenate two strings with a separator '/'
  *

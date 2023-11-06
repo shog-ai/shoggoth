@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = -lssl -lcrypto $$(pkg-config --cflags --libs uuid)
+LDFLAGS = -lssl -lcrypto -lnetlibc $$(pkg-config --cflags --libs uuid)
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion

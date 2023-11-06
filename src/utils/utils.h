@@ -11,14 +11,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "../include/netlibc.h"
-
+#include <netlibc.h>
 #include <sys/stat.h>
+#include <netlibc.h>
 
 #define FILE_PATH_SIZE 256
 
 #define SHOGGOTH_ID_SIZE 512
-
 #define NODE_ID_SIZE 512
 
 struct NODE_CTX;
@@ -36,112 +35,9 @@ typedef struct {
 } file_mapping_t;
 
 typedef struct {
-  bool failed;
-  char *file;
-  int line;
-
-  // OK
-  void *ok_ptr;
-  int ok_int;
-  u64 ok_u64;
-  bool ok_bool;
-
-  // ERR
-  u64 error_code;
-  char *error_message;
-} result_t;
-
-typedef struct {
   char **files;
   u64 files_count;
 } files_list_t;
-
-typedef enum {
-  WARN,
-  INFO,
-  ERROR,
-} log_level_t;
-
-#define EXIT(...) __exit(__FILE__, __LINE__, __VA_ARGS__)
-
-#define PANIC(...) __panic(__FILE__, __LINE__, __VA_ARGS__)
-
-#define LOG(log_level, ...) __log(log_level, __FILE__, __LINE__, __VA_ARGS__)
-
-#define OK(value)                                                              \
-  (result_t) {                                                                 \
-    .failed = false, .ok_ptr = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_INT(value)                                                          \
-  (result_t) {                                                                 \
-    .failed = false, .ok_int = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_U64(value)                                                          \
-  (result_t) {                                                                 \
-    .failed = false, .ok_u64 = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_BOOL(value)                                                         \
-  (result_t) {                                                                 \
-    .failed = false, .ok_bool = value, .error_message = NULL,                  \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define ERR(...) __err(__FILE__, __LINE__, __VA_ARGS__)
-
-// INFO: unlike PROPAGATE, you can use a function call for the parameter of
-// UNWRAP
-#define UNWRAP(res) __unwrap(__FILE__, __LINE__, res)
-#define UNWRAP_INT(res) __unwrap_int(__FILE__, __LINE__, res)
-#define UNWRAP_U64(res) __unwrap_u64(__FILE__, __LINE__, res)
-#define UNWRAP_BOOL(res) __unwrap_bool(__FILE__, __LINE__, res)
-
-#define VALUE(res) res.ok_ptr;
-
-#define VALUE_U64(res) res.ok_u64;
-
-// WARN: DO NOT use a function call as the parameter for PROPAGATE e.g
-// PROPAGATE(my_function());
-#define PROPAGATE(res)                                                         \
-  res.ok_ptr;                                                                  \
-  do {                                                                         \
-    if (!is_ok(res)) {                                                         \
-      return res;                                                              \
-    }                                                                          \
-    free_result(res);                                                          \
-  } while (0)
-
-#define PROPAGATE_INT(res)                                                     \
-  res.ok_int;                                                                  \
-  do {                                                                         \
-    if (!is_ok(res)) {                                                         \
-      return res;                                                              \
-    }                                                                          \
-    free_result(res);                                                          \
-  } while (0)
-
-#define PROPAGATE_U64(res)                                                     \
-  res.ok_u64;                                                                  \
-  do {                                                                         \
-    if (!is_ok(res)) {                                                         \
-      return res;                                                              \
-    }                                                                          \
-    free_result(res);                                                          \
-  } while (0)
-
-#define PROPAGATE_BOOL(res)                                                    \
-  res.ok_bool;                                                                 \
-  do {                                                                         \
-    if (!is_ok(res)) {                                                         \
-      return res;                                                              \
-    }                                                                          \
-    free_result(res);                                                          \
-  } while (0)
 
 #define SERVER_ERR(res)                                                        \
   do {                                                                         \
@@ -157,25 +53,6 @@ typedef enum {
 result_t utils_acquire_file_lock(char *file_path, u64 delay, u64 timeout);
 void utils_release_file_lock(file_lock_t *lock);
 
-result_t __err(const char *file, int line, const char *format, ...);
-
-bool is_ok(result_t res);
-
-bool is_err(result_t res);
-
-void *__unwrap(const char *file, int line, result_t res);
-int __unwrap_int(const char *file, int line, result_t res);
-u64 __unwrap_u64(const char *file, int line, result_t res);
-bool __unwrap_bool(const char *file, int line, result_t res);
-
-void free_result(result_t res);
-
-void __log(log_level_t log_level, const char *file, int line,
-           const char *format, ...);
-
-void __panic(const char *file, int line, const char *format, ...);
-
-void __exit(const char *file, int line, int status, const char *format, ...);
 
 char *utils_gen_uuid();
 

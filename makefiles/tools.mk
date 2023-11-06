@@ -55,7 +55,6 @@ sync-libs-headers:
 	cp ./lib/camel/camel.h ./src/include/camel.h
 	cp ./lib/sonic/sonic.h ./src/include/sonic.h
 	cp ./lib/tuwi/tuwi.h ./src/include/tuwi.h
-	cp ./lib/netlibc/netlibc.h ./src/include/netlibc.h
 
 kill-redis:
 	killall -v -w -s 9 redis-server

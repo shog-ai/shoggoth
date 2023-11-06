@@ -603,7 +603,7 @@ Note that it may take a few minutes or more for changes to your profile to propa
 
 ### Nodes
 
-Every Shoggoth node stores and maintains a local data structure called a Dynamic Hash Table (DHT). This DHT is stored in an in-memory database.
+Every Shoggoth node stores and maintains a local data structure called a Distributed Hash Table (DHT). This DHT is stored in an in-memory database.
 The DHT of a node is a table that contains information about all its peers, with each item in the table representing information about a peer, including its Node ID, Public Key, IP address or domain name,
 and the Shoggoth IDs of all profiles it has pinned.
 
@@ -781,7 +781,11 @@ The Shoggoth project is currently being developed on [Github](https://github.com
 
 Before making pull requests, first create a new issue on the [issues page](https://github.com/shoggoth-systems/shoggoth/issues) outlining the problems you want to solve, the feature you want to add, or the bug you want to fix.
 
-All libraries in ./lib/ are external dependencies and contributions to them should be made in their respective repositories. i.e. to contribute to Sonic, send PRs to the [sonic Github repo](https://github.com/shoggoth-systems/sonic).
+There are dependencies in `./lib/`. Some of these dependencies are external dependencies, meaning they are not part of the Shoggoth project.
+To contribute to external dependencies, please refer to their respective GitHub repositories listed in [dependencies](#dependencies).
+
+Some other dependencies including sonic, camel, tuwi, and netlibc are internal dependencies, meaning they are developed alongside Shoggoth.
+You can contibute to them by making your changes within the Shoggoth repository itself, and prefixing your commits and PRs with the name of the dependency like "SONIC: fixed a sonic specific bug".
 
 ### Coding guidelines
 
@@ -854,6 +858,8 @@ You can turn off auto-update in the node configuration:
   enable = false
 ```
 
+<div id="dependencies"></div>
+
 ### Dependencies
 
 All external dependencies for the Shoggoth project are housed within the Shoggoth repository itself.
@@ -888,7 +894,7 @@ The below dependencies are used in the Shoggoth project, sourced from external o
 * [cjson](https://github.com/DaveGamble/cJSON)
 * [tomlc](https://github.com/cktan/tomlc99)
 * [redis](https://github.com/redis/redis)
-* [redisjson](https://github.com/RedisJSON/RedisJSON)
+* [redisjson](https://github.com/RedisJSON/RedisJSON) (NOTE: RedisJSON's source code is open, but it has a proprietary license. We are working on replacing this dependency)
 * [md4c](https://github.com/mity/md4c/)
 
 #### Required System Utilities
@@ -921,6 +927,10 @@ If you encounter any bugs or need assistance with anything, do not hesitate to j
 ### License
 
 Shoggoth is licensed under the MIT license. Read the LICENSE file in the source code for more information
+
+Shoggoth uses a few dependencies which have their own licences. The dependencies in the ./lib/ directory of the Shoggoth source code are independent of the MIT license used for Shoggoth.
+The source code for each dependecy includes a LICENSE file indicating the license that covers it.
+
 
 ### Community
 

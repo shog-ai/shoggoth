@@ -115,18 +115,18 @@ run-fuzz-tests:
 
 
 # LIBS ========================================================================================
-sync: sync-camel sync-libs-headers
+sync: sync-libs-headers
 
 sync-libs-headers:
-	cp ./lib/camel/camel.h ./include/camel.h
+	cp ../camel/camel.h ./include/camel.h
 
-sync-camel:
-	rm -rf ./lib/camel/
-	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
+# sync-camel:
+# 	rm -rf ./lib/camel/
+# 	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
 
 ./target/camel.a:
-	cd ./lib/camel/ && $(MAKE)
-	cp ./lib/camel/target/libcamel.a ./target/camel.a
+	cd ../camel/ && $(MAKE)
+	cp ../camel/target/libcamel.a ./target/camel.a
 
 #========================================================================================
 

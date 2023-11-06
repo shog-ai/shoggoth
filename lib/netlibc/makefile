@@ -8,6 +8,10 @@ endif
 
 all: ./target/netlibc.a
 
+install:
+	sudo cp ./netlibc.h /usr/local/include
+	sudo cp ./target/netlibc.a /usr/local/lib
+
 ./target/netlibc.a: target-dir
 	$(CC) -c ./src/netlibc.c -o ./target/netlibc.o
 	ar rcs ./target/netlibc.a ./target/netlibc.o

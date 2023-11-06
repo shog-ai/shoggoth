@@ -11,7 +11,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "../include/common.h"
+#include "../include/netlibc.h"
 
 #include <sys/stat.h>
 

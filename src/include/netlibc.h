@@ -1,15 +1,15 @@
-/**** common.h ********************
+/**** netlibc.h ****
  *
- *  Copyright (c) 2023 Netrunner KD6-3.7
+ *  Copyright (c) 2023 Shoggoth Systems - https://shoggoth.systems
  *
- * Part of the Camel testing framework, under the MIT License.
+ * Part of the Sonic HTTP library, under the MIT License.
  * See LICENCE file for license information.
  * SPDX-License-Identifier: MIT
  *
- ****************************************************************/
+ ****/
 
-#ifndef KIM_COMMON_H
-#define KIM_COMMON_H
+#ifndef NETLIBC_H
+#define NETLIBC_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,14 +31,14 @@ typedef double f64;
 
 typedef size_t usize;
 
-#define LOOP()                                                                 \
-  for (;;) {                                                                   \
-  }
-
 #ifdef __APPLE__ // This macro is defined on macOS
 #define U64_FORMAT_SPECIFIER "%lld"
 #else
 #define U64_FORMAT_SPECIFIER "%lu"
 #endif
+
+#define LOOP()                                                                 \
+  for (;;) {                                                                   \
+  }
 
 #endif

@@ -11,7 +11,7 @@
 #ifndef SHOG_NODE_PINS_H
 #define SHOG_NODE_PINS_H
 
-#include "../../include/common.h"
+#include "../../include/netlibc.h"
 #include "../node.h"
 
 typedef struct {

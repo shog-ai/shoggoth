@@ -20,8 +20,8 @@ setup:
 
 
 ./target/tuwi.o:
-	cd ./lib/tuwi/ && make
-	cp ./lib/tuwi/target/libtuwi.a ./target/tuwi.a
+	cd ../tuwi/ && make
+	cp ../tuwi/target/libtuwi.a ./target/tuwi.a
 	cd target && ar x ./tuwi.a
 
 target-dir:
@@ -39,14 +39,14 @@ prepare-examples:
 clean:
 	rm -rf ./target/*
 
-sync: sync-tuwi sync-libs-headers
+sync: sync-libs-headers
 
 sync-libs-headers:
-	cp ./lib/tuwi/tuwi.h ./include/tuwi.h
+	cp ../tuwi/tuwi.h ./include/tuwi.h
 
-sync-tuwi:
-	rm -rf ./lib/tuwi/
-	rsync -av --exclude='target' --exclude='.git' ../tuwi/ ./lib/tuwi/
+# sync-tuwi:
+# 	rm -rf ./lib/tuwi/
+# 	rsync -av --exclude='target' --exclude='.git' ../tuwi/ ./lib/tuwi/
 
 downstream:
 	git fetch && git pull

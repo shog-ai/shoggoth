@@ -8,7 +8,7 @@
  *
  ****/
 
-#include "../../include/common.h"
+#include "../../include/netlibc.h"
 
 #include "../../include/redis.h"
 #include "../../include/sonic.h"

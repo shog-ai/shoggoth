@@ -8,9 +8,15 @@ endif
 
 all: ./target/libtuwi.a
 
-./target/libtuwi.a: target-dir
+./target/libtuwi.a: target-dir netlibc
 	$(CC) -c ./src/tuwi.c -o ./target/tuwi.o
 	ar rcs ./target/libtuwi.a ./target/tuwi.o
+
+netlibc:
+ifeq (,$(wildcard /usr/local/include/netlibc.h ))
+	echo "Installing netlibc ..."
+	cd ../netlibc/ && make && make install
+endif
 
 target-dir:
 	mkdir -p target

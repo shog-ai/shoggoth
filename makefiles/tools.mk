@@ -3,7 +3,7 @@ clean:
 	$(MAKE) clean-sonic
 	$(MAKE) clean-camel
 	$(MAKE) clean-tuwi
-# $(MAKE) clean-redis
+	$(MAKE) clean-netlibc
 
 clean-shoggoth: target-dir
 	rm -rf ./target/*
@@ -17,6 +17,9 @@ clean-camel:
 
 clean-tuwi:
 	cd lib/sonic && $(MAKE) clean
+
+clean-netlibc:
+	cd lib/netlibc && $(MAKE) clean
 
 clean-redis:
 	cd lib/redis && $(MAKE) clean

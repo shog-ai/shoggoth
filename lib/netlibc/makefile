@@ -12,6 +12,10 @@ install:
 	sudo cp ./netlibc.h /usr/local/include
 	sudo cp ./target/netlibc.a /usr/local/lib
 
+uninstall:
+	sudo rm /usr/local/include/netlibc.h
+	sudo rm /usr/local/lib/netlibc.a
+
 ./target/netlibc.a: target-dir
 	$(CC) -c ./src/netlibc.c -o ./target/netlibc.o
 	ar rcs ./target/netlibc.a ./target/netlibc.o

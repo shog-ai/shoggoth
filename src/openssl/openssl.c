@@ -9,7 +9,6 @@
  ****/
 
 #include "../utils/utils.h"
-#include "./openssl/sha.h"
 
 #include <openssl/bio.h>
 #include <openssl/err.h>

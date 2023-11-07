@@ -8,9 +8,12 @@ endif
 
 all: ./target/libtuwi.a
 
-./target/libtuwi.a: target-dir
+./target/libtuwi.a: target-dir check-netlibc
 	$(CC) -c ./src/tuwi.c -o ./target/tuwi.o
 	ar rcs ./target/libtuwi.a ./target/tuwi.o
+
+check-netlibc:
+	cd ../netlibc/ && make && make check-netlibc
 
 target-dir:
 	mkdir -p target

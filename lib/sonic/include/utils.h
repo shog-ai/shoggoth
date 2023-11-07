@@ -11,74 +11,13 @@
 #ifndef SONIC_UTILS_H
 #define SONIC_UTILS_H
 
+#include <netlibc.h>
 #include "../sonic.h"
 
 typedef struct {
   char **files;
   u64 files_count;
 } sonic_files_list_t;
-
-typedef struct {
-  bool failed;
-  char *file;
-  int line;
-
-  // OK
-  void *ok_ptr;
-  int ok_int;
-  u64 ok_u64;
-  bool ok_bool;
-
-  // ERR
-  u64 error_code;
-  char *error_message;
-} result_t;
-
-#define OK(value)                                                              \
-  (result_t) {                                                                 \
-    .failed = false, .ok_ptr = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_INT(value)                                                          \
-  (result_t) {                                                                 \
-    .failed = false, .ok_int = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_U64(value)                                                          \
-  (result_t) {                                                                 \
-    .failed = false, .ok_u64 = value, .error_message = NULL,                   \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define OK_BOOL(value)                                                         \
-  (result_t) {                                                                 \
-    .failed = false, .ok_bool = value, .error_message = NULL,                  \
-    .file = strdup(__FILE__), .line = __LINE__                                 \
-  }
-
-#define ERR(...) __sonic_err(__FILE__, __LINE__, __VA_ARGS__)
-
-#define VALUE(res) res.ok_ptr;
-
-#define VALUE_U64(res) res.ok_u64;
-
-// WARN: DO NOT use a function call as the parameter for PROPAGATE e.g
-// PROPAGATE(my_function());
-#define PROPAGATE(res)                                                         \
-  res.ok_ptr;                                                                  \
-  do {                                                                         \
-    if (!sonic_is_ok(res)) {                                                   \
-      return res;                                                              \
-    }                                                                          \
-    sonic_free_result(res);                                                    \
-  } while (0)
-
-result_t __sonic_err(const char *file, int line, const char *format, ...);
-bool sonic_is_ok(result_t res);
-bool sonic_is_err(result_t res);
-void sonic_free_result(result_t res);
 
 char *utils_status_code_to_string(sonic_status_t status_code);
 

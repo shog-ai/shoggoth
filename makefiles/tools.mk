@@ -3,7 +3,7 @@ clean:
 	$(MAKE) clean-sonic
 	$(MAKE) clean-camel
 	$(MAKE) clean-tuwi
-# $(MAKE) clean-redis
+	$(MAKE) clean-netlibc
 
 clean-shoggoth: target-dir
 	rm -rf ./target/*
@@ -18,6 +18,9 @@ clean-camel:
 clean-tuwi:
 	cd lib/sonic && $(MAKE) clean
 
+clean-netlibc:
+	cd lib/netlibc && $(MAKE) clean
+
 clean-redis:
 	cd lib/redis && $(MAKE) clean
 
@@ -27,26 +30,26 @@ version:
 downstream:
 	git fetch && git pull
 	
-upstream:
-	git add .
-	@read -p "Enter commit message: " message; \
-	git commit -m "$$message"
-	git push
+# upstream:
+# git add .
+# @read -p "Enter commit message: " message; \
+# git commit -m "$$message"
+# git push
 
 
-sync: sync-camel sync-sonic sync-tuwi sync-libs-headers
+sync: sync-libs-headers
 
-sync-camel:
-	rm -rf ./lib/camel/
-	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
+# sync-camel:
+# 	rm -rf ./lib/camel/
+# 	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
 
-sync-sonic:
-	rm -rf ./lib/sonic/
-	rsync -av --exclude='target' --exclude='.git' ../sonic/ ./lib/sonic/
+# sync-sonic:
+# 	rm -rf ./lib/sonic/
+# 	rsync -av --exclude='target' --exclude='.git' ../sonic/ ./lib/sonic/
 
-sync-tuwi:
-	rm -rf ./lib/tuwi/
-	rsync -av --exclude='target' --exclude='.git' ../tuwi/ ./lib/tuwi/
+# sync-tuwi:
+# 	rm -rf ./lib/tuwi/
+# 	rsync -av --exclude='target' --exclude='.git' ../tuwi/ ./lib/tuwi/
 
 sync-libs-headers:
 	cp ./lib/camel/camel.h ./src/include/camel.h

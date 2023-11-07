@@ -11,7 +11,7 @@
 #ifndef SHOG_CLIENT_H
 #define SHOG_CLIENT_H
 
-#include "../include/common.h"
+#include <netlibc.h>
 
 #include "../args/args.h"
 

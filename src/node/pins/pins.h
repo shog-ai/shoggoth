@@ -11,8 +11,8 @@
 #ifndef SHOG_NODE_PINS_H
 #define SHOG_NODE_PINS_H
 
-#include "../../include/common.h"
 #include "../node.h"
+#include <netlibc.h>
 
 typedef struct {
   char *shoggoth_id;

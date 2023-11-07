@@ -66,10 +66,7 @@ typedef ucontext_t sigcontext_t;
 /* Globals */
 static int bug_report_start = 0; /* True if bug report header was already logged. */
 static pthread_mutex_t bug_report_start_mutex = PTHREAD_MUTEX_INITIALIZER;
-/* Mutex for a case when two threads crash at the same time. */
-static pthread_mutex_t signal_handler_lock;
-static pthread_mutexattr_t signal_handler_lock_attr;
-static volatile int signal_handler_lock_initialized = 0;
+
 /* Forward declarations */
 void bugReportStart(void);
 void printCrashReport(void);
@@ -1066,7 +1063,7 @@ void _serverAssert(const char *estr, const char *file, int line) {
     }
 
     // remove the signal handler so on abort() we will output the crash report.
-    removeSigSegvHandlers();
+    removeSignalHandlers();
     bugReportEnd(0, 0);
 }
 
@@ -1162,7 +1159,7 @@ void _serverPanic(const char *file, int line, const char *msg, ...) {
     }
 
     // remove the signal handler so on abort() we will output the crash report.
-    removeSigSegvHandlers();
+    removeSignalHandlers();
     bugReportEnd(0, 0);
 }
 
@@ -1193,7 +1190,7 @@ static void* getAndSetMcontextEip(ucontext_t *uc, void *eip) {
     } \
     return old_val; \
 } while(0)
-#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_6)
+#if defined(__APPLE__) && !defined(MAC_OS_10_6_DETECTED)
     /* OSX < 10.6 */
     #if defined(__x86_64__)
     GET_SET_RETURN(uc->uc_mcontext->__ss.__rip, eip);
@@ -1202,7 +1199,7 @@ static void* getAndSetMcontextEip(ucontext_t *uc, void *eip) {
     #else
     GET_SET_RETURN(uc->uc_mcontext->__ss.__srr0, eip);
     #endif
-#elif defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_6)
+#elif defined(__APPLE__) && defined(MAC_OS_10_6_DETECTED)
     /* OSX >= 10.6 */
     #if defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__)
     GET_SET_RETURN(uc->uc_mcontext->__ss.__rip, eip);
@@ -1293,7 +1290,7 @@ void logRegisters(ucontext_t *uc) {
 } while(0)
 
 /* OSX */
-#if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_6)
+#if defined(__APPLE__) && defined(MAC_OS_10_6_DETECTED)
   /* OSX AMD64 */
     #if defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__)
     serverLog(LL_WARNING,
@@ -2119,19 +2116,9 @@ void invalidFunctionWasCalled(void) {}
 
 typedef void (*invalidFunctionWasCalledType)(void);
 
-static void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
+void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
     UNUSED(secret);
     UNUSED(info);
-    /* Check if it is safe to enter the signal handler. second thread crashing at the same time will deadlock. */
-    if(pthread_mutex_lock(&signal_handler_lock) == EDEADLK) {
-        /* If this thread already owns the lock (meaning we crashed during handling a signal)
-         * log that the crash report can't be generated. */
-        serverLog(LL_WARNING,
-            "Crashed running signal handler. Can't continue to generate the crash report");
-        /* gracefully exit */
-        bugReportEnd(1, sig);
-        return;
-    }
 
     bugReportStart();
     serverLog(LL_WARNING,
@@ -2184,47 +2171,6 @@ static void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
     bugReportEnd(1, sig);
 }
 
-void setupSigSegvHandler(void) {
-    /* Initialize the signal handler lock. 
-    Attempting to initialize an already initialized mutex or mutexattr results in undefined behavior. */
-    if (!signal_handler_lock_initialized) {
-        /* Set signal handler with error checking attribute. re-lock within the same thread will error. */
-        pthread_mutexattr_init(&signal_handler_lock_attr);
-        pthread_mutexattr_settype(&signal_handler_lock_attr, PTHREAD_MUTEX_ERRORCHECK);
-        pthread_mutex_init(&signal_handler_lock, &signal_handler_lock_attr);
-        signal_handler_lock_initialized = 1;
-    }
-
-    struct sigaction act;
-
-    sigemptyset(&act.sa_mask);
-    /* SA_NODEFER to disables adding the signal to the signal mask of the
-     * calling process on entry to the signal handler unless it is included in the sa_mask field. */
-    /* SA_SIGINFO flag is set to raise the function defined in sa_sigaction.
-     * Otherwise, sa_handler is used. */
-    act.sa_flags = SA_NODEFER | SA_SIGINFO;
-    act.sa_sigaction = sigsegvHandler;
-    if(server.crashlog_enabled) {
-        sigaction(SIGSEGV, &act, NULL);
-        sigaction(SIGBUS, &act, NULL);
-        sigaction(SIGFPE, &act, NULL);
-        sigaction(SIGILL, &act, NULL);
-        sigaction(SIGABRT, &act, NULL);
-    }
-}
-
-void removeSigSegvHandlers(void) {
-    struct sigaction act;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = SA_NODEFER | SA_RESETHAND;
-    act.sa_handler = SIG_DFL;
-    sigaction(SIGSEGV, &act, NULL);
-    sigaction(SIGBUS, &act, NULL);
-    sigaction(SIGFPE, &act, NULL);
-    sigaction(SIGILL, &act, NULL);
-    sigaction(SIGABRT, &act, NULL);
-}
-
 void printCrashReport(void) {
     /* Log INFO and CLIENT LIST */
     logServerInfo();
@@ -2272,7 +2218,7 @@ void bugReportEnd(int killViaSignal, int sig) {
     /* Make sure we exit with the right signal at the end. So for instance
      * the core will be dumped if enabled. */
     sigemptyset (&act.sa_mask);
-    act.sa_flags = 0;
+    act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
     act.sa_handler = SIG_DFL;
     sigaction (sig, &act, NULL);
     kill(getpid(),sig);

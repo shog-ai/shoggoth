@@ -2528,9 +2528,9 @@ static int updateAofAutoGCEnabled(const char **err) {
 static int updateSighandlerEnabled(const char **err) {
     UNUSED(err);
     if (server.crashlog_enabled)
-        setupSigSegvHandler();
+        setupSignalHandlers();
     else
-        removeSigSegvHandlers();
+        removeSignalHandlers();
     return 1;
 }
 

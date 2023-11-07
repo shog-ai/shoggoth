@@ -8,8 +8,6 @@
  *
  ****/
 
-#include "../include/common.h"
-
 #include "../camel.h"
 #include "../include/internal.h"
 #include "../include/tuwi.h"

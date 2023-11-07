@@ -16,6 +16,16 @@ To learn more about Shoggoth, read the documentation at https://shoggoth.network
 
 You can install Shoggoth by following the instructions at https://shoggoth.network/explorer/docs#installation
 
+
+LICENSE
+=================================
+
+Shoggoth is licensed under the MIT license. Read the LICENSE file for more information
+
+Shoggoth uses a few dependencies which have their own licenses. The dependencies in the ./lib/ directory are independent of the MIT license used for Shoggoth.
+The source code for each dependency includes a LICENSE file indicating the license that covers it.
+
+
 LINKS
 =================================
 Discord: https://discord.com/invite/AG3duN5yKP

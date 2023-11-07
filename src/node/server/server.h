@@ -11,7 +11,12 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <netlibc/netlibc.h>
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
+
 #include "../node.h"
 
 typedef struct {

@@ -62,7 +62,7 @@ result_t client_init_profile(client_manifest_t *manifest) {
   mkdir("./shoggoth-profile/datasets", 0777);
   mkdir("./shoggoth-profile/papers", 0777);
 
-  utils_create_file("./shoggoth-profile/.shoggoth/manifest.json");
+  create_file("./shoggoth-profile/.shoggoth/manifest.json");
 
   result_t res_manifest_json = json_client_manifest_to_json(*manifest);
   json_t *manifest_json = PROPAGATE(res_manifest_json);
@@ -70,9 +70,8 @@ result_t client_init_profile(client_manifest_t *manifest) {
   char *manifest_str = json_to_string(manifest_json);
   free_json(manifest_json);
 
-  result_t res =
-      utils_write_to_file("./shoggoth-profile/.shoggoth/manifest.json",
-                          manifest_str, strlen(manifest_str));
+  result_t res = write_to_file("./shoggoth-profile/.shoggoth/manifest.json",
+                               manifest_str, strlen(manifest_str));
   PROPAGATE(res);
 
   free(manifest_str);
@@ -83,7 +82,7 @@ result_t client_init_profile(client_manifest_t *manifest) {
 }
 
 result_t validate_manifest(char *path) {
-  if (!utils_file_exists(path)) {
+  if (!file_exists(path)) {
     return ERR("manifest does not exist");
   }
 
@@ -93,7 +92,7 @@ result_t validate_manifest(char *path) {
 }
 
 result_t validate_git_repo(char *path) {
-  if (!utils_dir_exists(path)) {
+  if (!dir_exists(path)) {
     char err[256];
     sprintf(err, "repo directory does not exist: %s", path);
 
@@ -129,11 +128,11 @@ result_t validate_git_repo(char *path) {
 }
 
 result_t validate_resource_group(char *path) {
-  if (!utils_dir_exists(path)) {
+  if (!dir_exists(path)) {
     return ERR("resource directory does not exist");
   }
 
-  result_t res_files = utils_get_files_and_dirs_list(path);
+  result_t res_files = get_files_and_dirs_list(path);
   files_list_t *files = PROPAGATE(res_files);
 
   for (u64 i = 0; i < files->files_count; i++) {
@@ -149,20 +148,20 @@ result_t validate_resource_group(char *path) {
     PROPAGATE(repo_valid);
   }
 
-  utils_free_files_list(files);
+  free_files_list(files);
 
   return OK(NULL);
 }
 
 result_t validate_profile(char *path) {
-  if (!utils_dir_exists(path)) {
+  if (!dir_exists(path)) {
     return ERR("profile directory does not exist");
   }
 
   char metadata_path[FILE_PATH_SIZE];
   sprintf(metadata_path, "%s/.shoggoth", path);
 
-  if (!utils_dir_exists(metadata_path)) {
+  if (!dir_exists(metadata_path)) {
     return ERR("the directory is not a valid Shoggoth profile: no .shoggoth");
   }
 
@@ -172,16 +171,16 @@ result_t validate_profile(char *path) {
   result_t manifest_valid = validate_manifest(manifest_path);
   PROPAGATE(manifest_valid);
 
-  result_t res_files = utils_get_files_and_dirs_list(path);
+  result_t res_files = get_files_and_dirs_list(path);
   files_list_t *files = PROPAGATE(res_files);
 
   if (files->files_count < 5) {
-    utils_free_files_list(files);
+    free_files_list(files);
 
     return ERR(
         "profile directory contains fewer files/directories than necessary");
   } else if (files->files_count > 5) {
-    utils_free_files_list(files);
+    free_files_list(files);
 
     return ERR(
         "profile directory contains more files/directories than necessary");
@@ -204,13 +203,13 @@ result_t validate_profile(char *path) {
               "Invalid Shoggoth profile: directory contains invalid "
               "file/directory `%s`",
               files->files[i]);
-      utils_free_files_list(files);
+      free_files_list(files);
 
       return ERR(err);
     }
   }
 
-  utils_free_files_list(files);
+  free_files_list(files);
 
   char code_path[FILE_PATH_SIZE];
   sprintf(code_path, "%s/code", path);
@@ -274,13 +273,13 @@ result_t generate_resource_signatures(client_ctx_t *ctx, char *group_name) {
 
   char group_metadata_path[FILE_PATH_SIZE];
   sprintf(group_metadata_path, "%s/.shoggoth", group_tmp_dir_path);
-  utils_create_dir(group_metadata_path);
+  create_dir(group_metadata_path);
 
   char group_fingerprints_path[FILE_PATH_SIZE];
   sprintf(group_fingerprints_path, "%s/fingerprints", group_metadata_path);
-  utils_create_dir(group_fingerprints_path);
+  create_dir(group_fingerprints_path);
 
-  result_t res_files_list = utils_get_files_and_dirs_list(group_tmp_dir_path);
+  result_t res_files_list = get_files_and_dirs_list(group_tmp_dir_path);
   files_list_t *files_list = PROPAGATE(res_files_list);
 
   for (u64 i = 0; i < files_list->files_count; i++) {
@@ -328,26 +327,25 @@ result_t generate_resource_signatures(client_ctx_t *ctx, char *group_name) {
     char resource_metadata_path[FILE_PATH_SIZE];
     sprintf(resource_metadata_path, "%s/%s", group_fingerprints_path,
             files_list->files[i]);
-    utils_create_dir(resource_metadata_path);
+    create_dir(resource_metadata_path);
 
     char fingerprint_path[FILE_PATH_SIZE];
     sprintf(fingerprint_path, "%s/fingerprint.json", resource_metadata_path);
-    utils_write_to_file(fingerprint_path, fingerprint_str,
-                        strlen(fingerprint_str));
+    write_to_file(fingerprint_path, fingerprint_str, strlen(fingerprint_str));
 
     char signature_path[FILE_PATH_SIZE];
     sprintf(signature_path, "%s/signature.txt", resource_metadata_path);
-    utils_write_to_file(signature_path, fingerprint_signature,
-                        strlen(fingerprint_signature));
+    write_to_file(signature_path, fingerprint_signature,
+                  strlen(fingerprint_signature));
 
-    utils_delete_file(resource_tmp_tarball_path);
+    delete_file(resource_tmp_tarball_path);
 
     free(fingerprint_str);
     free(fingerprint_signature);
     free(file_hash);
   }
 
-  utils_free_files_list(files_list);
+  free_files_list(files_list);
 
   char group_tmp_tarball_path[FILE_PATH_SIZE];
   sprintf(group_tmp_tarball_path, "%s/profile.%s.tar", tmp_path, group_name);
@@ -383,17 +381,17 @@ result_t generate_resource_signatures(client_ctx_t *ctx, char *group_name) {
 
   char fingerprint_path[FILE_PATH_SIZE];
   sprintf(fingerprint_path, "%s/fingerprint.json", group_metadata_path);
-  result_t res_write = utils_write_to_file(fingerprint_path, fingerprint_str,
-                                           strlen(fingerprint_str));
+  result_t res_write =
+      write_to_file(fingerprint_path, fingerprint_str, strlen(fingerprint_str));
   PROPAGATE(res_write);
 
   char signature_path[FILE_PATH_SIZE];
   sprintf(signature_path, "%s/signature.txt", group_metadata_path);
-  res_write = utils_write_to_file(signature_path, fingerprint_signature,
-                                  strlen(fingerprint_signature));
+  res_write = write_to_file(signature_path, fingerprint_signature,
+                            strlen(fingerprint_signature));
   UNWRAP(res_write);
 
-  result_t res_delete = utils_delete_file(group_tmp_tarball_path);
+  result_t res_delete = delete_file(group_tmp_tarball_path);
   PROPAGATE(res_delete);
 
   free(fingerprint_str);
@@ -446,7 +444,7 @@ void copy_git_repo(client_ctx_t *ctx, char *source_path,
 
   ctx = (void *)ctx;
 
-  utils_copy_dir(source_path, destination_path);
+  copy_dir(source_path, destination_path);
 
   clean_ignored_files(destination_path);
 }
@@ -459,9 +457,9 @@ result_t copy_group(client_ctx_t *ctx, char *group_name, char *source_path,
   char group_dest_path[FILE_PATH_SIZE];
   sprintf(group_dest_path, "%s/%s", destination_path, group_name);
 
-  utils_create_dir(group_dest_path);
+  create_dir(group_dest_path);
 
-  result_t res_files_list = utils_get_files_and_dirs_list(group_path);
+  result_t res_files_list = get_files_and_dirs_list(group_path);
   files_list_t *files_list = PROPAGATE(res_files_list);
 
   for (u64 i = 0; i < files_list->files_count; i++) {
@@ -472,7 +470,7 @@ result_t copy_group(client_ctx_t *ctx, char *group_name, char *source_path,
       char dir_dest_path[FILE_PATH_SIZE];
       sprintf(dir_dest_path, "%s/%s", group_dest_path, files_list->files[i]);
 
-      utils_copy_dir(dir_path, dir_dest_path);
+      copy_dir(dir_path, dir_dest_path);
 
       continue;
     }
@@ -483,7 +481,7 @@ result_t copy_group(client_ctx_t *ctx, char *group_name, char *source_path,
     char repo_dest_path[FILE_PATH_SIZE];
     sprintf(repo_dest_path, "%s/%s", group_dest_path, files_list->files[i]);
 
-    utils_create_dir(repo_dest_path);
+    create_dir(repo_dest_path);
 
     char repo_dotgit_path[FILE_PATH_SIZE];
     sprintf(repo_dotgit_path, "%s/.git", repo_path);
@@ -491,26 +489,26 @@ result_t copy_group(client_ctx_t *ctx, char *group_name, char *source_path,
     char repo_dest_dotgit_path[FILE_PATH_SIZE];
     sprintf(repo_dest_dotgit_path, "%s/.git", repo_dest_path);
 
-    utils_copy_dir(repo_dotgit_path, repo_dest_dotgit_path);
+    copy_dir(repo_dotgit_path, repo_dest_dotgit_path);
 
     copy_git_repo(ctx, repo_path, repo_dest_path);
   }
 
-  utils_free_files_list(files_list);
+  free_files_list(files_list);
 
   return OK(NULL);
 }
 
 result_t copy_profile(client_ctx_t *ctx, char *source_path,
                       char *destination_path) {
-  utils_create_dir(destination_path);
+  create_dir(destination_path);
 
   char metadata_path[FILE_PATH_SIZE];
   sprintf(metadata_path, "%s/.shoggoth", source_path);
 
   char metadata_dest_path[FILE_PATH_SIZE];
   sprintf(metadata_dest_path, "%s/.shoggoth", destination_path);
-  result_t res_copy = utils_copy_dir(metadata_path, metadata_dest_path);
+  result_t res_copy = copy_dir(metadata_path, metadata_dest_path);
   PROPAGATE(res_copy);
 
   res_copy = copy_group(ctx, "code", source_path, destination_path);
@@ -541,7 +539,7 @@ result_t client_publish_profile(client_ctx_t *ctx) {
   char metadata_path[FILE_PATH_SIZE];
   sprintf(metadata_path, "%s/.shoggoth", profile_path);
 
-  if (!utils_dir_exists(metadata_path)) {
+  if (!dir_exists(metadata_path)) {
     return ERR("the directory is not a valid Shoggoth profile: no .shoggoth");
   }
 
@@ -562,18 +560,18 @@ result_t client_publish_profile(client_ctx_t *ctx) {
   utils_get_client_tmp_path(ctx, tmp_tarball_path);
   strcat(tmp_tarball_path, "/profile.tar");
 
-  if (utils_file_exists(tmp_tarball_path)) {
-    result_t res_delete = utils_delete_file(tmp_tarball_path);
+  if (file_exists(tmp_tarball_path)) {
+    result_t res_delete = delete_file(tmp_tarball_path);
     PROPAGATE(res_delete);
   }
 
   result_t res_tarball = utils_create_tarball(tmp_dir_path, tmp_tarball_path);
   PROPAGATE(res_tarball);
 
-  result_t res_delete = utils_delete_dir(tmp_dir_path);
+  result_t res_delete = delete_dir(tmp_dir_path);
   PROPAGATE(res_delete);
 
-  result_t res_file_mapping = utils_map_file(tmp_tarball_path);
+  result_t res_file_mapping = map_file(tmp_tarball_path);
   file_mapping_t *file_mapping = PROPAGATE(res_file_mapping);
 
   char tmp_path[FILE_PATH_SIZE];
@@ -591,7 +589,7 @@ result_t client_publish_profile(client_ctx_t *ctx) {
 
   sonic_request_t *req = sonic_new_request(METHOD_GET, req_url);
 
-  u64 ts = utils_get_timestamp_ms();
+  u64 ts = get_timestamp_ms();
 
   char timestamp[50];
   sprintf(timestamp, U64_FORMAT_SPECIFIER, ts);
@@ -793,10 +791,10 @@ result_t client_publish_profile(client_ctx_t *ctx) {
   sonic_free_response(finish_resp);
 
   free(upload_id);
-  result_t res_delete_tarball = utils_delete_file(tmp_tarball_path);
+  result_t res_delete_tarball = delete_file(tmp_tarball_path);
   PROPAGATE(res_delete_tarball);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
   free(file_hash);
   free(fingerprint_str);
   free(fingerprint_signature);

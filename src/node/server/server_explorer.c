@@ -19,7 +19,7 @@ void explorer_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/explorer.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -32,7 +32,7 @@ void explorer_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void stats_route(sonic_server_request_t *req) {
@@ -42,7 +42,7 @@ void stats_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/stats.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -55,7 +55,7 @@ void stats_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void docs_route(sonic_server_request_t *req) {
@@ -65,7 +65,7 @@ void docs_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/docs/docs.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -78,7 +78,7 @@ void docs_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void docs_api_route(sonic_server_request_t *req) {
@@ -88,7 +88,7 @@ void docs_api_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/docs/api.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -101,7 +101,7 @@ void docs_api_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void docs_sonic_route(sonic_server_request_t *req) {
@@ -111,7 +111,7 @@ void docs_sonic_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/docs/sonic.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -124,7 +124,7 @@ void docs_sonic_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void docs_camel_route(sonic_server_request_t *req) {
@@ -134,7 +134,7 @@ void docs_camel_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/docs/camel.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -147,7 +147,7 @@ void docs_camel_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void docs_tuwi_route(sonic_server_request_t *req) {
@@ -157,7 +157,7 @@ void docs_tuwi_route(sonic_server_request_t *req) {
   char file_path[FILE_PATH_SIZE];
   sprintf(file_path, "%s/docs/tuwi.html", explorer_dir);
 
-  result_t res_file_mapping = utils_map_file(file_path);
+  result_t res_file_mapping = map_file(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -170,7 +170,7 @@ void docs_tuwi_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  utils_unmap_file(file_mapping);
+  unmap_file(file_mapping);
 }
 
 void home_route(sonic_server_request_t *req) {

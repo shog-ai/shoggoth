@@ -16,8 +16,8 @@ LIBRARY_CHECKSUM := $$(md5sum ./target/libnetlibc.a | cut -d ' ' -f 1)
 check-netlibc:
 	$(MAKE)
 
-	if [ -f /usr/local/include/netlibc/netlibc.h ]; then \
-	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc/netlibc.h | cut -d ' ' -f 1); \
+	if [ -f /usr/local/include/netlibc.h ]; then \
+	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc.h | cut -d ' ' -f 1); \
 	    if [ "$$INSTALLED_HEADER_CHECKSUM" != "$(HEADER_CHECKSUM)" ]; then \
 	        echo "netlibc header checksum mismatch. Reinstalling..."; \
 	        $(MAKE) install; \
@@ -42,11 +42,16 @@ check-netlibc:
 
 install:
 	sudo mkdir -p /usr/local/include/netlibc/
-	sudo cp -r ./include/* /usr/local/include/netlibc/
+	
+	sudo cp -r ./include/netlibc/* /usr/local/include/netlibc/
+	sudo cp ./include/netlibc.h /usr/local/include/netlibc.h
+
 	sudo cp ./target/libnetlibc.a /usr/local/lib
 
 uninstall:
 	sudo rm -r /usr/local/include/netlibc/
+	sudo rm /usr/local/include/netlibc.h
+	
 	sudo rm /usr/local/lib/libnetlibc.a
 
 ./target/libnetlibc.a: target-dir

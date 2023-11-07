@@ -31,7 +31,7 @@ result_t add_node_to_known_nodes(client_ctx_t *ctx, char *new_node) {
   char known_nodes_path[FILE_PATH_SIZE];
   sprintf(known_nodes_path, "%s/known_nodes.json", client_runtime_path);
 
-  if (!utils_file_exists(known_nodes_path)) {
+  if (!file_exists(known_nodes_path)) {
     return ERR("known nodes file `%s` does not exist", known_nodes_path);
   }
 
@@ -40,7 +40,7 @@ result_t add_node_to_known_nodes(client_ctx_t *ctx, char *new_node) {
 
   char *known_nodes_str = json_to_string(known_nodes_json);
   free_json(known_nodes_json);
-  utils_write_to_file(known_nodes_path, known_nodes_str,
+  write_to_file(known_nodes_path, known_nodes_str,
                       strlen(known_nodes_str));
   free(known_nodes_str);
 
@@ -128,7 +128,7 @@ result_t client_delegate_node(client_ctx_t *ctx, char node_host[]) {
     return ERR("ERROR: No known nodes");
   }
 
-  u64 random_index = utils_random_number(0, ctx->known_nodes->nodes_count - 1);
+  u64 random_index = random_number(0, ctx->known_nodes->nodes_count - 1);
 
   // LOG(INFO, "RANDOM INDEX: %lu", random_index);
 
@@ -171,7 +171,7 @@ result_t generate_client_key_pair(char *keys_path, char *public_key_path,
  *
  ****/
 result_t generate_client_manifest(char *public_key_path) {
-  result_t res_public_key_string = utils_read_file_to_string(public_key_path);
+  result_t res_public_key_string = read_file_to_string(public_key_path);
   char *public_key_string = PROPAGATE(res_public_key_string);
 
   char *stripped_public_key = utils_strip_public_key(public_key_string);
@@ -222,8 +222,8 @@ result_t init_client_runtime(client_ctx_t *ctx, args_t *args) {
   char public_key_path[FILE_PATH_SIZE];
   sprintf(public_key_path, "%s/public.txt", keys_path);
 
-  if (!utils_dir_exists(keys_path)) {
-    utils_create_dir(keys_path);
+  if (!dir_exists(keys_path)) {
+    create_dir(keys_path);
   }
 
   if (!utils_keys_exist(keys_path)) {
@@ -240,18 +240,18 @@ result_t init_client_runtime(client_ctx_t *ctx, args_t *args) {
     sprintf(config_path, "%s/config.toml", client_runtime_path);
   }
 
-  if (!utils_file_exists(config_path)) {
+  if (!file_exists(config_path)) {
     return ERR("Config file `%s` does not exist \n", config_path);
   }
 
   char known_nodes_path[FILE_PATH_SIZE];
   sprintf(known_nodes_path, "%s/known_nodes.json", client_runtime_path);
 
-  if (!utils_file_exists(known_nodes_path)) {
+  if (!file_exists(known_nodes_path)) {
     return ERR("known nodes file `%s` does not exist \n", known_nodes_path);
   }
 
-  result_t res_known_nodes_str = utils_read_file_to_string(known_nodes_path);
+  result_t res_known_nodes_str = read_file_to_string(known_nodes_path);
   char *known_nodes_str = PROPAGATE(res_known_nodes_str);
 
   result_t res_known_nodes = json_string_to_known_nodes(known_nodes_str);
@@ -316,7 +316,7 @@ result_t shog_init_client(args_t *args) {
 
     LOG(INFO, "Using custom runtime path: %s", ctx->runtime_path);
 
-    if (!utils_dir_exists(ctx->runtime_path)) {
+    if (!dir_exists(ctx->runtime_path)) {
       return ERR("custom runtime path does not exist");
     }
   } else {

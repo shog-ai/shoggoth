@@ -53,14 +53,14 @@ result_t process_pin_request(node_ctx_t *ctx, char *tmp_path, char *shoggoth_id,
   sprintf(signature_path, "%s/signature.txt", metadata_dir);
 
   bool is_update = false;
-  if (utils_dir_exists(final_dir_path)) {
+  if (dir_exists(final_dir_path)) {
     is_update = true;
   }
 
   bool should_update = false;
   if (is_update) {
     result_t res_old_fingerprint_str =
-        utils_read_file_to_string(fingerprint_path);
+        read_file_to_string(fingerprint_path);
     char *old_fingerprint_str = PROPAGATE(res_old_fingerprint_str);
 
     result_t res_old_fingerprint =
@@ -81,25 +81,25 @@ result_t process_pin_request(node_ctx_t *ctx, char *tmp_path, char *shoggoth_id,
 
   if (!is_update || (is_update && should_update)) {
     if (is_update) {
-      utils_delete_dir(final_dir_path);
+      delete_dir(final_dir_path);
     }
 
     result_t res_untarball =
         utils_extract_tarball(tmp_tarball_path, final_dir_path);
     PROPAGATE(res_untarball);
 
-    result_t res_write = utils_write_to_file(fingerprint_path, fingerprint_str,
+    result_t res_write = write_to_file(fingerprint_path, fingerprint_str,
                                              strlen(fingerprint_str));
     PROPAGATE(res_write);
 
-    res_write = utils_write_to_file(signature_path, received_signature,
+    res_write = write_to_file(signature_path, received_signature,
                                     strlen(received_signature));
     PROPAGATE(res_write);
 
-    result_t res_delete = utils_delete_file(tmp_tarball_path);
+    result_t res_delete = delete_file(tmp_tarball_path);
     PROPAGATE(res_delete);
 
-    res_delete = utils_delete_dir(tmp_dir_path);
+    res_delete = delete_dir(tmp_dir_path);
     PROPAGATE(res_delete);
 
     if (!is_update) {
@@ -133,8 +133,8 @@ result_t process_pin_request(node_ctx_t *ctx, char *tmp_path, char *shoggoth_id,
       return OK(resp);
     }
   } else {
-    utils_delete_file(tmp_tarball_path);
-    utils_delete_dir(tmp_dir_path);
+    delete_file(tmp_tarball_path);
+    delete_dir(tmp_dir_path);
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);

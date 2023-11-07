@@ -12,7 +12,11 @@
 
 #include "../sonic.h"
 
-#include "../include/utils.h"
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 #include <arpa/inet.h>
 #include <dirent.h>
@@ -43,7 +47,7 @@ char *concat_path(char *path1, char *path2) {
  * Recursive function to list files in a directory and its subdirectories
  *
  ****/
-void list_files_recursive(sonic_files_list_t *result, char *dir_path) {
+void list_files_recursive(files_list_t *result, char *dir_path) {
   DIR *dir = opendir(dir_path);
   if (dir == NULL) {
     printf("ERROR: could not open directory: %s\n", dir_path);
@@ -74,12 +78,13 @@ void list_files_recursive(sonic_files_list_t *result, char *dir_path) {
  * lists files in a directory and its subdirectories
  *
  ****/
-sonic_files_list_t get_files_list_from_dir(char *dir_path) {
-  sonic_files_list_t result;
-  result.files = NULL;
-  result.files_count = 0;
+files_list_t *get_files_list_from_dir(char *dir_path) {
+  files_list_t *result = calloc(1, sizeof(files_list_t));
 
-  list_files_recursive(&result, dir_path);
+  result->files = NULL;
+  result->files_count = 0;
+
+  list_files_recursive(result, dir_path);
 
   return result;
 }
@@ -126,14 +131,14 @@ char *remove_prefix(const char *prefix, const char *input) {
  * gets the extension of a file from it's path
  *
  ****/
-char *get_file_extension(const char *file_path) {
-  char *extension = strrchr(file_path, '.');
-  if (extension == NULL || extension == file_path) {
-    return NULL; // No extension found or the dot is the first character
-  } else {
-    return extension + 1; // Skip the dot and return the extension
-  }
-}
+// char *get_file_extension(const char *file_path) {
+//   char *extension = strrchr(file_path, '.');
+//   if (extension == NULL || extension == file_path) {
+//     return NULL; // No extension found or the dot is the first character
+//   } else {
+//     return extension + 1; // Skip the dot and return the extension
+//   }
+// }
 
 /****
  * converts a string to a HTTP method

@@ -258,14 +258,14 @@ result_t gen_api_docs() {
   free(endpoints_str);
 
   result_t res_end_template_string =
-      utils_read_file_to_string("./explorer/templates/end.html");
+      read_file_to_string("./explorer/templates/end.html");
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
   free(end_template_string);
 
   result_t res_head_template_string =
-      utils_read_file_to_string("./explorer/templates/head.html");
+      read_file_to_string("./explorer/templates/head.html");
   char *head_template_string = UNWRAP(res_head_template_string);
 
   template_t *head_template = create_template(
@@ -274,7 +274,7 @@ result_t gen_api_docs() {
   free(head_template_string);
 
   result_t res_api_template_string =
-      utils_read_file_to_string("./explorer/docs/md/api.md");
+      read_file_to_string("./explorer/docs/md/api.md");
   char *api_template_string = UNWRAP(res_api_template_string);
 
   template_t *api_template =
@@ -292,7 +292,7 @@ result_t gen_api_docs() {
   free_template(head_template);
   free_template(end_template);
 
-  utils_write_to_file("./explorer/out/docs/api.html", cooked_api,
+  write_to_file("./explorer/out/docs/api.html", cooked_api,
                       strlen(cooked_api));
 
   // LOG(INFO, "COOKED: %s", cooked_api);

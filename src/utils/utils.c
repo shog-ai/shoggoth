@@ -37,7 +37,7 @@ char *utils_gen_uuid() {
 }
 
 result_t utils_extract_tarball(char *archive_path, char *destination_path) {
-  utils_create_dir(destination_path);
+  create_dir(destination_path);
 
   char command_str[512];
 
@@ -73,7 +73,7 @@ result_t utils_create_tarball(char *dir_path, char *output_path) {
   char prev_cwd[1024];
   getcwd(prev_cwd, sizeof(prev_cwd));
 
-  assert(utils_dir_exists(dir_path));
+  assert(dir_exists(dir_path));
 
   char command_str[512];
 #ifdef __APPLE__
@@ -146,7 +146,7 @@ result_t utils_hash_tarball(char *tmp_path, char *tarball_path) {
 
   chdir(prev_cwd);
 
-  result_t res_delete = utils_delete_dir(hash_tmp_path);
+  result_t res_delete = delete_dir(hash_tmp_path);
   PROPAGATE(res_delete);
 
   if (WIFEXITED(status)) {
@@ -247,8 +247,7 @@ bool utils_keys_exist(char *keys_path) {
   char public_key_path[FILE_PATH_SIZE];
   sprintf(public_key_path, "%s/public.txt", keys_path);
 
-  if (utils_file_exists(public_key_path) &&
-      utils_file_exists(private_key_path)) {
+  if (file_exists(public_key_path) && file_exists(private_key_path)) {
     return true;
   } else {
     return false;
@@ -282,28 +281,28 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
 
   assert(runtime_path != NULL);
 
-  if (!utils_dir_exists(runtime_path)) {
-    utils_create_dir(runtime_path);
+  if (!dir_exists(runtime_path)) {
+    create_dir(runtime_path);
   }
 
-  if (!utils_dir_exists(node_runtime_path)) {
-    utils_create_dir(node_runtime_path);
+  if (!dir_exists(node_runtime_path)) {
+    create_dir(node_runtime_path);
   }
 
-  if (!utils_dir_exists(node_explorer_path)) {
-    utils_create_dir(node_explorer_path);
+  if (!dir_exists(node_explorer_path)) {
+    create_dir(node_explorer_path);
   }
 
-  if (!utils_dir_exists(node_bin_path)) {
-    utils_create_dir(node_bin_path);
+  if (!dir_exists(node_bin_path)) {
+    create_dir(node_bin_path);
   }
 
-  if (!utils_dir_exists(node_tmp_path)) {
-    utils_create_dir(node_tmp_path);
+  if (!dir_exists(node_tmp_path)) {
+    create_dir(node_tmp_path);
   }
 
-  if (!utils_dir_exists(node_update_path)) {
-    utils_create_dir(node_update_path);
+  if (!dir_exists(node_update_path)) {
+    create_dir(node_update_path);
   }
 }
 
@@ -325,16 +324,16 @@ void utils_verify_client_runtime_dirs(client_ctx_t *ctx) {
 
   assert(runtime_path != NULL);
 
-  if (!utils_dir_exists(runtime_path)) {
-    utils_create_dir(runtime_path);
+  if (!dir_exists(runtime_path)) {
+    create_dir(runtime_path);
   }
 
-  if (!utils_dir_exists(client_runtime_path)) {
-    utils_create_dir(client_runtime_path);
+  if (!dir_exists(client_runtime_path)) {
+    create_dir(client_runtime_path);
   }
 
-  if (!utils_dir_exists(client_tmp_path)) {
-    utils_create_dir(client_tmp_path);
+  if (!dir_exists(client_tmp_path)) {
+    create_dir(client_tmp_path);
   }
 }
 

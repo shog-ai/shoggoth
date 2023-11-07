@@ -17,7 +17,7 @@
 void download_response_callback(char *data, u64 size, void *user_pointer) {
   char *tmp_tarball_path = (char *)user_pointer;
 
-  utils_append_to_file(tmp_tarball_path, data, size);
+  append_to_file(tmp_tarball_path, data, size);
 }
 
 /****
@@ -37,7 +37,7 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
   sprintf(tmp_tarball_path, "%s/%s.tar", tmp_path, shoggoth_id);
 
   result_t res_tmp_tarball_lock =
-      utils_acquire_file_lock(tmp_tarball_path, 1000, 10000);
+      acquire_file_lock(tmp_tarball_path, 1000, 10000);
   file_lock_t *tmp_tarball_lock = PROPAGATE(res_tmp_tarball_lock);
 
   char *user_ptr = strdup(tmp_tarball_path);
@@ -55,8 +55,8 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
 
   sonic_response_t *resp = sonic_send_request(req);
   if (resp->failed) {
-    utils_delete_file(tmp_tarball_path);
-    utils_release_file_lock(tmp_tarball_lock);
+    delete_file(tmp_tarball_path);
+    release_file_lock(tmp_tarball_lock);
 
     sonic_free_request(req);
     // sonic_free_response(resp); // WARN: resp->err used below
@@ -67,8 +67,8 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
   char *fingerprint_str =
       sonic_get_header_value(resp->headers, resp->headers_count, "fingerprint");
   if (fingerprint_str == NULL) {
-    utils_delete_file(tmp_tarball_path);
-    utils_release_file_lock(tmp_tarball_lock);
+    delete_file(tmp_tarball_path);
+    release_file_lock(tmp_tarball_lock);
     sonic_free_request(req);
     sonic_free_response(resp);
 
@@ -78,11 +78,11 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
   char *signature_str =
       sonic_get_header_value(resp->headers, resp->headers_count, "signature");
   if (signature_str == NULL) {
-    utils_delete_file(tmp_tarball_path);
+    delete_file(tmp_tarball_path);
     sonic_free_request(req);
     sonic_free_response(resp);
 
-    utils_release_file_lock(tmp_tarball_lock);
+    release_file_lock(tmp_tarball_lock);
     return ERR("no signature header was found in remote clone response");
   }
 
@@ -93,36 +93,36 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
     utils_get_node_runtime_path(ctx, pins_path);
     strcat(pins_path, "/pins");
 
-    result_t res_profile_size = utils_get_file_size(tmp_tarball_path);
+    result_t res_profile_size = get_file_size(tmp_tarball_path);
     u64 profile_size = PROPAGATE_U64(res_profile_size);
 
     u64 profile_size_limit =
         (u64)(ctx->config->storage.max_profile_size * 1000000.0); // megabytes
 
-    result_t res_total_pins_size = utils_get_dir_size(pins_path);
+    result_t res_total_pins_size = get_dir_size(pins_path);
     u64 total_pins_size = PROPAGATE_U64(res_total_pins_size);
 
     u64 total_pins_limit =
         (u64)(ctx->config->storage.limit * 1000000000.0); // gigabytes
 
     if (profile_size > profile_size_limit) {
-      utils_delete_file(tmp_tarball_path);
+      delete_file(tmp_tarball_path);
 
       sonic_free_request(req);
       sonic_free_response(resp);
 
       LOG(ERROR, "Download remote profile failed: profile too large");
 
-      utils_release_file_lock(tmp_tarball_lock);
+      release_file_lock(tmp_tarball_lock);
       return ERR("profile too large");
     } else if (profile_size + total_pins_size > total_pins_limit) {
-      utils_delete_file(tmp_tarball_path);
+      delete_file(tmp_tarball_path);
 
       sonic_free_request(req);
       sonic_free_response(resp);
 
       LOG(ERROR, "Download remote profile failed: storage limit exceeded");
-      utils_release_file_lock(tmp_tarball_lock);
+      release_file_lock(tmp_tarball_lock);
       return ERR("storage limit exceeded");
     }
 
@@ -130,13 +130,13 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
 
     result_t profile_dir_valid = validate_profile(tmp_dir_path);
     if (is_err(profile_dir_valid)) {
-      utils_delete_file(tmp_tarball_path);
-      utils_delete_file(tmp_dir_path);
+      delete_file(tmp_tarball_path);
+      delete_file(tmp_dir_path);
 
       sonic_free_request(req);
       sonic_free_response(resp);
 
-      utils_release_file_lock(tmp_tarball_lock);
+      release_file_lock(tmp_tarball_lock);
     }
 
     PROPAGATE(profile_dir_valid);
@@ -149,13 +149,13 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
         fingerprint_str, signature_str);
 
     if (is_err(valid)) {
-      utils_delete_file(tmp_tarball_path);
-      utils_delete_dir(tmp_dir_path);
+      delete_file(tmp_tarball_path);
+      delete_dir(tmp_dir_path);
 
       sonic_free_request(req);
       sonic_free_response(resp);
 
-      utils_release_file_lock(tmp_tarball_lock);
+      release_file_lock(tmp_tarball_lock);
     }
     PROPAGATE(valid);
 
@@ -167,31 +167,31 @@ result_t download_remote_profile(node_ctx_t *ctx, char *remote_host,
     char fingerprint_path[FILE_PATH_SIZE];
     sprintf(fingerprint_path, "%s/fingerprint.json", metadata_dir);
 
-    utils_write_to_file(fingerprint_path, fingerprint_str,
+    write_to_file(fingerprint_path, fingerprint_str,
                         strlen(fingerprint_str));
 
     char signature_path[FILE_PATH_SIZE];
     sprintf(signature_path, "%s/signature.txt", metadata_dir);
 
-    utils_write_to_file(signature_path, signature_str, strlen(signature_str));
+    write_to_file(signature_path, signature_str, strlen(signature_str));
 
-    utils_delete_file(tmp_tarball_path);
-    utils_delete_dir(tmp_dir_path);
+    delete_file(tmp_tarball_path);
+    delete_dir(tmp_dir_path);
 
     free_fingerprint(fingerprint);
     sonic_free_request(req);
     sonic_free_response(resp);
 
   } else {
-    utils_delete_file(tmp_tarball_path);
-    utils_release_file_lock(tmp_tarball_lock);
+    delete_file(tmp_tarball_path);
+    release_file_lock(tmp_tarball_lock);
     sonic_free_request(req);
     sonic_free_response(resp);
 
     return ERR("Could not download profile: status was not OK");
   }
 
-  utils_release_file_lock(tmp_tarball_lock);
+  release_file_lock(tmp_tarball_lock);
 
   return OK(NULL);
 }
@@ -375,10 +375,10 @@ void *pins_downloader(void *thread_arg) {
               char update_path[FILE_PATH_SIZE];
               utils_get_node_update_path(arg->ctx, update_path);
 
-              result_t res_delete = utils_delete_dir(update_path);
+              result_t res_delete = delete_dir(update_path);
               UNWRAP(res_delete);
 
-              result_t res_copy = utils_copy_dir(final_dir_path, update_path);
+              result_t res_copy = copy_dir(final_dir_path, update_path);
               UNWRAP(res_copy);
 
               auto_update_node(arg->ctx);
@@ -501,7 +501,7 @@ void *pins_updater(void *thread_arg) {
                 runtime_path, local_pins->pins[i]);
 
         result_t res_local_fingerprint_str =
-            utils_read_file_to_string(local_fingerprint_path);
+            read_file_to_string(local_fingerprint_path);
         char *local_fingerprint_str = UNWRAP(res_local_fingerprint_str);
 
         result_t res_local_fingerprint =
@@ -538,10 +538,10 @@ void *pins_updater(void *thread_arg) {
                 char update_path[FILE_PATH_SIZE];
                 utils_get_node_update_path(arg->ctx, update_path);
 
-                result_t res_delete = utils_delete_dir(update_path);
+                result_t res_delete = delete_dir(update_path);
                 UNWRAP(res_delete);
 
-                result_t res_copy = utils_copy_dir(final_dir_path, update_path);
+                result_t res_copy = copy_dir(final_dir_path, update_path);
                 UNWRAP(res_copy);
 
                 auto_update_node(arg->ctx);

@@ -72,7 +72,7 @@ request_id_t parse_id(char *input) {
 void clone_response_callback(char *data, u64 size, void *user_pointer) {
   char *tmp_zip_path = (char *)user_pointer;
 
-  result_t res = utils_append_to_file(tmp_zip_path, data, size);
+  result_t res = append_to_file(tmp_zip_path, data, size);
   UNWRAP(res);
 }
 
@@ -231,10 +231,10 @@ result_t client_clone(client_ctx_t *ctx, char *id_str) {
   res_unzip = utils_extract_tarball(tmp_zip_path, final_dir_path);
   PROPAGATE(res_unzip);
 
-  result_t res_delete = utils_delete_file(tmp_zip_path);
+  result_t res_delete = delete_file(tmp_zip_path);
   PROPAGATE(res_delete);
 
-  res_delete = utils_delete_dir(tmp_dir_path);
+  res_delete = delete_dir(tmp_dir_path);
   PROPAGATE(res_delete);
 
   LOG(INFO, "Cloned successfully");

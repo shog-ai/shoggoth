@@ -11,7 +11,11 @@
 #ifndef SHOG_CLIENT_H
 #define SHOG_CLIENT_H
 
-#include <netlibc/netlibc.h>
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 #include "../args/args.h"
 
@@ -31,7 +35,7 @@ typedef struct {
 typedef struct CLIENT_CTX {
   client_config_t config;
   client_manifest_t *manifest;
-  known_nodes_t* known_nodes;
+  known_nodes_t *known_nodes;
   char *runtime_path;
 } client_ctx_t;
 

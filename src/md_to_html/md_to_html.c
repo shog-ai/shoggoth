@@ -53,16 +53,16 @@ result_t merge_output(char *content, head_type_t head_type,
   char *end = NULL;
 
   if (head_type == HEAD_DOCS) {
-    result_t res_head = utils_read_file_to_string("./docs/templates/head.html");
+    result_t res_head = read_file_to_string("./docs/templates/head.html");
     head = PROPAGATE(res_head);
   } else if (head_type == HEAD_API) {
     result_t res_head =
-        utils_read_file_to_string("./docs/templates/head-api.html");
+        read_file_to_string("./docs/templates/head-api.html");
     head = PROPAGATE(res_head);
   }
 
   if (end_type == END_DOCS) {
-    result_t res_end = utils_read_file_to_string("./docs/templates/end.html");
+    result_t res_end = read_file_to_string("./docs/templates/end.html");
     end = PROPAGATE(res_end);
   }
 
@@ -83,7 +83,7 @@ result_t md_to_html(char *md_str) {
 }
 
 result_t md_file_to_html_file(char *input_path, char *output_path) {
-  result_t res_input = utils_read_file_to_string(input_path);
+  result_t res_input = read_file_to_string(input_path);
   char *input = PROPAGATE(res_input);
 
   assert(input != NULL);
@@ -92,7 +92,7 @@ result_t md_file_to_html_file(char *input_path, char *output_path) {
 
   char *output = PROPAGATE(res_output);
 
-  utils_write_to_file(output_path, output, strlen(output));
+  write_to_file(output_path, output, strlen(output));
 
   free(output);
   free(input);

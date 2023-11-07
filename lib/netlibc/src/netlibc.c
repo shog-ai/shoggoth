@@ -9,6 +9,10 @@
  ****/
 
 #include "../include/netlibc.h"
+#include "../include/netlibc/error.h"
+#include "../include/netlibc/fs.h"
+#include "../include/netlibc/log.h"
+#include "../include/netlibc/string.h"
 
 #include <assert.h>
 #include <dirent.h>
@@ -37,7 +41,7 @@
  * utility function to check if a directory exists
  *
  ****/
-bool utils_dir_exists(char *dir_path) {
+bool dir_exists(char *dir_path) {
 #ifdef _WIN32
   DWORD attrib = GetFileAttributesA(dir_path);
   return (attrib != INVALID_FILE_ATTRIBUTES &&
@@ -55,7 +59,7 @@ bool utils_dir_exists(char *dir_path) {
  * utility function to check if a file exists
  *
  ****/
-bool utils_file_exists(const char *file_path) {
+bool file_exists(const char *file_path) {
   if (access(file_path, F_OK) != -1) {
     return true; // File exists
   } else {
@@ -67,7 +71,7 @@ bool utils_file_exists(const char *file_path) {
  * creates a new directory
  *
  ****/
-void utils_create_dir(const char *dir_path) {
+void create_dir(const char *dir_path) {
 #ifdef _WIN32
   _mkdir(dir_path);
 #else
@@ -79,7 +83,7 @@ void utils_create_dir(const char *dir_path) {
  * creates a new file
  *
  ****/
-void utils_create_file(const char *file_path) {
+void create_file(const char *file_path) {
   FILE *file = fopen(file_path, "w");
   fclose(file);
 }
@@ -88,8 +92,8 @@ void utils_create_file(const char *file_path) {
  * utility function to extract the file name from a file path
  *
  ****/
-const char *utils_extract_filename_from_path(const char *path) {
-  const char *filename = strrchr(path, '/');
+char *extract_filename_from_path(char *path) {
+  char *filename = strrchr(path, '/');
   if (filename == NULL) {
     // If no '/' is found, check for Windows-style '\' separator
     filename = strrchr(path, '\\');
@@ -108,8 +112,7 @@ const char *utils_extract_filename_from_path(const char *path) {
  * writes a string to a file
  *
  ****/
-result_t utils_write_to_file(const char *file_path, char *content,
-                             size_t size) {
+result_t write_to_file(const char *file_path, char *content, size_t size) {
   FILE *file = fopen(file_path, "w");
   if (file != NULL) {
     fwrite(content, sizeof(char), size, file);
@@ -121,8 +124,7 @@ result_t utils_write_to_file(const char *file_path, char *content,
   return OK(NULL);
 }
 
-result_t utils_append_to_file(const char *file_path, char *content,
-                              size_t size) {
+result_t append_to_file(const char *file_path, char *content, size_t size) {
   FILE *file = fopen(file_path, "a");
   if (file != NULL) {
     fwrite(content, sizeof(char), size, file);
@@ -139,8 +141,8 @@ result_t utils_append_to_file(const char *file_path, char *content,
  * e.g returns `txt` for myfile.txt
  *
  ****/
-const char *utils_get_file_extension(const char *file_path) {
-  const char *extension = strrchr(file_path, '.');
+char *get_file_extension(char *file_path) {
+  char *extension = strrchr(file_path, '.');
   if (extension == NULL || extension == file_path) {
     return ""; // No extension found or the dot is the first character
   } else {
@@ -152,7 +154,7 @@ const char *utils_get_file_extension(const char *file_path) {
  * returns the content of a file as an allocated string
  *
  ****/
-result_t utils_read_file_to_string(const char *file_path) {
+result_t read_file_to_string(const char *file_path) {
   FILE *file = fopen(file_path, "r");
   if (file == NULL) {
     return ERR("Error opening file: %s", strerror(errno));
@@ -174,7 +176,7 @@ result_t utils_read_file_to_string(const char *file_path) {
   return OK(file_content);
 }
 
-char *utils_escape_character(char *input, char character) {
+char *escape_character(char *input, char character) {
   if (input == NULL) {
     return NULL; // Return NULL if the input string is not valid.
   }
@@ -199,7 +201,7 @@ char *utils_escape_character(char *input, char character) {
   return result;
 }
 
-char *utils_replace_escape_character(char *input, char ch, char replacement) {
+char *replace_escape_character(char *input, char ch, char replacement) {
   if (input == NULL) {
     return NULL; // Return NULL if the input string is not valid.
   }
@@ -224,7 +226,7 @@ char *utils_replace_escape_character(char *input, char ch, char replacement) {
   return result;
 }
 
-char *utils_escape_tabs(char *input) {
+char *escape_tabs(char *input) {
   if (input == NULL) {
     return NULL; // Return NULL if the input string is not valid.
   }
@@ -249,25 +251,25 @@ char *utils_escape_tabs(char *input) {
   return result;
 }
 
-char *utils_escape_json_string(char *i) {
-  char *i2 = utils_escape_character(i, '\\');
+char *escape_json_string(char *i) {
+  char *i2 = escape_character(i, '\\');
 
-  char *i3 = utils_escape_character(i2, '"');
+  char *i3 = escape_character(i2, '"');
   free(i2);
 
-  char *i4 = utils_replace_escape_character(i3, '\n', 'n');
+  char *i4 = replace_escape_character(i3, '\n', 'n');
   free(i3);
 
-  char *i5 = utils_replace_escape_character(i4, '\t', 't');
+  char *i5 = replace_escape_character(i4, '\t', 't');
   free(i4);
 
-  char *i6 = utils_replace_escape_character(i5, '\r', 'r');
+  char *i6 = replace_escape_character(i5, '\r', 'r');
   free(i5);
 
   return i6;
 }
 
-char *utils_escape_html_tags(const char *input) {
+char *escape_html_tags(char *input) {
   if (input == NULL) {
     return NULL;
   }
@@ -295,7 +297,7 @@ char *utils_escape_html_tags(const char *input) {
   return result;
 }
 
-char *utils_remove_newlines_except_quotes(const char *input) {
+char *remove_newlines_except_quotes(char *input) {
   int input_length = (int)strlen(input);
   char *result = (char *)malloc((unsigned long)input_length + 1);
   if (result == NULL) {
@@ -319,7 +321,7 @@ char *utils_remove_newlines_except_quotes(const char *input) {
   return result;
 }
 
-result_t utils_delete_file(const char *file_path) {
+result_t delete_file(const char *file_path) {
   if (remove(file_path) == 0) {
     return OK(NULL);
   } else {
@@ -328,7 +330,7 @@ result_t utils_delete_file(const char *file_path) {
 }
 
 // Function to recursively delete a directory and its contents
-result_t utils_delete_dir(const char *dir_path) {
+result_t delete_dir(const char *dir_path) {
   struct dirent *entry;
   struct stat statbuf;
 
@@ -350,7 +352,7 @@ result_t utils_delete_dir(const char *dir_path) {
 
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-        result_t res = utils_delete_dir(filePath);
+        result_t res = delete_dir(filePath);
 
         if (!is_ok(res)) {
           closedir(dir);
@@ -380,7 +382,7 @@ result_t utils_delete_dir(const char *dir_path) {
 }
 
 // returns the UNIX timestamp in microseconds
-u64 utils_get_timestamp_us() {
+u64 get_timestamp_us() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
 
@@ -388,14 +390,14 @@ u64 utils_get_timestamp_us() {
 }
 
 // returns the UNIX timestamp in milliseconds
-u64 utils_get_timestamp_ms() {
-  u64 us = utils_get_timestamp_us();
+u64 get_timestamp_ms() {
+  u64 us = get_timestamp_us();
   return us / 1000; // Convert microseconds to milliseconds
 }
 
 // returns the UNIX timestamp in seconds
-u64 utils_get_timestamp_s() {
-  u64 ms = utils_get_timestamp_ms();
+u64 get_timestamp_s() {
+  u64 ms = get_timestamp_ms();
   return ms / 1000; // Convert milliseconds to seconds
 }
 
@@ -406,7 +408,7 @@ u64 utils_get_timestamp_s() {
  *
  * @return a struct containing the array of strings and the count
  ****/
-result_t utils_get_files_list(char *dir_path) {
+result_t get_files_list(char *dir_path) {
   files_list_t *result = calloc(1, sizeof(files_list_t));
   result->files = NULL;
   result->files_count = 0;
@@ -432,7 +434,7 @@ result_t utils_get_files_list(char *dir_path) {
   return OK(result);
 }
 
-result_t utils_get_files_and_dirs_list(char *dir_path) {
+result_t get_files_and_dirs_list(char *dir_path) {
   files_list_t *result = calloc(1, sizeof(files_list_t));
   result->files = NULL;
   result->files_count = 0;
@@ -458,7 +460,7 @@ result_t utils_get_files_and_dirs_list(char *dir_path) {
   return OK(result);
 }
 
-void utils_free_files_list(files_list_t *list) {
+void free_files_list(files_list_t *list) {
   for (u64 i = 0; i < list->files_count; i++) {
     free(list->files[i]);
   }
@@ -474,7 +476,7 @@ void utils_free_files_list(files_list_t *list) {
  * extracts only the filename from a file path excluding the extension
  *
  ****/
-result_t utils_remove_file_extension(const char *str) {
+result_t remove_file_extension(char *str) {
   // Find the last dot (.) in the string
   const char *lastDot = strrchr(str, '.');
 
@@ -502,8 +504,8 @@ result_t utils_remove_file_extension(const char *str) {
  * duplicates a file
  *
  ****/
-result_t utils_copy_file(const char *source_file_path,
-                         const char *destination_file_path) {
+result_t copy_file(const char *source_file_path,
+                   const char *destination_file_path) {
   FILE *sourceFile = fopen(source_file_path, "rb");
   if (sourceFile == NULL) {
     return ERR("Failed to open source file");
@@ -526,7 +528,7 @@ result_t utils_copy_file(const char *source_file_path,
 }
 
 // Function to recursively copy a directory and its contents
-result_t utils_copy_dir(char *src_path, char *dest_path) {
+result_t copy_dir(char *src_path, char *dest_path) {
   struct dirent *entry;
   struct stat statbuf;
 
@@ -557,7 +559,7 @@ result_t utils_copy_dir(char *src_path, char *dest_path) {
 
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-        result_t res = utils_copy_dir(srcFile, destFile);
+        result_t res = copy_dir(srcFile, destFile);
         PROPAGATE(res);
       }
     } else {
@@ -585,7 +587,7 @@ result_t utils_copy_dir(char *src_path, char *dest_path) {
   return OK(NULL);
 }
 
-result_t utils_get_file_size(const char *filePath) {
+result_t get_file_size(const char *filePath) {
   FILE *file = fopen(filePath, "rb"); // Open the file in binary mode
 
   if (file == NULL) {
@@ -602,16 +604,16 @@ result_t utils_get_file_size(const char *filePath) {
   return OK_U64(fileSize);
 }
 
-result_t utils_acquire_file_lock(char *file_path, u64 delay, u64 timeout) {
+result_t acquire_file_lock(char *file_path, u64 delay, u64 timeout) {
   char lockfile_path[256];
   sprintf(lockfile_path, "%s.lockfile", file_path);
 
-  u64 start_time = utils_get_timestamp_ms();
+  u64 start_time = get_timestamp_ms();
 
   int lockfile_fd = -1;
 
   for (;;) {
-    u64 now = utils_get_timestamp_ms();
+    u64 now = get_timestamp_ms();
 
     if (now > (start_time + timeout)) {
       LOG(INFO, "acquire lock timeout on %s", file_path);
@@ -643,7 +645,7 @@ result_t utils_acquire_file_lock(char *file_path, u64 delay, u64 timeout) {
   return OK(lock);
 }
 
-void utils_release_file_lock(file_lock_t *lock) {
+void release_file_lock(file_lock_t *lock) {
   char lockfile_path[256];
   sprintf(lockfile_path, "%s.lockfile", lock->path);
 
@@ -657,7 +659,7 @@ void utils_release_file_lock(file_lock_t *lock) {
   free(lock);
 }
 
-result_t utils_is_file_plain_text(const char *file_path) {
+result_t is_file_plain_text(const char *file_path) {
   FILE *file = fopen(file_path, "rb");
   if (file == NULL) {
     // Unable to open the file
@@ -678,7 +680,7 @@ result_t utils_is_file_plain_text(const char *file_path) {
   return OK_BOOL(true); // No non-printable characters found, it's plain text
 }
 
-u64 utils_random_number(u64 start, u64 end) {
+u64 random_number(u64 start, u64 end) {
   if (start >= end) {
     // Invalid input, return 0 or handle the error as needed.
     return 0;
@@ -693,7 +695,7 @@ u64 utils_random_number(u64 start, u64 end) {
   return random_num;
 }
 
-result_t utils_map_file(char *file_path) {
+result_t map_file(char *file_path) {
   file_mapping_t *file_mapping = calloc(1, sizeof(file_mapping_t));
 
   file_mapping->fd = open(file_path, O_RDONLY);
@@ -720,7 +722,7 @@ result_t utils_map_file(char *file_path) {
   return OK(file_mapping);
 }
 
-void utils_unmap_file(file_mapping_t *file_mapping) {
+void unmap_file(file_mapping_t *file_mapping) {
   munmap(file_mapping->content, (size_t)file_mapping->info.st_size);
 
   close(file_mapping->fd);
@@ -728,7 +730,7 @@ void utils_unmap_file(file_mapping_t *file_mapping) {
   free(file_mapping);
 }
 
-result_t utils_get_dir_size(char *path) {
+result_t get_dir_size(char *path) {
   struct stat statbuf;
   u64 total_size = 0;
 
@@ -753,7 +755,7 @@ result_t utils_get_dir_size(char *path) {
         char child_path[512]; // Adjust the size as needed
         snprintf(child_path, sizeof(child_path), "%s/%s", path, entry->d_name);
 
-        result_t res_child_size = utils_get_dir_size(child_path);
+        result_t res_child_size = get_dir_size(child_path);
         u64 child_size = PROPAGATE_U64(res_child_size);
 
         total_size += child_size;

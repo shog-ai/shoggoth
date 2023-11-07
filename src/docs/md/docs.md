@@ -785,7 +785,7 @@ There are dependencies in `./lib/`. Some of these dependencies are external depe
 To contribute to external dependencies, please refer to their respective GitHub repositories listed in [dependencies](#dependencies).
 
 Some other dependencies including sonic, camel, tuwi, and netlibc are internal dependencies, meaning they are developed alongside Shoggoth.
-You can contibute to them by making your changes within the Shoggoth repository itself, and prefixing your commits and PRs with the name of the dependency like "SONIC: fixed a sonic specific bug".
+You can contibute to them by making your changes within the Shoggoth repository itself, and prefixing your commits and PRs with the name of the dependency like "sonic: fixed a sonic specific bug".
 
 ### Coding guidelines
 

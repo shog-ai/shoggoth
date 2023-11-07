@@ -9,6 +9,7 @@
  ****/
 
 #include "../../json/json.h"
+#include "../manifest/manifest.h"
 #include "../db/db.h"
 #include "../manifest/manifest.h"
 
@@ -142,6 +143,12 @@ bool valid_peer_host(node_ctx_t *ctx, char *peer_host) {
   return true;
 }
 
+bool valid_node_id(node_manifest_t *manifest) {
+  char computed_node_id_string[512];
+  node_id_from_public_key(manifest->public_key, computed_node_id_string);
+  return strcmp(computed_node_id_string, manifest->node_id) == 0;
+}
+
 /****
  * adds a new peer to the dht
  *
@@ -190,6 +197,11 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
 
   result_t res_manifest = json_string_to_node_manifest(manifest_str);
   node_manifest_t *manifest = PROPAGATE(res_manifest);
+
+  if (!valid_node_id(manifest)) {
+    free_node_manifest(manifest);
+    return ERR("peer manifest node_id invalid due to public key mismatch");
+  }
 
   if (!valid_peer_host(ctx, manifest->public_host)) {
     free_node_manifest(manifest);

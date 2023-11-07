@@ -91,8 +91,8 @@ void api_clone_route(sonic_server_request_t *req) {
     sprintf(target_tarball_path, "%s/tmp/%s.%s.tar", runtime_path, shoggoth_id,
             group_name);
   } else if (target == RESOURCE) {
-    sprintf(target_tarball_path, "%s/tmp/%s.%s.%s.tar", runtime_path, shoggoth_id,
-            group_name, resource_name);
+    sprintf(target_tarball_path, "%s/tmp/%s.%s.%s.tar", runtime_path,
+            shoggoth_id, group_name, resource_name);
   }
 
   char target_tmp_path[FILE_PATH_SIZE];
@@ -109,7 +109,7 @@ void api_clone_route(sonic_server_request_t *req) {
   // FIXME: run checks on the value of group_name and resource_name to ensure it
   // does not contain unsafe characters like a dot "." or slash "/"
 
-  if (!utils_file_exists(pin_dir_path)) {
+  if (!file_exists(pin_dir_path)) {
     result_t res_peers_with_pin = db_get_peers_with_pin(api_ctx, shoggoth_id);
     SERVER_ERR(res_peers_with_pin);
     char *peers_with_pin = VALUE(res_peers_with_pin);
@@ -151,7 +151,7 @@ void api_clone_route(sonic_server_request_t *req) {
     free_dht(peers);
   } else {
     if (target == RESOURCE) {
-      if (!utils_dir_exists(target_dir_path)) {
+      if (!dir_exists(target_dir_path)) {
         sonic_server_response_t *resp =
             sonic_new_response(STATUS_404, MIME_TEXT_HTML);
 
@@ -168,11 +168,11 @@ void api_clone_route(sonic_server_request_t *req) {
     }
 
     result_t res_target_tmp_lock =
-        utils_acquire_file_lock(target_tmp_path, 1000, 20000);
+        acquire_file_lock(target_tmp_path, 1000, 20000);
     SERVER_ERR(res_target_tmp_lock);
     file_lock_t *target_tmp_lock = VALUE(res_target_tmp_lock);
 
-    result_t res_copy = utils_copy_dir(target_dir_path, target_tmp_path);
+    result_t res_copy = copy_dir(target_dir_path, target_tmp_path);
     SERVER_ERR(res_copy);
 
     if (target == PROFILE) {
@@ -184,33 +184,34 @@ void api_clone_route(sonic_server_request_t *req) {
       sprintf(signature_tmp_path, "%s/.shoggoth/signature.txt",
               target_tmp_path);
 
-      result_t res_delete = utils_delete_file(fingerprint_tmp_path);
+      result_t res_delete = delete_file(fingerprint_tmp_path);
       SERVER_ERR(res_delete);
 
-      res_delete = utils_delete_file(signature_tmp_path);
+      res_delete = delete_file(signature_tmp_path);
       SERVER_ERR(res_delete);
     } else if (target == GROUP) {
       char fingerprint_path[FILE_PATH_SIZE];
       sprintf(fingerprint_path, "%s/.shoggoth/fingerprint.json",
               target_tmp_path);
 
-      result_t res_delete = utils_delete_file(fingerprint_path);
+      result_t res_delete = delete_file(fingerprint_path);
       SERVER_ERR(res_delete);
 
       char signature_path[FILE_PATH_SIZE];
       sprintf(signature_path, "%s/.shoggoth/signature.txt", target_tmp_path);
 
-      res_delete = utils_delete_file(signature_path);
+      res_delete = delete_file(signature_path);
       SERVER_ERR(res_delete);
     }
 
-    result_t res_tarball = utils_create_tarball(target_tmp_path, target_tarball_path);
+    result_t res_tarball =
+        utils_create_tarball(target_tmp_path, target_tarball_path);
     SERVER_ERR(res_tarball);
 
-    result_t res_delete = utils_delete_dir(target_tmp_path);
+    result_t res_delete = delete_dir(target_tmp_path);
     SERVER_ERR(res_delete);
 
-    result_t res_file_mapping = utils_map_file(target_tarball_path);
+    result_t res_file_mapping = map_file(target_tarball_path);
     SERVER_ERR(res_file_mapping);
     file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -232,7 +233,7 @@ void api_clone_route(sonic_server_request_t *req) {
               runtime_path, shoggoth_id, group_name, resource_name);
     }
 
-    result_t res_fingerprint_str = utils_read_file_to_string(fingerprint_path);
+    result_t res_fingerprint_str = read_file_to_string(fingerprint_path);
     SERVER_ERR(res_fingerprint_str);
     char *fingerprint_str = VALUE(res_fingerprint_str);
 
@@ -251,7 +252,7 @@ void api_clone_route(sonic_server_request_t *req) {
               runtime_path, shoggoth_id, group_name, resource_name);
     }
 
-    result_t res_signature_str = utils_read_file_to_string(signature_path);
+    result_t res_signature_str = read_file_to_string(signature_path);
     SERVER_ERR(res_signature_str);
     char *signature_str = VALUE(res_signature_str);
 
@@ -259,15 +260,15 @@ void api_clone_route(sonic_server_request_t *req) {
 
     sonic_send_response(req, resp);
 
-    utils_unmap_file(file_mapping);
+    unmap_file(file_mapping);
     free(fingerprint_str);
     free(signature_str);
     sonic_free_server_response(resp);
 
-    res_delete = utils_delete_file(target_tarball_path);
+    res_delete = delete_file(target_tarball_path);
     SERVER_ERR(res_delete);
 
-    utils_release_file_lock(target_tmp_lock);
+    release_file_lock(target_tmp_lock);
   }
 }
 
@@ -347,7 +348,7 @@ void api_negotiate_publish_route(sonic_server_request_t *req) {
   u64 profile_size_limit = (u64)(api_ctx->config->storage.max_profile_size *
                                  1000000.0); // convert megabytes to bytes
 
-  result_t res_total_pins_size = utils_get_dir_size(pins_path);
+  result_t res_total_pins_size = get_dir_size(pins_path);
   SERVER_ERR(res_total_pins_size);
   u64 total_pins_size = VALUE_U64(res_total_pins_size);
 
@@ -393,7 +394,7 @@ void api_negotiate_publish_route(sonic_server_request_t *req) {
   }
 
   u64 five_minutes = 300000; // 5 miinutes in milliseconds
-  u64 now = utils_get_timestamp_ms();
+  u64 now = get_timestamp_ms();
 
   result_t res_fingerprint = json_string_to_fingerprint(fingerprint_str);
   SERVER_ERR(res_fingerprint);
@@ -437,14 +438,13 @@ void api_negotiate_publish_route(sonic_server_request_t *req) {
   sprintf(fingerprint_path, "%s/fingerprint.json", metadata_dir);
 
   bool is_update = false;
-  if (utils_dir_exists(final_dir_path)) {
+  if (dir_exists(final_dir_path)) {
     is_update = true;
   }
 
   bool should_update = false;
   if (is_update) {
-    result_t res_old_fingerprint_str =
-        utils_read_file_to_string(fingerprint_path);
+    result_t res_old_fingerprint_str = read_file_to_string(fingerprint_path);
     SERVER_ERR(res_old_fingerprint_str);
     char *old_fingerprint_str = VALUE(res_old_fingerprint_str);
 
@@ -480,29 +480,29 @@ void api_negotiate_publish_route(sonic_server_request_t *req) {
 
     char tmp_upload_path[FILE_PATH_SIZE];
     sprintf(tmp_upload_path, "%s/%s", tmp_path, upload_id);
-    utils_create_dir(tmp_upload_path);
+    create_dir(tmp_upload_path);
 
     char tmp_signature_path[FILE_PATH_SIZE];
     sprintf(tmp_signature_path, "%s/signature.txt", tmp_upload_path);
-    result_t res_write = utils_write_to_file(
-        tmp_signature_path, received_signature, strlen(received_signature));
+    result_t res_write = write_to_file(tmp_signature_path, received_signature,
+                                       strlen(received_signature));
     SERVER_ERR(res_write);
 
     char tmp_fingerprint_path[FILE_PATH_SIZE];
     sprintf(tmp_fingerprint_path, "%s/fingerprint.json", tmp_upload_path);
-    res_write = utils_write_to_file(tmp_fingerprint_path, fingerprint_str,
-                                    strlen(fingerprint_str));
+    res_write = write_to_file(tmp_fingerprint_path, fingerprint_str,
+                              strlen(fingerprint_str));
     SERVER_ERR(res_write);
 
     char tmp_upload_info_path[FILE_PATH_SIZE];
     sprintf(tmp_upload_info_path, "%s/upload_info.json", tmp_upload_path);
-    res_write = utils_write_to_file(tmp_upload_info_path, upload_info_str,
-                                    strlen(upload_info_str));
+    res_write = write_to_file(tmp_upload_info_path, upload_info_str,
+                              strlen(upload_info_str));
     SERVER_ERR(res_write);
 
     char tmp_chunks_path[FILE_PATH_SIZE];
     sprintf(tmp_chunks_path, "%s/chunks", tmp_upload_path);
-    utils_create_dir(tmp_chunks_path);
+    create_dir(tmp_chunks_path);
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -556,7 +556,7 @@ void api_publish_finish_route(sonic_server_request_t *req) {
   char tmp_upload_path[FILE_PATH_SIZE];
   sprintf(tmp_upload_path, "%s/%s", tmp_path, upload_id);
 
-  if (!utils_dir_exists(tmp_upload_path)) {
+  if (!dir_exists(tmp_upload_path)) {
     respond_error(req, "upload path does not exist");
     return;
   }
@@ -564,7 +564,7 @@ void api_publish_finish_route(sonic_server_request_t *req) {
   char upload_info_path[FILE_PATH_SIZE];
   sprintf(upload_info_path, "%s/upload_info.json", tmp_upload_path);
 
-  result_t res_upload_info_str = utils_read_file_to_string(upload_info_path);
+  result_t res_upload_info_str = read_file_to_string(upload_info_path);
   SERVER_ERR(res_upload_info_str);
   char *upload_info_str = VALUE(res_upload_info_str);
 
@@ -577,7 +577,7 @@ void api_publish_finish_route(sonic_server_request_t *req) {
   char tmp_tarball_path[FILE_PATH_SIZE];
   sprintf(tmp_tarball_path, "%s/%s.tar", tmp_path, upload_info->shoggoth_id);
 
-  utils_create_file(tmp_tarball_path);
+  create_file(tmp_tarball_path);
 
   char tmp_chunks_path[FILE_PATH_SIZE];
   sprintf(tmp_chunks_path, "%s/chunks", tmp_upload_path);
@@ -589,34 +589,33 @@ void api_publish_finish_route(sonic_server_request_t *req) {
     char chunk_path[FILE_PATH_SIZE];
     sprintf(chunk_path, "%s/%s", tmp_chunks_path, chunk_id_str);
 
-    result_t res_file_mapping = utils_map_file(chunk_path);
+    result_t res_file_mapping = map_file(chunk_path);
     SERVER_ERR(res_file_mapping);
     file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
-    result_t res_append = utils_append_to_file(
-        tmp_tarball_path, file_mapping->content, (u64)file_mapping->info.st_size);
+    result_t res_append =
+        append_to_file(tmp_tarball_path, file_mapping->content,
+                       (u64)file_mapping->info.st_size);
     SERVER_ERR(res_append);
 
-    utils_unmap_file(file_mapping);
+    unmap_file(file_mapping);
   }
 
   char tmp_signature_path[FILE_PATH_SIZE];
   sprintf(tmp_signature_path, "%s/signature.txt", tmp_upload_path);
 
-  result_t res_received_signature =
-      utils_read_file_to_string(tmp_signature_path);
+  result_t res_received_signature = read_file_to_string(tmp_signature_path);
   SERVER_ERR(res_received_signature);
   char *received_signature = VALUE(res_received_signature);
 
   char tmp_fingerprint_path[FILE_PATH_SIZE];
   sprintf(tmp_fingerprint_path, "%s/fingerprint.json", tmp_upload_path);
 
-  result_t res_fingerprint_str =
-      utils_read_file_to_string(tmp_fingerprint_path);
+  result_t res_fingerprint_str = read_file_to_string(tmp_fingerprint_path);
   SERVER_ERR(res_fingerprint_str);
   char *fingerprint_str = VALUE(res_fingerprint_str);
 
-  result_t res_delete = utils_delete_dir(tmp_upload_path);
+  result_t res_delete = delete_dir(tmp_upload_path);
   SERVER_ERR(res_delete);
 
   // TODO: lock the file while performing verification
@@ -681,7 +680,7 @@ void api_publish_chunk_route(sonic_server_request_t *req) {
   char tmp_upload_path[FILE_PATH_SIZE];
   sprintf(tmp_upload_path, "%s/%s", tmp_path, upload_id);
 
-  if (!utils_dir_exists(tmp_upload_path)) {
+  if (!dir_exists(tmp_upload_path)) {
     respond_error(req, "upload path does not exist");
     return;
   }
@@ -702,7 +701,7 @@ void api_publish_chunk_route(sonic_server_request_t *req) {
   char upload_info_path[FILE_PATH_SIZE];
   sprintf(upload_info_path, "%s/upload_info.json", tmp_upload_path);
 
-  result_t res_upload_info_str = utils_read_file_to_string(upload_info_path);
+  result_t res_upload_info_str = read_file_to_string(upload_info_path);
   SERVER_ERR(res_upload_info_str);
   char *upload_info_str = VALUE(res_upload_info_str);
 
@@ -731,8 +730,7 @@ void api_publish_chunk_route(sonic_server_request_t *req) {
 
   free_upload_info(upload_info);
 
-  result_t res_write =
-      utils_write_to_file(chunk_path, req->request_body, chunk_size);
+  result_t res_write = write_to_file(chunk_path, req->request_body, chunk_size);
   SERVER_ERR(res_write);
 
   sonic_server_response_t *resp =
@@ -810,7 +808,7 @@ void api_get_fingerprint_route(sonic_server_request_t *req) {
   sprintf(fingerprint_path, "%s/pins/%s/.shoggoth/fingerprint.json",
           runtime_path, shoggoth_id);
 
-  result_t res_fingerprint_str = utils_read_file_to_string(fingerprint_path);
+  result_t res_fingerprint_str = read_file_to_string(fingerprint_path);
   SERVER_ERR(res_fingerprint_str);
   char *fingerprint_str = VALUE(res_fingerprint_str);
 

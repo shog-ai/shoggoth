@@ -498,10 +498,10 @@ void directory_home_route(sonic_server_request_t *req) {
  ****/
 void server_add_directory_route(sonic_server_t *server, char *path,
                                 char *directory_path) {
-  sonic_files_list_t files_list = get_files_list_from_dir(directory_path);
+  files_list_t *files_list = get_files_list_from_dir(directory_path);
 
-  for (u64 i = 0; i < files_list.files_count; i++) {
-    char *file_item_str = files_list.files[i];
+  for (u64 i = 0; i < files_list->files_count; i++) {
+    char *file_item_str = files_list->files[i];
 
     char relative_path[256];
     strcpy(relative_path, path);
@@ -523,11 +523,7 @@ void server_add_directory_route(sonic_server_t *server, char *path,
 
   server_add_route(server, path, METHOD_GET, directory_home_route);
 
-  for (u64 i = 0; i < files_list.files_count; i++) {
-    free(files_list.files[i]);
-  }
-
-  free(files_list.files);
+  free_files_list(files_list);
 }
 
 /****

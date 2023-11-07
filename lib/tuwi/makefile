@@ -6,10 +6,12 @@ ifndef CC
 CC = gcc
 endif
 
+CFLAGS = -g
+
 all: ./target/libtuwi.a
 
 ./target/libtuwi.a: target-dir check-netlibc
-	$(CC) -c ./src/tuwi.c -o ./target/tuwi.o
+	$(CC) $(CFLAGS) -c ./src/tuwi.c -o ./target/tuwi.o
 	ar rcs ./target/libtuwi.a ./target/tuwi.o
 
 check-netlibc:

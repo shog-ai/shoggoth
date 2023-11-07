@@ -56,7 +56,7 @@ void *garbage_collector(void *thread_arg) {
       utils_get_node_runtime_path(arg->ctx, pins_path);
       strcat(pins_path, "/pins");
 
-      result_t res_total_pins_size = utils_get_dir_size(pins_path);
+      result_t res_total_pins_size = get_dir_size(pins_path);
       u64 total_pins_size = UNWRAP_U64(res_total_pins_size);
 
       u64 total_storage_limit =
@@ -76,7 +76,7 @@ void *garbage_collector(void *thread_arg) {
               runtime_path, local_pins->pins[i]);
 
       result_t res_fingerprint_str =
-          utils_read_file_to_string(fingerprint_path);
+          read_file_to_string(fingerprint_path);
       char *fingerprint_str = UNWRAP(res_fingerprint_str);
 
       result_t res_fingerprint = json_string_to_fingerprint(fingerprint_str);
@@ -86,7 +86,7 @@ void *garbage_collector(void *thread_arg) {
 
       u64 timestamp = strtoull(fingerprint->timestamp, NULL, 0);
 
-      u64 now = utils_get_timestamp_ms();
+      u64 now = get_timestamp_ms();
       u64 one_day_ms = 86400000;
       u64 expiry_duration = arg->ctx->config->gc.profile_expiry *
                             one_day_ms; // milliseconds in 1 minute
@@ -103,8 +103,8 @@ void *garbage_collector(void *thread_arg) {
 
         db_pins_remove_profile(arg->ctx, local_pins->pins[i]);
 
-        utils_delete_file(pin_tarball_path);
-        utils_delete_dir(pin_dir_path);
+        delete_file(pin_tarball_path);
+        delete_dir(pin_dir_path);
       }
 
       free_fingerprint(fingerprint);

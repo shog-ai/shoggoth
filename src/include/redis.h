@@ -11,8 +11,12 @@
 #ifndef SHOG_REDIS
 #define SHOG_REDIS
 
-#include "../include/netlibc.h"
 #include "../utils/utils.h"
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 typedef enum {
   COM_GET,

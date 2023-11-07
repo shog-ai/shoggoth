@@ -12,6 +12,11 @@
 #define SHOG_NODE_GARBAGE_COLLECTOR_H
 
 #include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
+
 #include "../node.h"
 
 typedef struct {

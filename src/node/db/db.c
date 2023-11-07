@@ -9,6 +9,10 @@
  ****/
 
 #include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 #include "../../include/redis.h"
 #include "../../include/sonic.h"
@@ -33,8 +37,8 @@ result_t kill_redis_db(node_ctx_t *ctx) {
   char db_pid_path[FILE_PATH_SIZE];
   sprintf(db_pid_path, "%s/db_pid.txt", node_runtime_path);
 
-  if (utils_file_exists(db_pid_path)) {
-    result_t res_db_pid_str = utils_read_file_to_string(db_pid_path);
+  if (file_exists(db_pid_path)) {
+    result_t res_db_pid_str = read_file_to_string(db_pid_path);
     char *db_pid_str = PROPAGATE(res_db_pid_str);
 
     int pid = atoi(db_pid_str);
@@ -62,7 +66,7 @@ result_t kill_redis_db(node_ctx_t *ctx) {
       kill_count++;
     }
 
-    utils_delete_file(db_pid_path);
+    delete_file(db_pid_path);
   }
 
   return OK(NULL);
@@ -115,7 +119,7 @@ void launch_db(node_ctx_t *ctx) {
     pid_t db_pid = getpid();
     char db_pid_str[120];
     sprintf(db_pid_str, "%d", db_pid);
-    utils_write_to_file(db_pid_path, db_pid_str, strlen(db_pid_str));
+    write_to_file(db_pid_path, db_pid_str, strlen(db_pid_str));
 
     // Execute the redis executable
 
@@ -148,7 +152,7 @@ void launch_db(node_ctx_t *ctx) {
 
     close(logs_fd);
 
-    char *db_logs = UNWRAP(utils_read_file_to_string(db_logs_path));
+    char *db_logs = UNWRAP(read_file_to_string(db_logs_path));
     PANIC("error occured while launching redis executable. LOGS:\n%s", db_logs);
   } else {
     // PARENT PROCESS
@@ -162,7 +166,7 @@ void launch_db(node_ctx_t *ctx) {
       PANIC("waitpid failed");
     } else if (child_status == 0) {
     } else {
-      char *db_logs = UNWRAP(utils_read_file_to_string(db_logs_path));
+      char *db_logs = UNWRAP(read_file_to_string(db_logs_path));
       PANIC("error occured while launching redis executable.\nDB LOGS:\n%s",
             db_logs);
     }
@@ -390,11 +394,11 @@ result_t db_verify_data(node_ctx_t *ctx) {
   utils_get_node_runtime_path(ctx, pins_path);
   strcat(pins_path, "/pins/");
 
-  result_t res_pins_list = utils_get_files_and_dirs_list(pins_path);
+  result_t res_pins_list = get_files_and_dirs_list(pins_path);
   files_list_t *pins_list = PROPAGATE(res_pins_list);
 
   for (u64 i = 0; i < pins_list->files_count; i++) {
-    result_t res_pin_str = utils_remove_file_extension(pins_list->files[i]);
+    result_t res_pin_str = remove_file_extension(pins_list->files[i]);
     char *pin_str = PROPAGATE(res_pin_str);
 
     db_pins_add_profile(ctx, pin_str);
@@ -402,7 +406,7 @@ result_t db_verify_data(node_ctx_t *ctx) {
     free(pin_str);
   }
 
-  utils_free_files_list(pins_list);
+  free_files_list(pins_list);
 
   return OK(NULL);
 }

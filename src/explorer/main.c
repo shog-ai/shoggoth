@@ -12,14 +12,14 @@ typedef enum {
 
 result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   result_t res_end_template_string =
-      utils_read_file_to_string("./explorer/templates/end.html");
+      read_file_to_string("./explorer/templates/end.html");
   char *end_template_string = PROPAGATE(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
   free(end_template_string);
 
   result_t res_head_template_string =
-      utils_read_file_to_string("./explorer/templates/head.html");
+      read_file_to_string("./explorer/templates/head.html");
   char *head_template_string = PROPAGATE(res_head_template_string);
 
   char *head_template_data = NULL;
@@ -38,7 +38,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
       create_template(head_template_string, head_template_data);
   free(head_template_string);
 
-  result_t res_template_string = utils_read_file_to_string(source_path);
+  result_t res_template_string = read_file_to_string(source_path);
   char *template_string = PROPAGATE(res_template_string);
 
   template_t *template_object = create_template(template_string, "{}");
@@ -54,7 +54,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   free_template(head_template);
   free_template(end_template);
 
-  utils_write_to_file(destination_path, cooked_docs, strlen(cooked_docs));
+  write_to_file(destination_path, cooked_docs, strlen(cooked_docs));
 
   free(cooked_docs);
 

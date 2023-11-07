@@ -66,8 +66,8 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   char public_key_path[FILE_PATH_SIZE];
   sprintf(public_key_path, "%s/public.txt", keys_path);
 
-  if (!utils_dir_exists(keys_path)) {
-    utils_create_dir(keys_path);
+  if (!dir_exists(keys_path)) {
+    create_dir(keys_path);
   }
 
   if (!utils_keys_exist(keys_path)) {
@@ -79,8 +79,8 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   char pins_path[FILE_PATH_SIZE];
   sprintf(pins_path, "%s/pins", node_runtime_path);
 
-  if (!utils_dir_exists(pins_path)) {
-    utils_create_dir(pins_path);
+  if (!dir_exists(pins_path)) {
+    create_dir(pins_path);
   }
 
   char config_path[FILE_PATH_SIZE];
@@ -91,11 +91,11 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
     sprintf(config_path, "%s/config.toml", node_runtime_path);
   }
 
-  if (!utils_file_exists(config_path)) {
+  if (!file_exists(config_path)) {
     return ERR("Config file `%s` does not exist", config_path);
   }
 
-  result_t res_config_str = utils_read_file_to_string(config_path);
+  result_t res_config_str = read_file_to_string(config_path);
   char *config_str = PROPAGATE(res_config_str);
 
   result_t res_config = toml_string_to_node_config(config_str);
@@ -105,7 +105,7 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
 
   ctx->config = config;
 
-  result_t res_public_key_string = utils_read_file_to_string(public_key_path);
+  result_t res_public_key_string = read_file_to_string(public_key_path);
   char *public_key_string = PROPAGATE(res_public_key_string);
 
   result_t res_manifest_str =
@@ -325,7 +325,7 @@ result_t shog_init_node(args_t *args, bool print_info) {
 
     LOG(INFO, "Using custom runtime path: %s", ctx->runtime_path);
 
-    if (!utils_dir_exists(ctx->runtime_path)) {
+    if (!dir_exists(ctx->runtime_path)) {
       return ERR("custom runtime path does not exist");
     }
   } else {
@@ -404,7 +404,7 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
     pid_t node_pid = getpid();
     char node_pid_str[120];
     sprintf(node_pid_str, "%d", node_pid);
-    utils_write_to_file(node_pid_path, node_pid_str, strlen(node_pid_str));
+    write_to_file(node_pid_path, node_pid_str, strlen(node_pid_str));
 
     int logs_fd = open(node_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (logs_fd == -1) {
@@ -448,7 +448,7 @@ result_t check_node_service(node_ctx_t *ctx) {
   char node_pid_path[FILE_PATH_SIZE];
   sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
 
-  result_t res_node_pid_str = utils_read_file_to_string(node_pid_path);
+  result_t res_node_pid_str = read_file_to_string(node_pid_path);
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -477,7 +477,7 @@ result_t stop_node_service(node_ctx_t *ctx) {
   char node_pid_path[FILE_PATH_SIZE];
   sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
 
-  result_t res_node_pid_str = utils_read_file_to_string(node_pid_path);
+  result_t res_node_pid_str = read_file_to_string(node_pid_path);
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -501,7 +501,7 @@ result_t stop_node_service(node_ctx_t *ctx) {
     sleep(1);
   }
 
-  utils_delete_file(node_pid_path);
+  delete_file(node_pid_path);
 
   LOG(INFO, "Node service stopped");
 
@@ -515,7 +515,7 @@ result_t print_node_service_logs(node_ctx_t *ctx) {
   char node_logs_path[FILE_PATH_SIZE];
   sprintf(node_logs_path, "%s/node_service_logs.txt", node_runtime_path);
 
-  result_t res_node_logs_str = utils_read_file_to_string(node_logs_path);
+  result_t res_node_logs_str = read_file_to_string(node_logs_path);
   char *node_logs_str = PROPAGATE(res_node_logs_str);
 
   if (node_logs_str == NULL) {
@@ -538,7 +538,7 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   char node_pid_path[FILE_PATH_SIZE];
   sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
 
-  result_t res_node_pid_str = utils_read_file_to_string(node_pid_path);
+  result_t res_node_pid_str = read_file_to_string(node_pid_path);
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -565,7 +565,7 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
       sleep(1);
     }
 
-    utils_delete_file(node_pid_path);
+    delete_file(node_pid_path);
 
     LOG(INFO, "Node service stopped");
 

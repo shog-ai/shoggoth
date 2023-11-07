@@ -12,12 +12,12 @@
 #define SONIC_UTILS_H
 
 #include <netlibc.h>
-#include "../sonic.h"
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
-typedef struct {
-  char **files;
-  u64 files_count;
-} sonic_files_list_t;
+#include "../sonic.h"
 
 char *utils_status_code_to_string(sonic_status_t status_code);
 
@@ -26,13 +26,13 @@ char *utils_get_header_value(sonic_header_t *headers, u64 headers_count,
 
 sonic_content_type_t file_extension_to_content_type(char *file_extension);
 
-char *get_file_extension(const char *file_path);
+// char *get_file_extension(const char *file_path);
 
 char *remove_prefix(const char *prefix, const char *input);
 
-sonic_files_list_t get_files_list_from_dir(char *dir_path);
+files_list_t *get_files_list_from_dir(char *dir_path);
 
-void list_files_recursive(sonic_files_list_t *result, char *dir_path);
+void list_files_recursive(files_list_t *result, char *dir_path);
 
 char *concat_path(char *path1, char *path2);
 

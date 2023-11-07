@@ -163,7 +163,7 @@ result_t redis_read(char *host, u16 port, redis_command_t command) {
 
 result_t redis_write(char *host, u16 port, redis_command_t command) {
   // escape all newlines
-  char *escaped_data = utils_remove_newlines_except_quotes(command.data);
+  char *escaped_data = remove_newlines_except_quotes(command.data);
 
   result_t res_sockfd = prepare_client(host, port);
   int sockfd = PROPAGATE_INT(res_sockfd);

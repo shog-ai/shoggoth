@@ -100,7 +100,7 @@ void profile_resource_route(sonic_server_request_t *req) {
   sprintf(resource_path, "%s/pins/%s/%s/%s", runtime_path, shoggoth_id,
           resource_group_str, resource_name);
 
-  if (!utils_dir_exists(user_profile_path)) {
+  if (!dir_exists(user_profile_path)) {
     result_t res_peers_with_pin =
         db_get_peers_with_pin(profile_ctx, shoggoth_id);
     char *peers_with_pin = UNWRAP(res_peers_with_pin);
@@ -138,7 +138,7 @@ void profile_resource_route(sonic_server_request_t *req) {
     return;
   }
 
-  if (!utils_dir_exists(resource_path)) {
+  if (!dir_exists(resource_path)) {
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_404, MIME_TEXT_HTML);
 
@@ -160,16 +160,16 @@ void profile_resource_route(sonic_server_request_t *req) {
   char within_resource_path[FILE_PATH_SIZE];
   sprintf(within_resource_path, "%s%s", resource_path, inner_path);
 
-  if (utils_dir_exists(within_resource_path)) {
+  if (dir_exists(within_resource_path)) {
     is_file = false;
-  } else if (utils_file_exists(within_resource_path)) {
+  } else if (file_exists(within_resource_path)) {
     is_file = true;
   }
 
   bool is_dir = !is_file;
 
   if (!is_inner) {
-    result_t res_files_list = utils_get_files_and_dirs_list(resource_path);
+    result_t res_files_list = get_files_and_dirs_list(resource_path);
     files_list_t *files_list = UNWRAP(res_files_list);
 
     for (u64 i = 0; i < files_list->files_count; i++) {
@@ -205,19 +205,19 @@ void profile_resource_route(sonic_server_request_t *req) {
       content = "";
     }
 
-    utils_free_files_list(files_list);
+    free_files_list(files_list);
   } else {
     bool found = false;
 
-    if (utils_dir_exists(within_resource_path) ||
-        utils_file_exists(within_resource_path)) {
+    if (dir_exists(within_resource_path) ||
+        file_exists(within_resource_path)) {
       found = true;
     }
 
     if (found) {
       if (is_dir) {
         result_t res_files_list =
-            utils_get_files_and_dirs_list(within_resource_path);
+            get_files_and_dirs_list(within_resource_path);
         files_list_t *files_list = UNWRAP(res_files_list);
 
         for (u64 i = 0; i < files_list->files_count; i++) {
@@ -255,16 +255,16 @@ void profile_resource_route(sonic_server_request_t *req) {
           content = "";
         }
 
-        utils_free_files_list(files_list);
+        free_files_list(files_list);
       } else if (is_file) {
-        result_t res_file_size = utils_get_file_size(within_resource_path);
+        result_t res_file_size = get_file_size(within_resource_path);
         u64 file_size = UNWRAP_U64(res_file_size);
 
         u64 file_size_limit = 100000; // 100KB
 
         if (file_size < file_size_limit) {
           result_t res_is_plain_text =
-              utils_is_file_plain_text(within_resource_path);
+              is_file_plain_text(within_resource_path);
           bool is_plain_text = UNWRAP_BOOL(res_is_plain_text);
 
           if (!is_plain_text) {
@@ -275,16 +275,16 @@ void profile_resource_route(sonic_server_request_t *req) {
             strcpy(content, new_res);
           } else {
             result_t res_file_text =
-                utils_read_file_to_string(within_resource_path);
+                read_file_to_string(within_resource_path);
             char *file_text = UNWRAP(res_file_text);
 
             // sanitizes the string to be used as a json value
-            char *escaped_json_string = utils_escape_json_string(file_text);
+            char *escaped_json_string = escape_json_string(file_text);
             free(file_text);
 
             // sanitizes the string to be plain text with html tags escaped
             char *escaped_html_string =
-                utils_escape_html_tags(escaped_json_string);
+                escape_html_tags(escaped_json_string);
             free(escaped_json_string);
 
             content = malloc((strlen(escaped_html_string) + 1) * sizeof(char));
@@ -425,14 +425,14 @@ void profile_resource_route(sonic_server_request_t *req) {
   sprintf(profile_template_path, "%s/templates/profile.html", explorer_dir);
 
   result_t res_end_template_string =
-      utils_read_file_to_string(end_template_path);
+      read_file_to_string(end_template_path);
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
   free(end_template_string);
 
   result_t res_head_template_string =
-      utils_read_file_to_string(head_template_path);
+      read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
   char head_template_data[256];
@@ -443,7 +443,7 @@ void profile_resource_route(sonic_server_request_t *req) {
       create_template(head_template_string, head_template_data);
   free(head_template_string);
 
-  result_t res_file_content = utils_read_file_to_string(profile_template_path);
+  result_t res_file_content = read_file_to_string(profile_template_path);
   char *file_content = UNWRAP(res_file_content);
 
   template_t *template_object = create_template(file_content, template_data);
@@ -544,7 +544,7 @@ void profile_route(sonic_server_request_t *req) {
   sprintf(user_profile_path, "%s/pins/%s/%s", runtime_path, shoggoth_id,
           resource_group_str);
 
-  if (!utils_dir_exists(user_profile_path)) {
+  if (!dir_exists(user_profile_path)) {
     result_t res_peers_with_pin =
         db_get_peers_with_pin(profile_ctx, shoggoth_id);
     char *peers_with_pin = UNWRAP(res_peers_with_pin);
@@ -584,7 +584,7 @@ void profile_route(sonic_server_request_t *req) {
 
   char *resource_list = NULL;
 
-  result_t res_files_list = utils_get_files_and_dirs_list(user_profile_path);
+  result_t res_files_list = get_files_and_dirs_list(user_profile_path);
   files_list_t *files_list = UNWRAP(res_files_list);
 
   for (u64 i = 0; i < files_list->files_count; i++) {
@@ -623,7 +623,7 @@ void profile_route(sonic_server_request_t *req) {
     resource_list = "";
   }
 
-  utils_free_files_list(files_list);
+  free_files_list(files_list);
 
   char *tabs_str = malloc(512 * sizeof(char));
 
@@ -718,14 +718,14 @@ void profile_route(sonic_server_request_t *req) {
   sprintf(profile_template_path, "%s/templates/profile.html", explorer_dir);
 
   result_t res_end_template_string =
-      utils_read_file_to_string(end_template_path);
+      read_file_to_string(end_template_path);
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
   free(end_template_string);
 
   result_t res_head_template_string =
-      utils_read_file_to_string(head_template_path);
+      read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
   char head_template_data[256];
@@ -737,7 +737,7 @@ void profile_route(sonic_server_request_t *req) {
       create_template(head_template_string, head_template_data);
   free(head_template_string);
 
-  result_t res_file_content = utils_read_file_to_string(profile_template_path);
+  result_t res_file_content = read_file_to_string(profile_template_path);
   char *file_content = UNWRAP(res_file_content);
 
   template_t *template_object = create_template(file_content, template_data);

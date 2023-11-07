@@ -7,6 +7,11 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 #include "client/client.h"
 #include "const.h"

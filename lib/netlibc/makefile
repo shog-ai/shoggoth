@@ -8,6 +8,45 @@ endif
 
 all: ./target/libnetlibc.a
 
+# check-netlibc:
+# ifeq (,$(wildcard /usr/local/include/netlibc.h ))
+# 	echo "Installing netlibc ..."
+# 	$(MAKE)
+# 	$(MAKE) install
+# endif
+
+# LIBRARY_CHECKSUM := 872ba3160577be3d08661bedfbb69e74
+
+HEADER_CHECKSUM := $$(md5sum ./netlibc.h | cut -d ' ' -f 1)
+LIBRARY_CHECKSUM := $$(md5sum ./target/libnetlibc.a | cut -d ' ' -f 1)
+
+check-netlibc:
+	$(MAKE)
+
+	if [ -f /usr/local/include/netlibc.h ]; then \
+	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc.h | cut -d ' ' -f 1); \
+	    if [ "$$INSTALLED_HEADER_CHECKSUM" != "$(HEADER_CHECKSUM)" ]; then \
+	        echo "netlibc header checksum mismatch. Reinstalling..."; \
+	        $(MAKE) install; \
+	    fi; \
+	else \
+	    echo "netlibc header not found. Installing..."; \
+	    $(MAKE) install; \
+	fi
+
+
+	if [ -f /usr/local/lib/libnetlibc.a ]; then \
+	    INSTALLED_LIBRARY_CHECKSUM=$$(md5sum /usr/local/lib/libnetlibc.a | cut -d ' ' -f 1); \
+	    if [ "$$INSTALLED_LIBRARY_CHECKSUM" != "$(LIBRARY_CHECKSUM)" ]; then \
+	        echo "netlibc library checksum mismatch. Reinstalling..."; \
+	        $(MAKE) install; \
+	    fi; \
+	else \
+	    echo "netlibc library not found. Installing..."; \
+	    $(MAKE) install; \
+	fi
+
+
 install:
 	sudo cp ./netlibc.h /usr/local/include
 	sudo cp ./target/libnetlibc.a /usr/local/lib

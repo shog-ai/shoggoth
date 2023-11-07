@@ -11,8 +11,8 @@ build-sanitized: ./target/libsonic-sanitized.a
 
 OBJS = ./target/sonic.o ./target/utils.o ./target/server.o ./target/client.o ./target/rate_limiter.o
 
-CFLAGS += -g -std=c11
-LDFLAGS += -lssl -lcrypto -lnetlibc
+CFLAGS += -g -std=c11 $$(pkg-config --cflags openssl)
+LDFLAGS += $$(pkg-config --libs openssl) -lnetlibc
 
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds
 
@@ -21,7 +21,7 @@ CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan 
 endif
 CFLAGS_SANITIZED +=
-LDFLAGS_SANITIZED += -lssl -lcrypto
+LDFLAGS_SANITIZED += $$(pkg-config --libs openssl)
 
 LIBSONIC = ./target/libsonic.a
 LIBSONIC_SANITIZED = ./target/libsonic-sanitized.a

@@ -14,7 +14,7 @@ endif
 LD = $(CC)
 
 # flags
-CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length
+CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)
 CFLAGS_FLAT = -DNDEBUG
 
 ifeq ($(CC), gcc)
@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = -lssl -lcrypto -lnetlibc $$(pkg-config --cflags --libs uuid)
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -lnetlibc
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion

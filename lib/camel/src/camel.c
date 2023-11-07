@@ -12,6 +12,8 @@
 #include "../include/internal.h"
 #include "../include/tuwi.h"
 
+#include <netlibc/fs.h>
+
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -58,32 +60,8 @@ bool __files_equal(char *first_file, char *second_file) {
   }
 }
 
-char *read_file_to_string(const char *file_path) {
-  FILE *file = fopen(file_path, "r");
-  if (file == NULL) {
-    // printf("Error opening file \n");
-    return NULL; 
-  }
-
-  fseek(file, 0, SEEK_END);
-  u32 file_size = (u32)ftell(file);
-  fseek(file, 0, SEEK_SET);
-
-  char *file_content = (char *)malloc(file_size + 1);
-
-  size_t bytes_read = fread(file_content, 1, file_size, file);
-  if (bytes_read != file_size) {
-    printf("Error reading file \n");
-    exit(1);
-  }
-
-  file_content[file_size] = '\0';
-  fclose(file);
-  return file_content;
-}
-
 char *__read_file(char *path) {
-  char *content = read_file_to_string(path);
+  char *content = UNWRAP(read_file_to_string(path));
 
   return content;
 }

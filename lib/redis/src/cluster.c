@@ -119,6 +119,20 @@ static inline int defaultClientPort(void) {
     return server.tls_cluster ? server.tls_port : server.port;
 }
 
+/* When a cluster command is called, we need to decide whether to return TLS info or
+ * non-TLS info by the client's connection type. However if the command is called by
+ * a Lua script or RM_call, there is no connection in the fake client, so we use 
+ * server.current_client here to get the real client if available. And if it is not 
+ * available (modules may call commands without a real client), we return the default
+ * info, which is determined by server.tls_cluster. */
+static int shouldReturnTlsInfo(void) {
+    if (server.current_client && server.current_client->conn) {
+        return connIsTLS(server.current_client->conn);
+    } else {
+        return server.tls_cluster;
+    }
+}
+
 /* Links to the next and previous entries for keys in the same slot are stored
  * in the dict entry metadata. See Slot to Key API below. */
 #define dictEntryNextInSlot(de) \
@@ -1119,6 +1133,9 @@ void clusterReset(int hard) {
         clusterDelNode(node);
     }
     dictReleaseIterator(di);
+
+    /* Empty the nodes blacklist. */
+    dictEmpty(server.cluster->nodes_black_list, NULL);
 
     /* Hard reset only: set epochs to 0, change node ID. */
     if (hard) {
@@ -2641,8 +2658,7 @@ void clusterProcessPingExtensions(clusterMsg *hdr, clusterLink *link) {
             clusterNode *n = clusterLookupNode(forgotten_node_ext->name, CLUSTER_NAMELEN);
             if (n && n != myself && !(nodeIsSlave(myself) && myself->slaveof == n)) {
                 sds id = sdsnewlen(forgotten_node_ext->name, CLUSTER_NAMELEN);
-                dictEntry *de = dictAddRaw(server.cluster->nodes_black_list, id, NULL);
-                serverAssert(de != NULL);
+                dictEntry *de = dictAddOrFind(server.cluster->nodes_black_list, id);
                 uint64_t expire = server.unixtime + ntohu64(forgotten_node_ext->ttl);
                 dictSetUnsignedIntegerVal(de, expire);
                 clusterDelNode(n);
@@ -4922,12 +4938,8 @@ int clusterDelSlot(int slot) {
     if (!n) return C_ERR;
 
     /* Cleanup the channels in master/replica as part of slot deletion. */
-    list *nodes_for_slot = clusterGetNodesInMyShard(n);
-    serverAssert(nodes_for_slot != NULL);
-    listNode *ln = listSearchKey(nodes_for_slot, myself);
-    if (ln != NULL) {
-        removeChannelsInSlot(slot);
-    }
+    removeChannelsInSlot(slot);
+    /* Clear the slot bit. */
     serverAssert(clusterNodeClearSlotBit(n,slot) == 1);
     server.cluster->slots[slot] = NULL;
     return C_OK;
@@ -5570,7 +5582,7 @@ void addNodeToNodeReply(client *c, clusterNode *node) {
     }
 
     /* Report TLS ports to TLS client, and report non-TLS port to non-TLS client. */
-    addReplyLongLong(c, getNodeClientPort(node, connIsTLS(c->conn)));
+    addReplyLongLong(c, getNodeClientPort(node, shouldReturnTlsInfo()));
     addReplyBulkCBuffer(c, node->name, CLUSTER_NAMELEN);
 
     /* Add the additional endpoint information, this is all the known networking information
@@ -5703,7 +5715,7 @@ void addShardReplyForClusterShards(client *c, list *nodes) {
         serverAssert((n->slot_info_pairs_count % 2) == 0);
         addReplyArrayLen(c, n->slot_info_pairs_count);
         for (int i = 0; i < n->slot_info_pairs_count; i++)
-            addReplyBulkLongLong(c, (unsigned long)n->slot_info_pairs[i]);
+            addReplyLongLong(c, (unsigned long)n->slot_info_pairs[i]);
     } else {
         /* If no slot info pair is provided, the node owns no slots */
         addReplyArrayLen(c, 0);
@@ -5946,7 +5958,7 @@ NULL
     } else if (!strcasecmp(c->argv[1]->ptr,"nodes") && c->argc == 2) {
         /* CLUSTER NODES */
         /* Report TLS ports to TLS client, and report non-TLS port to non-TLS client. */
-        sds nodes = clusterGenNodesDescription(c, 0, connIsTLS(c->conn));
+        sds nodes = clusterGenNodesDescription(c, 0, shouldReturnTlsInfo());
         addReplyVerbatim(c,nodes,sdslen(nodes),"txt");
         sdsfree(nodes);
     } else if (!strcasecmp(c->argv[1]->ptr,"myid") && c->argc == 2) {
@@ -6312,7 +6324,7 @@ NULL
         /* Report TLS ports to TLS client, and report non-TLS port to non-TLS client. */
         addReplyArrayLen(c,n->numslaves);
         for (j = 0; j < n->numslaves; j++) {
-            sds ni = clusterGenNodeDescription(c, n->slaves[j], connIsTLS(c->conn));
+            sds ni = clusterGenNodeDescription(c, n->slaves[j], shouldReturnTlsInfo());
             addReplyBulkCString(c,ni);
             sdsfree(ni);
         }
@@ -7438,7 +7450,7 @@ void clusterRedirectClient(client *c, clusterNode *n, int hashslot, int error_co
                error_code == CLUSTER_REDIR_ASK)
     {
         /* Report TLS ports to TLS client, and report non-TLS port to non-TLS client. */
-        int port = getNodeClientPort(n, connIsTLS(c->conn));
+        int port = getNodeClientPort(n, shouldReturnTlsInfo());
         addReplyErrorSds(c,sdscatprintf(sdsempty(),
             "-%s %d %s:%d",
             (error_code == CLUSTER_REDIR_ASK) ? "ASK" : "MOVED",

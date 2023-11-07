@@ -37,6 +37,8 @@ typedef size_t usize;
 #define U64_FORMAT_SPECIFIER "%lu"
 #endif
 
+#define FILE_PATH_SIZE 256
+
 #define LOOP()                                                                 \
   for (;;) {                                                                   \
   }
@@ -165,5 +167,110 @@ void __netlibc_panic(const char *file, int line, const char *format, ...);
 
 void __netlibc_exit(const char *file, int line, int status, const char *format,
                     ...);
+
+#include <sys/stat.h>
+
+#define FILE_PATH_SIZE 256
+
+#define SHOGGOTH_ID_SIZE 512
+#define NODE_ID_SIZE 512
+
+struct NODE_CTX;
+struct CLIENT_CTX;
+
+typedef struct {
+  int fd;
+  char *path;
+} file_lock_t;
+
+typedef struct {
+  char *content;
+  int fd;
+  struct stat info;
+} file_mapping_t;
+
+typedef struct {
+  char **files;
+  u64 files_count;
+} files_list_t;
+
+#define SERVER_ERR(res)                                                        \
+  do {                                                                         \
+    if (is_err(res)) {                                                         \
+      respond_error(req, res.error_message);                                   \
+      free_result(res);                                                        \
+      return;                                                                  \
+    }                                                                          \
+                                                                               \
+    free_result(res);                                                          \
+  } while (0)
+
+result_t utils_acquire_file_lock(char *file_path, u64 delay, u64 timeout);
+void utils_release_file_lock(file_lock_t *lock);
+
+result_t utils_is_file_plain_text(const char *file_path);
+
+u64 utils_random_number(u64 start, u64 end);
+
+result_t utils_map_file(char *file_path);
+void utils_unmap_file(file_mapping_t *file_mapping);
+
+result_t utils_get_dir_size(char *path);
+
+result_t utils_get_file_size(const char *filePath);
+
+char *utils_remove_newlines_except_quotes(const char *input);
+
+char *utils_escape_newlines(char *input);
+
+char *utils_escape_json_string(char *i);
+
+char *utils_escape_html_tags(const char *input);
+
+result_t utils_clear_dir_timestamps(char *dir_path);
+
+result_t utils_clear_dir_permissions(char *dir_path);
+
+result_t utils_delete_file(const char *file_path);
+
+result_t utils_delete_dir(const char *dir_path);
+
+result_t utils_copy_dir(char *src_path, char *dest_path);
+
+u64 utils_get_timestamp_us();
+
+u64 utils_get_timestamp_ms();
+
+u64 utils_get_timestamp_s();
+
+result_t utils_get_files_list(char *dir_path);
+
+result_t utils_get_files_and_dirs_list(char *dir_path);
+
+void utils_free_files_list(files_list_t *list);
+
+result_t utils_remove_file_extension(const char *str);
+
+result_t utils_copy_file(const char *source_file_path,
+                         const char *destination_file_path);
+
+const char *utils_extract_filename_from_path(const char *path);
+
+const char *utils_get_file_extension(const char *file_path);
+
+void utils_create_dir(const char *dir_path);
+
+void utils_create_file(const char *file_path);
+
+bool utils_dir_exists(char *dir_path);
+
+bool utils_file_exists(const char *file_path);
+
+result_t utils_write_to_file(const char *file_path, char *content, size_t size);
+
+result_t utils_append_to_file(const char *file_path, char *content,
+                              size_t size);
+
+result_t utils_read_file_to_string(const char *file_path);
 
 #endif

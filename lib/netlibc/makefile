@@ -6,25 +6,18 @@ ifndef CC
 CC = gcc
 endif
 
+CFLAGS = -g
+
 all: ./target/libnetlibc.a
 
-# check-netlibc:
-# ifeq (,$(wildcard /usr/local/include/netlibc.h ))
-# 	echo "Installing netlibc ..."
-# 	$(MAKE)
-# 	$(MAKE) install
-# endif
-
-# LIBRARY_CHECKSUM := 872ba3160577be3d08661bedfbb69e74
-
-HEADER_CHECKSUM := $$(md5sum ./netlibc.h | cut -d ' ' -f 1)
+HEADER_CHECKSUM := $$(md5sum ./include/netlibc.h | cut -d ' ' -f 1)
 LIBRARY_CHECKSUM := $$(md5sum ./target/libnetlibc.a | cut -d ' ' -f 1)
 
 check-netlibc:
 	$(MAKE)
 
-	if [ -f /usr/local/include/netlibc.h ]; then \
-	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc.h | cut -d ' ' -f 1); \
+	if [ -f /usr/local/include/netlibc/netlibc.h ]; then \
+	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc/netlibc.h | cut -d ' ' -f 1); \
 	    if [ "$$INSTALLED_HEADER_CHECKSUM" != "$(HEADER_CHECKSUM)" ]; then \
 	        echo "netlibc header checksum mismatch. Reinstalling..."; \
 	        $(MAKE) install; \
@@ -48,15 +41,16 @@ check-netlibc:
 
 
 install:
-	sudo cp ./netlibc.h /usr/local/include
+	sudo mkdir -p /usr/local/include/netlibc/
+	sudo cp -r ./include/* /usr/local/include/netlibc/
 	sudo cp ./target/libnetlibc.a /usr/local/lib
 
 uninstall:
-	sudo rm /usr/local/include/netlibc.h
+	sudo rm -r /usr/local/include/netlibc/
 	sudo rm /usr/local/lib/libnetlibc.a
 
 ./target/libnetlibc.a: target-dir
-	$(CC) -c ./src/netlibc.c -o ./target/netlibc.o
+	$(CC) $(CFLAGS) -c ./src/netlibc.c -o ./target/netlibc.o
 	ar rcs ./target/libnetlibc.a ./target/netlibc.o
 
 target-dir:

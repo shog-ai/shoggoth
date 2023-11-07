@@ -8,7 +8,7 @@
  *
  ****/
 
-#include "../include/netlibc.h"
+#include <netlibc/netlibc.h>
 
 #include "../utils/utils.h"
 #include "args.h"

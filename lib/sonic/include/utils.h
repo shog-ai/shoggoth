@@ -11,7 +11,7 @@
 #ifndef SONIC_UTILS_H
 #define SONIC_UTILS_H
 
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 #include "../sonic.h"
 
 typedef struct {

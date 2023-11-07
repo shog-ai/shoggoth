@@ -11,7 +11,7 @@
 #ifndef SHOG_REDIS
 #define SHOG_REDIS
 
-#include "../include/netlibc.h"
+#include <netlibc/netlibc.h>
 #include "../utils/utils.h"
 
 typedef enum {

@@ -11,7 +11,7 @@
 #ifndef SHOG_NODE_H
 #define SHOG_NODE_H
 
-#include "../include/netlibc.h"
+#include <netlibc/netlibc.h>
 #include "../include/sonic.h"
 
 #include "../args/args.h"

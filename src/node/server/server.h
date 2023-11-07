@@ -11,7 +11,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 #include "../node.h"
 
 typedef struct {

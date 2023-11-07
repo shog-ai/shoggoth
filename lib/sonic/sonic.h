@@ -11,7 +11,7 @@
 #ifndef SONIC_H
 #define SONIC_H
 
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 
 typedef enum {
   CLIENT_ERROR_NONE,

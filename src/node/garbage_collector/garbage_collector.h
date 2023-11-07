@@ -11,7 +11,7 @@
 #ifndef SHOG_NODE_GARBAGE_COLLECTOR_H
 #define SHOG_NODE_GARBAGE_COLLECTOR_H
 
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 #include "../node.h"
 
 typedef struct {

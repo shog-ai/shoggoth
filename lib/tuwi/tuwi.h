@@ -1,7 +1,7 @@
 #ifndef TUWI_H
 #define TUWI_H
 
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 
 #include <termios.h>
 #include <wchar.h>

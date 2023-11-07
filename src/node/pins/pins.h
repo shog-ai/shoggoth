@@ -12,7 +12,7 @@
 #define SHOG_NODE_PINS_H
 
 #include "../node.h"
-#include <netlibc.h>
+#include <netlibc/netlibc.h>
 
 typedef struct {
   char *shoggoth_id;

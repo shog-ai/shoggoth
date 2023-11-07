@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = -lssl -lcrypto $$(pkg-config --cflags --libs uuid)
+LDFLAGS = -lssl -lcrypto -lnetlibc $$(pkg-config --cflags --libs uuid)
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion
@@ -58,6 +58,9 @@ STATIC_LIBS_SANITIZED = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(T
 
 check-cc:
 	echo $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]; then echo "gcc" ; elif [ "$$(cc --help 2>&1 | grep -o -m 1 'clang')" = "clang" ]; then echo "clang"; else echo "NONE"; fi)
+
+check-netlibc:
+	cd ./lib/netlibc/ && make && make check-netlibc
 
 echo-objs:
 	echo $(OBJS)
@@ -154,8 +157,8 @@ build-dynamic-libs: $(TARGET_DIR)/redisjson.so
 
 dev: package-dev
 
-build: build-flat redis
-build-dev: build-sanitized redis
+build: check-netlibc build-flat redis
+build-dev: check-netlibc build-sanitized redis
 
 build-sanitized: target-dir build-dynamic-libs build-objects-sanitized link-objects-sanitized 
 build-debug: target-dir build-dynamic-libs build-objects-debug link-objects-debug

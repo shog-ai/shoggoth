@@ -12,7 +12,7 @@ build-sanitized: ./target/libsonic-sanitized.a
 OBJS = ./target/sonic.o ./target/utils.o ./target/server.o ./target/client.o ./target/rate_limiter.o
 
 CFLAGS += -g -std=c11
-LDFLAGS += -lssl -lcrypto
+LDFLAGS += -lssl -lcrypto -lnetlibc
 
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds
 
@@ -40,7 +40,7 @@ target-dir:
 	mkdir -p target/examples
 	mkdir -p target/examples/client && mkdir -p target/examples/server
 
-$(LIBSONIC): target-dir camel
+$(LIBSONIC): target-dir check-netlibc camel
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c ./src/sonic.c -o ./target/sonic.o
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c ./src/utils.c -o ./target/utils.o
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c ./src/server/server.c -o ./target/server.o
@@ -48,7 +48,7 @@ $(LIBSONIC): target-dir camel
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c ./src/client/client.c -o ./target/client.o
 	ar rcs $(LIBSONIC) $(OBJS)
 
-$(LIBSONIC_SANITIZED): target-dir camel
+$(LIBSONIC_SANITIZED): target-dir check-netlibc camel
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZED) -c ./src/sonic.c -o ./target/sonic.o
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZED) -c ./src/utils.c -o ./target/utils.o
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZED) -c ./src/server/server.c -o ./target/server.o
@@ -56,6 +56,9 @@ $(LIBSONIC_SANITIZED): target-dir camel
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZED) -c ./src/client/client.c -o ./target/client.o
 	ar rcs $(LIBSONIC_SANITIZED) $(OBJS)
 
+
+check-netlibc:
+	cd ../netlibc/ && make && make check-netlibc
 
 # EXAMPLES ========================================================================================
 run-client-example: build-sanitized 
@@ -115,18 +118,18 @@ run-fuzz-tests:
 
 
 # LIBS ========================================================================================
-sync: sync-camel sync-libs-headers
+sync: sync-libs-headers
 
 sync-libs-headers:
-	cp ./lib/camel/camel.h ./include/camel.h
+	cp ../camel/camel.h ./include/camel.h
 
-sync-camel:
-	rm -rf ./lib/camel/
-	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
+# sync-camel:
+# 	rm -rf ./lib/camel/
+# 	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
 
 ./target/camel.a:
-	cd ./lib/camel/ && $(MAKE)
-	cp ./lib/camel/target/libcamel.a ./target/camel.a
+	cd ../camel/ && $(MAKE)
+	cp ../camel/target/libcamel.a ./target/camel.a
 
 #========================================================================================
 

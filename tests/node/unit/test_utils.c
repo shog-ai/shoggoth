@@ -34,7 +34,7 @@ void test_utils_strip_public_key(test_t *test) {
 void test_utils_extract_filename_from_path(test_t *test) {
   char *file_path = "$HOME/shoggoth/client/tmp/myfile.txt";
 
-  const char *file_name = utils_extract_filename_from_path(file_path);
+  const char *file_name = extract_filename_from_path(file_path);
 
   ASSERT_EQ_STR(file_name, "myfile.txt", NULL);
 }
@@ -42,7 +42,7 @@ void test_utils_extract_filename_from_path(test_t *test) {
 void test_utils_get_file_extension(test_t *test) {
   char *file_path = "$HOME/shoggoth/client/tmp/myfile.txt";
 
-  const char *file_extension = utils_get_file_extension(file_path);
+  const char *file_extension = get_file_extension(file_path);
 
   ASSERT_EQ_STR(file_extension, "txt", NULL);
 }

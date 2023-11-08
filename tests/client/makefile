@@ -12,7 +12,7 @@ LDFLAGS += -lasan -lubsan
 endif
 
 CFLAGS +=
-LDFLAGS += -lssl -lcrypto -luuid
+LDFLAGS += -lssl -lcrypto $$(pkg-config --cflags --libs uuid) -lnetlibc
 
 TARGET_DIR = ../../target
 

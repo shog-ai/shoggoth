@@ -11,15 +11,15 @@ CFLAGS += -fsanitize=address,undefined,leak,undefined
 LDFLAGS += -lasan -lubsan 
 endif
 
-CFLAGS +=
-LDFLAGS += -lssl -lcrypto $$(pkg-config --cflags --libs uuid) -lnetlibc
+CFLAGS += -I ../../lib/netlibc/include
+LDFLAGS += -lssl -lcrypto $$(pkg-config --cflags --libs uuid)
 
 TARGET_DIR = ../../target
 
 ROOT_DIR = ../../
 
 # static libraries
-STATIC_LIBS = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 
 CC = gcc
 LD = gcc

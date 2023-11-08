@@ -146,7 +146,14 @@ bool valid_peer_host(node_ctx_t *ctx, char *peer_host) {
 bool valid_node_id(node_manifest_t *manifest) {
   char computed_node_id_string[512];
   node_id_from_public_key(manifest->public_key, computed_node_id_string);
-  return strcmp(computed_node_id_string, manifest->node_id) == 0;
+
+  bool valid = false;
+  
+  if (strcmp(computed_node_id_string, manifest->node_id) == 0) {
+    valid = true;
+  }
+
+  return valid;
 }
 
 /****

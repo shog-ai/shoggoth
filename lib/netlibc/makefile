@@ -10,36 +10,6 @@ CFLAGS = -g
 
 all: ./target/libnetlibc.a
 
-# HEADER_CHECKSUM := $$(md5sum ./include/netlibc.h | cut -d ' ' -f 1)
-# LIBRARY_CHECKSUM := $$(md5sum ./target/libnetlibc.a | cut -d ' ' -f 1)
-
-# check-netlibc:
-# 	$(MAKE)
-
-# 	if [ -f /usr/local/include/netlibc.h ]; then \
-# 	    INSTALLED_HEADER_CHECKSUM=$$(md5sum /usr/local/include/netlibc.h | cut -d ' ' -f 1); \
-# 	    if [ "$$INSTALLED_HEADER_CHECKSUM" != "$(HEADER_CHECKSUM)" ]; then \
-# 	        echo "netlibc header checksum mismatch. Reinstalling..."; \
-# 	        $(MAKE) install; \
-# 	    fi; \
-# 	else \
-# 	    echo "netlibc header not found. Installing..."; \
-# 	    $(MAKE) install; \
-# 	fi
-
-
-# 	if [ -f /usr/local/lib/libnetlibc.a ]; then \
-# 	    INSTALLED_LIBRARY_CHECKSUM=$$(md5sum /usr/local/lib/libnetlibc.a | cut -d ' ' -f 1); \
-# 	    if [ "$$INSTALLED_LIBRARY_CHECKSUM" != "$(LIBRARY_CHECKSUM)" ]; then \
-# 	        echo "netlibc library checksum mismatch. Reinstalling..."; \
-# 	        $(MAKE) install; \
-# 	    fi; \
-# 	else \
-# 	    echo "netlibc library not found. Installing..."; \
-# 	    $(MAKE) install; \
-# 	fi
-
-
 install:
 	sudo mkdir -p /usr/local/include/netlibc/
 	

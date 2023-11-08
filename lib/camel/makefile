@@ -16,7 +16,7 @@ setup:
 
 ./target/libcamel.a: target-dir ./target/tuwi.o ./camel.h ./src/camel.c
 	$(CC) $(CFLAGS) -c ./src/camel.c -o ./target/camel.o
-	ar rcs ./target/libcamel.a ./target/camel.o ./target/tuwi.o ../netlibc/target/netlibc.a
+	ar rcs ./target/libcamel.a ./target/camel.o ./target/tuwi.o
 
 ./target/tuwi.o:
 	cd ../tuwi/ && make

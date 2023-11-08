@@ -1,7 +1,8 @@
 {{> head}}
-{{> table_of_contents }}
 
 # Shoggoth - Documentation
+
+{{> table_of_contents}}
 
 <div id="what-is-shoggoth"></div>
 

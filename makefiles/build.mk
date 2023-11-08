@@ -50,7 +50,7 @@ OBJS +=
 
 # static libraries
 STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
-STATIC_LIBS_SANITIZED = $(TARGET_DIR)/netlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 
 .PHONY: target-dir redis $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a

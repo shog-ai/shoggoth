@@ -1,5 +1,5 @@
 {{> head}}
-{{> table_of_content }}
+{{> table_of_contents }}
 
 # Shoggoth - Documentation
 

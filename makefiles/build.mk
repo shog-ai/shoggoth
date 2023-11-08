@@ -70,7 +70,7 @@ target-dir:
 	mkdir -p $(TARGET_DIR)
 
 setup-linux:
-	sudo apt install build-essential libssl-dev uuid-dev pkgconf
+	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang
 
 
 # LIBRARIES

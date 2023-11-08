@@ -25,6 +25,14 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   template_t *end_template = create_template(end_template_string, "{}");
   free(end_template_string);
 
+  result_t res_table_of_contents_template_string =
+      read_file_to_string("./explorer/templates/table_of_contents.html");
+  char *table_of_contents_template_string = PROPAGATE(res_end_template_string);
+
+  template_t *table_of_contents_template =
+      create_template(table_of_contents_template_string, "{}");
+  free(table_of_contents_template_string);
+
   result_t res_head_template_string =
       read_file_to_string("./explorer/templates/head.html");
   char *head_template_string = PROPAGATE(res_head_template_string);
@@ -56,6 +64,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   template_add_partial(docs_template, "head", head_template);
   template_add_partial(docs_template, "end", end_template);
+  template_add_partial(docs_template, "table_of_contents", end_template);
 
   result_t res_cooked_docs = cook_template(docs_template);
   char *cooked_docs = PROPAGATE(res_cooked_docs);

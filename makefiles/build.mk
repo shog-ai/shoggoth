@@ -14,7 +14,7 @@ endif
 LD = $(CC)
 
 # flags
-CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)
+CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ./lib/netlibc/include
 CFLAGS_FLAT = -DNDEBUG
 
 ifeq ($(CC), gcc)
@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -lnetlibc
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid)
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion
@@ -49,8 +49,8 @@ OBJS +=
 OBJS +=
 
 # static libraries
-STATIC_LIBS = $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
-STATIC_LIBS_SANITIZED = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS_SANITIZED = $(TARGET_DIR)/netlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 
 .PHONY: target-dir redis $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
@@ -58,9 +58,6 @@ STATIC_LIBS_SANITIZED = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(T
 
 check-cc:
 	echo $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]; then echo "gcc" ; elif [ "$$(cc --help 2>&1 | grep -o -m 1 'clang')" = "clang" ]; then echo "clang"; else echo "NONE"; fi)
-
-check-netlibc:
-	cd ./lib/netlibc/ && make && make check-netlibc
 
 echo-objs:
 	echo $(OBJS)
@@ -80,6 +77,10 @@ setup-linux:
 $(TARGET_DIR)/tuwi.a:
 	cd ./lib/tuwi/ && make
 	cp ./lib/tuwi/target/libtuwi.a $(TARGET_DIR)/tuwi.a
+
+$(TARGET_DIR)/libnetlibc.a:
+	cd ./lib/netlibc/ && make
+	cp ./lib/netlibc/target/libnetlibc.a $(TARGET_DIR)/libnetlibc.a
 
 camel: $(TARGET_DIR)/camel.a
 
@@ -157,8 +158,8 @@ build-dynamic-libs: $(TARGET_DIR)/redisjson.so
 
 dev: package-dev
 
-build: check-netlibc build-flat redis
-build-dev: check-netlibc build-sanitized redis
+build: build-flat redis
+build-dev: build-sanitized redis
 
 build-sanitized: target-dir build-dynamic-libs build-objects-sanitized link-objects-sanitized 
 build-debug: target-dir build-dynamic-libs build-objects-debug link-objects-debug

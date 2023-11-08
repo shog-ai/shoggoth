@@ -42,20 +42,6 @@ typedef size_t usize;
   for (;;) {                                                                   \
   }
 
-// struct NODE_CTX;
-// struct CLIENT_CTX;
-
-// #define SERVER_ERR(res)                                                        \
-//   do {                                                                         \
-//     if (is_err(res)) {                                                         \
-//       respond_error(req, res.error_message);                                   \
-//       free_result(res);                                                        \
-//       return;                                                                  \
-//     }                                                                          \
-//                                                                                \
-//     free_result(res);                                                          \
-//   } while (0)
-
 u64 random_number(u64 start, u64 end);
 
 u64 get_timestamp_us();

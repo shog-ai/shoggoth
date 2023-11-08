@@ -27,7 +27,7 @@ build-explorer: build-static $(STATIC_LIBS)
 	cp -r ./src/explorer/templates/ $(TARGET_DIR)/explorer/templates/
 	cp -r ./src/explorer/html/ $(TARGET_DIR)/explorer/html/
 
-	$(CC) ./src/explorer/main.c ./target/libshoggoth.a $(STATIC_LIBS) $(LDFLAGS) -o $(TARGET_DIR)/explorergen
+	$(CC) $(CFLAGS) ./src/explorer/main.c ./target/libshoggoth.a $(STATIC_LIBS) $(LDFLAGS) -o $(TARGET_DIR)/explorergen
 	cd $(TARGET_DIR) && ./explorergen
 
 	$(MAKE) build-docs

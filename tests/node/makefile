@@ -12,7 +12,7 @@ LDFLAGS += -lasan -lubsan
 endif
 
 CFLAGS += -I ../../lib/netlibc/include
-LDFLAGS += -lssl -lcrypto $$(pkg-config --cflags --libs uuid)
+LDFLAGS += $$(pkg-config --cflags --libs uuid) $$(pkg-config --libs openssl)
 
 TARGET_DIR = ../../target
 

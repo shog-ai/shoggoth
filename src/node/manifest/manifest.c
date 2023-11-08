@@ -13,6 +13,22 @@
 
 #include <stdlib.h>
 
+result_t node_id_from_public_key(char *public_key_string, char *node_id_output) {
+  char node_id_string[512];
+  result_t res_public_key_hash =
+      openssl_hash_data(public_key_string, strlen(public_key_string));
+  char *public_key_hash = PROPAGATE(res_public_key_hash);
+
+  strcpy(node_id_string, "SHOGN");
+  strcat(node_id_string, &public_key_hash[32]);
+
+  free(public_key_hash);
+
+  strcpy(node_id_output, node_id_string);
+  return OK(NULL);
+ }
+
+
 /****
  * creates a bew node manifest as a json string derived from the public key and
  * public host of the node
@@ -29,16 +45,10 @@ result_t generate_node_manifest(char *public_key_string, char *public_host,
   manifest.version = version;
 
   char node_id_string[512];
-  result_t res_public_key_hash =
-      openssl_hash_data(stripped_public_key, strlen(stripped_public_key));
-  char *public_key_hash = PROPAGATE(res_public_key_hash);
-
-  strcpy(node_id_string, "SHOGN");
-  strcat(node_id_string, &public_key_hash[32]);
+  result_t node_id_result = node_id_from_public_key(stripped_public_key, node_id_string);
+  PROPAGATE(node_id_result);
 
   manifest.node_id = node_id_string;
-
-  free(public_key_hash);
 
   result_t res_manifest_json = json_node_manifest_to_json(manifest);
   json_t *manifest_json = PROPAGATE(res_manifest_json);

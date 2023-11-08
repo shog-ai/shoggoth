@@ -1,10 +1,11 @@
 {{> head}}
+{{> table_of_contents }}
+
 # Shoggoth - Documentation
 
 <div id="what-is-shoggoth"></div>
 
 ## What is Shoggoth?
-
 
 Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.
 To join the Shoggoth network, there is no registration or approval process.
@@ -13,7 +14,6 @@ Anyone can freely join the network and immediately begin publishing or accessing
 
 The purpose of Shoggoth is to combat software censorship and empower software developers to create and distribute software, without a centralized hosting service or platform.
 Shoggoth is developed and maintained by [Shoggoth Systems](https://shoggoth.systems), and its development is funded by [donations and sponsorships](#donate).
-
 
 ### ⚠️Disclaimer⚠️
 
@@ -26,16 +26,17 @@ This documentation is a work in progress. It is not complete and may contain out
 
 Please be aware that Shoggoth is a public network! This means anything uploaded will be accessible by anybody on the network.
 
-
 <div id="installation"></div>
 
 ## Installation
 
-### Supported platforms
+### Supported Platforms
 
 Shoggoth currently supports only Linux and macOS operating systems. Windows support is still in development.
 
-### Download precompiled binaries
+<div id="download-precompiled-binaries"></div>
+
+### Download Precompiled Binaries
 
 You can download Shoggoth from [shoggoth.systems/download.html](https://shoggoth.systems/download.html).
 Once the download is complete, verify the checksum with the following command to ensure it was not tampered with in transit:
@@ -53,7 +54,7 @@ unzip -o -q shoggoth-v0.1.5-Linux-x86_64.zip -d $HOME/shoggoth/
 ```
 
 Your home directory should now contain a `shoggoth` directory. Shoggoth uses this directory as the runtime where essential data is stored.
-Do not delete this directory or move it elsewhere. 
+Do not delete this directory or move it elsewhere.
 
 cd into the `shoggoth` directory:
 
@@ -74,14 +75,18 @@ You can run the below command to verify that it was installed correctly:
 shog --version
 ```
 
-### Build from source
+<div id="build-from-source"></div>
+
+### Build from Source
 
 You can build Shoggoth from source. Since Shoggoth is written in the C programming language, all you need to build it is a C compiler and GNU make.
 Follow the below instructions to obtain the source code and build Shoggoth:
 
-NOTE: if you encounter any problems while building Shoggoth from source, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub, or join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you. 
+NOTE: if you encounter any problems while building Shoggoth from source, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub, or join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
-#### Download the source code
+<div id="download-the-source-code"></div>
+
+#### Download the Source Code
 
 You can obtain the Shoggoth source code either by using git to clone the repository or by downloading it as a Zip archive from the Shoggoth Systems website.
 
@@ -100,11 +105,14 @@ wget https://shoggoth.systems/download/v0.1.5/shoggoth-source-v0.1.5.zip
 ```
 
 Then extract the downloaded zip:
+
 ```bash
   unzip -o -q ./shoggoth-source-v0.1.5.zip -d ./shoggoth-source
 ```
 
-#### Build with make
+<div id="build-with-make"></div>
+
+#### Build with Make
 
 After downloading the source either by using git or from the download link, change into the directory that was downloaded:
 
@@ -131,13 +139,18 @@ You can run the below command to verify that it was installed correctly:
 shog --version
 ```
 
+<div id="concepts"></div>
+
 ## Concepts
+
+<div id="shoggoth-resources"></div>
 
 ### Shoggoth Resources
 
 On the Shoggoth network, data such as code repositories, research papers, Machine Learning models, and datasets are called resources,
 and these resources are stored on servers called nodes.
 
+<div id="shoggoth-nodes"></div>
 
 ### Shoggoth Nodes
 
@@ -161,6 +174,7 @@ To run the node, use the following command:
 shog node run
 ```
 
+<div id="shoggoth-clients"></div>
 
 ### Shoggoth Clients
 
@@ -188,6 +202,7 @@ Consequently, a Node ID is 37 characters long and a Shoggoth ID is 36 characters
 
 The Shoggoth ID of a client is its unique address on the Shoggoth network and it points to the client's Shoggoth Profile.
 
+<div id="shoggoth-profile"></div>
 
 ### Shoggoth Profile
 
@@ -268,11 +283,13 @@ Since Shoggoth resources are simply git repositories, you can store any file for
 Every valid git repository is a valid Shoggoth resource and every valid Shoggoth resource is a valid git repository.
 An ideal Shoggoth resource will contain a README file with general information about the resource and instructions on how to use it.
 It should also contain a LICENSE file and other supporting files, however, these are not rules but only conventions.
-A resource could also be empty with no files and still be a valid resource.  
+A resource could also be empty with no files and still be a valid resource.
 
 By default, nodes limit profiles to a maximum size of 50 MB. However, individual nodes can increase or decrease this limit.
 To publish large resources, such as resources as large as 100 Gigabytes, you may have to set up a node where you pin only your own profile.
 On a personal Shoggoth node, you have the freedom to pin Gigabytes (and possibly even terabytes) of resources in a single profile, and Shoggoth clients will be able to download them from your node, or any node on the network that can reach your node.
+
+<div id="profile-pinning"></div>
 
 ### Profile Pinning
 
@@ -287,11 +304,10 @@ In the latter case, it simply forwards the request to the other node.
 
 <div id="public-and-private-keys"></div>
 
-### Public and Private keys
+### Public and Private Keys
 
 On the Shoggoth network, profiles are mutable. This means you have the freedom of publishing resources to your profile, deleting resources, and modifying resources, changing their content.
 However, only the original publisher of a profile can modify it, or add resources to it. This is enforced via cryptographic signatures.
-
 
 When you start a Shoggoth client or Shoggoth Node for the first time, an RSA key-pair is generated and stored in `$HOME/shoggoth/client/keys/` for clients and `$HOME/shoggoth/node/keys/` for nodes.
 This directory will contain two files: public.txt and private.txt.
@@ -311,6 +327,7 @@ When a node receives a new version of an existing profile and verifies that it w
 For example, if you change some code in a code repository, you have to republish your entire profile.
 Nodes that pin that profile will then replace their copy of the profile with the new one.
 
+<div id="#how-to-use-shoggoth"></div>
 
 ## How to use Shoggoth - Overview
 
@@ -318,7 +335,7 @@ Once you have installed Shoggoth, you can use the `shog` command to perform vari
 Here is an overview of how to use the `shog` command. A more detailed step-by-step guide is available in [the next section](#using-shoggoth-step-by-step).
 
 NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub.
-If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you. 
+If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
 The below command uses the Shoggoth client to clone a code repository:
 
@@ -326,20 +343,20 @@ The below command uses the Shoggoth client to clone a code repository:
 shog client clone SHOGed21b1a13c07a5cba894bb9326d72133/code/myrepo
 ```
 
-
 The below command starts a Shoggoth node:
 
 ```bash
 shog node run
 ```
 
-### Creating and publishing a profile
+<div id="#creating-and-publishing-a-profile"></div>
+
+### Creating and Publishing a Profile
 
 As described earlier, nodes do not store individual resources but instead, they store whole profiles with all their resources included.
 Therefore, to publish a resource, you have to publish your entire profile.
 
-
-#### Creating a profile
+#### Creating a Profile
 
 Use the below command to create a new Shoggoth profile in your current working directory:
 
@@ -353,7 +370,7 @@ You can create as many profiles as you like, but since you can have only one pro
 Therefore, you would want to create only one profile and place it in a suitable location.
 This profile will then contain all your code repositories, ML models, Datasets, and research papers.
 
-#### Publishing a profile
+#### Publishing a Profile
 
 Make sure you are in the directory of your profile:
 
@@ -367,12 +384,16 @@ then run the below command to publish it:
 shog client publish
 ```
 
-#### Updating/modifying a profile
+<div id="#updating-modifying-a-profile"></div>
+
+#### Updating/Modifying a Profile
 
 To update or modify your profile, change the content of the `shoggoth-profile` folder on your local machine, then publish the profile again.
 When a node receives your new profile, it simply replaces the old one with the new one. Since your profile is a folder, you can simply drag and drop or copy files into it, then run the publish command again to update your profile on the network.
 
-### Downloading profiles and resources
+<div id="#downloading-profiles-and-resources"></div>
+
+### Downloading Profiles and Resources
 
 You can download a whole profile, a group of resources from the profile such as code, datasets, etc, or a specific resource.
 
@@ -394,8 +415,7 @@ Download a specific code repository:
 shog client clone SHOGed21b1a13c07a5cba894bb9326d72133/code/mycoderepo
 ```
 
-
-### Command line flags
+### Command Line Flags
 
 The `shog` command accepts a few command line flags that can be used to customize its behavior.
 To see a list of all the available flags, run the below command:
@@ -406,12 +426,14 @@ shog -h
 
 <div id="using-shoggoth-step-by-step"></div>
 
-## Using Shoggoth - step-by-step examples
+## Using Shoggoth - Step-by-Step Examples
 
 NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub.
-If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you. 
+If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
-### Publishing your profile for the first time
+<div id="publishing-your-profile-for-the-first-time"></div>
+
+### Publishing your Profile for the First Time
 
 After installing Shoggoth, the first thing you may want to do is publish your profile and then update it with a code repository to get a feel of the workflow.
 Here is a step-by-step guide:
@@ -466,7 +488,7 @@ shog client id
 The output should look something like this:
 
 ```text
-Your Shoggoth ID is: SHOGed21b1a13c07a5cba894bb9326d72133 
+Your Shoggoth ID is: SHOGed21b1a13c07a5cba894bb9326d72133
 ```
 
 Note that it may take a while for your profile to propagate across many nodes depending on the traffic on the network.
@@ -474,8 +496,9 @@ Ideally, your profile should reach most nodes within a couple of minutes.
 
 Congrats! Your profile is now published. Follow the next guide to upload a code repository to your profile.
 
+<div id="publishing-your-first-repository-to-your-profile"></div>
 
-### Publishing your first repository to your profile
+### Publishing your First Repository to your Profile
 
 After publishing your profile, the next thing you may want to do is add a resource to your profile.
 Here is a step-by-step guide to add a code resource to your profile:
@@ -483,10 +506,9 @@ Here is a step-by-step guide to add a code resource to your profile:
 1. cd into the code directory
 
 In your profile directory, there are 4 main sub-directories. Among them, there is a `code` sub-directory.
-This directory will contain all your code resources which are basically git repositories. 
+This directory will contain all your code resources which are basically git repositories.
 
 Assuming your profile is in your Desktop directory, cd into the `code` sub-directory:
-
 
 ```bash
 cd $HOME/Desktop/shoggoth-profile/code
@@ -539,7 +561,9 @@ As long as at least one node pins your profile, a client from anywhere in the wo
 
 Read the next section to learn how to download resources.
 
-### Downloading a profile
+<div id="downloading-a-profile"></div>
+
+### Downloading a Profile
 
 NOTE: When you want to download a resource or profile, you should not download it into your profile, else the next time you publish your profile, the downloaded resource will be published too.
 Before downloading a profile or resource, ensure your current working directory is at a suitable location where you want the downloaded resource/profile to be saved.
@@ -564,7 +588,9 @@ shog client clone SHOGed21b1a13c07a5cba894bb9326d72133/code/myrepo
 After the download is complete, you should see a new folder in your current working directory, named after the Shoggoth ID if you downloaded a profile,
 or the group name (like code, models, etc) if you downloaded a group of resources, or the name of the resource if you downloaded a single resource.
 
-### Updating your repository
+<div id="updating-your-repository"></div>
+
+### Updating your Repository
 
 After publishing the code repository to your profile, the next thing you may want to do is update it, since it is expected that software will be modified to newer versions.
 
@@ -575,7 +601,6 @@ Here is a step-by-step guide to update the `myrepo` repository we created earlie
 ```bash
 cd $HOME/Desktop/shoggoth-profile/code/myrepo
 ```
-
 
 2. Change the content of the hello.py file to print "Hello world" instead of "Hello Shoggoth":
 
@@ -599,7 +624,11 @@ Now when you explore your profile by clicking the link printed by the publish co
 
 Note that it may take a few minutes or more for changes to your profile to propagate across all nodes that pin it.
 
-## How does Shoggoth work?
+<div id="how-does-shoggoth-work"></div>
+
+## How does Shoggoth Work?
+
+<div id="nodes"></div>
 
 ### Nodes
 
@@ -609,7 +638,7 @@ and the Shoggoth IDs of all profiles it has pinned.
 
 This DHT will be updated frequently as the node discovers new peers, and the list of pinned profiles for all peers will also be updated periodically.
 
-Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of a node that is part of the network and merging it with its local DHT. 
+Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of a node that is part of the network and merging it with its local DHT.
 
 This is the backbone of the Shoggoth Network. By its design, every node is able to communicate with every other node directly, without relays, by simply querying its local DHT for the IP address or domain name of the desired node, and sending HTTP requests to it.
 
@@ -623,19 +652,22 @@ This already existing node that a new node uses to join the network is also call
 
 Once the new node obtains the DHT of the bootstrap node, it will add all the peers of the bootstrap node to its local DHT and also request for the DHTs of its new peers to increase its network reach.
 
-There are many public nodes available that can be used as bootstrap nodes. One of them is  [https://shoggoth.network](https://shoggoth.network) which is run and maintained by Shoggoth Systems.
+There are many public nodes available that can be used as bootstrap nodes. One of them is [https://shoggoth.network](https://shoggoth.network) which is run and maintained by Shoggoth Systems.
 This is the default bootstrap node which can easily be changed in a [configuration file](#configuration). If you know someone who already runs a node, you can use theirs as a bootstrap node. All you need is the public address of the node.
 This public address can be its domain name like `http://shoggoth.network`, only an IP address (assuming port 80) like `http://8.8.8.8`, or an IP address with a specified port like `http://8.8.8.8:6969`
 
 Every Shoggoth node exposes an HTTP API which it uses to receive requests from other nodes and clients. It is this API that underpins the protocol that nodes use to exchange DHTs, fetch resources, and perform other network activities.
 The API is documented [here](/explorer/docs/api).
 
+<div id="clients"></div>
 
 ### Clients
 
 Shoggoth clients access the network only through Shoggoth nodes. A client keeps a list of known nodes, which it updates occasionally. Whenever a client needs to perform an action such as publish a resource or download a resource, it randomly picks one of those nodes as a gateway to the network.
 
 Shoggoth clients communicate with nodes via the same HTTP API used by nodes to communicate with one another.
+
+<div id="persistence"></div>
 
 ### Persistence
 
@@ -658,16 +690,15 @@ Note that garbage collection is local to individual nodes. A node may unpin a pr
 
 You can decide to set up a Shoggoth node where you pin only your own profile or profiles of people you know and turn off garbage collection completely.
 
-
 <div id="configuration"></div>
 
 ## Configuration
 
-### Configuring a node
+### Configuring a Node
 
 Shoggoth nodes are configured with a config.toml file located in $HOME/shoggoth/node/
 
-### Configuring a client
+### Configuring a Client
 
 Shoggoth clients are configured with a config.toml file located in $HOME/shoggoth/client/
 
@@ -694,6 +725,8 @@ You can access it by running a Shoggoth node:
 
 The above command will start a Shoggoth node and expose the Shoggoth explorer at http://127.0.0.1/explorer
 
+<div id="exposing-a-shoggoth-node-to-the-internet"></div>
+
 ## Exposing a Shoggoth Node to the Internet
 
 ⚠️WARNING⚠️
@@ -715,7 +748,7 @@ Below are the necessary changes you need to make to expose your node to the inte
 
 To take your node public, you need to make a couple of modifications to your node config in `$HOME/shoggoth/node/config.toml`
 
-#### 1. Change the host and port
+#### 1. Change the Host and Port
 
 1.1 Change the `host` field in the `network` table from "127.0.0.1" to "0.0.0.0".
 
@@ -728,7 +761,7 @@ You can leave it as the default `6969` or change it to `80` if you intend to use
   port = 6969
 ```
 
-#### 2. Change public host
+#### 2. Change Public Host
 
 Change the `public_host` field in the `network` table to the public IP address of your computer (the IP address that can be used to reach you from the internet, not your private IP address), or domain name that points to your computer.
 If using an IP address, indicate the port after the IP address like `8.8.8.8:6969`. The port you indicate must be the same as the one you set in the `port` field above. If you are using a reverse proxy, then use the port that the reverse proxy exposes.
@@ -746,6 +779,7 @@ The below example configuration illustrates using an IP address `8.8.8.8` with a
 ```
 
 The below example configuration illustrates using a domain name `shoggoth.network`, with a reverse proxy such as nginx redirecting traffic from port 80 to the node service running at port 6969:
+
 ```toml
   [network]
   host = "0.0.0.0"
@@ -753,10 +787,9 @@ The below example configuration illustrates using a domain name `shoggoth.networ
   public_host = "http://shoggoth.network"
 ```
 
+Note that your Internet Service Provider (ISP) may block incoming internet traffic if you are using a home router.
 
-Note that your Internet Service Provider (ISP) may block incoming internet traffic if you are using a home router. 
-
-#### 3. Allow publish, Enable downloader
+#### 3. Allow Publish, Enable Downloader
 
 By default, your node will not accept requests to publish new profiles. Change the `allow_publish` field in the `pins` table to `true` to allow publishing.
 
@@ -768,7 +801,9 @@ allow_publish = true
 enable_downloader = true
 ```
 
-### System requirements
+<div id="system-requirements"></div>
+
+### System Requirements
 
 A Shoggoth node is very light on system resources and barely uses any compute while idle.
 A machine with at least 1GB of RAM and 25GB of storage can be considered the bare minimum required to reliably run a node.
@@ -787,59 +822,53 @@ To contribute to external dependencies, please refer to their respective GitHub 
 Some other dependencies including sonic, camel, tuwi, and netlibc are internal dependencies, meaning they are developed alongside Shoggoth.
 You can contibute to them by making your changes within the Shoggoth repository itself, and prefixing your commits and PRs with the name of the dependency like "sonic: fixed a sonic specific bug".
 
-### Coding guidelines
+### Coding Guidelines
 
-* Avoid adding third-party dependencies, extra files, extra headers, etc.
-* Always consider cross-compatibility with other operating systems and architectures.
-* Spend a little time reading the existing code to get a feel for the style. Try to follow the patterns in the code.
+- Avoid adding third-party dependencies, extra files, extra headers, etc.
+- Always consider cross-compatibility with other operating systems and architectures.
+- Spend a little time reading the existing code to get a feel for the style. Try to follow the patterns in the code.
 
 You can join the [Discord community](https://discord.com/invite/AG3duN5yKP) to ask questions concerning the coding style, the code architecture, and whatever problems you encounter.
 
+<div id="faq"></div>
+
 ## Frequently Asked Questions (FAQ)
+
 Q: Is Shoggoth free to use?
 <br />
 A: Yes, Shoggoth is 100% free and open source software. There are no fees or licenses required to access the network as a user or run a node.
-
 
 Q: How does Shoggoth prevent censorship?
 <br />
 A: Shoggoth uses a decentralized peer-to-peer network to make censorship virtually impossible. Content is replicated across many volunteer nodes instead of centralized servers.
 
-
 Q: Can Shoggoth be taken down or blocked?
 <br />
 A: It is extremely unlikely that Shoggoth can be completely blocked since there is no central point of failure to attack. Nodes are run independently all over the world. As long as some nodes remain active, the network persists.
-
 
 Q: Who created Shoggoth?
 <br />
 A: Shoggoth was created by Netrunner KD6-3.7 (email netrunner@shoggoth.systems) at [Shoggoth Systems](https://shoggoth.systems).
 
-
 Q: How is the development of Shoggoth funded?
 <br />
 A: The development of Shoggoth is funded by [donations and sponsorships](#donate).
-
 
 Q: How can I get involved with the Shoggoth community?
 <br />
 A: You can join the [Discord community](https://discord.com/invite/AG3duN5yKP), follow [Shoggoth on Twitter](https://twitter.com/shoggothsystems) and contribute to the open source code on [GitHub](https://github.com/shoggoth-systems).
 
-
 Q: How fast is data transfer on the Shoggoth network?
 <br />
-A: Speeds depend on node capacity and user demand, but are generally quite fast. 
-
+A: Speeds depend on node capacity and user demand, but are generally quite fast.
 
 Q: Is there a limit on how much I can publish on Shoggoth?
 <br />
 A: By default, nodes impose soft limits of 50MB per profile, but you can run a personal node to remove limits.
 
-
 Q: How can I donate to support Shoggoth's development?
 <br />
 A: You can donate online with a credit card at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html), send Bitcoin or Ethereum to the addresses listed at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html). Corporate sponsorships are also available (email netrunner@shoggoth.systems).
-
 
 Q: Does Shoggoth use any blockchain technologies?
 <br />
@@ -847,7 +876,7 @@ A: No. Shoggoth is not a blockchain and currently does not use any blockchain te
 
 ## Technical Details
 
-### Node auto-update
+### Node Auto-Update
 
 By default, Shoggoth Nodes will check for updates on the Shoggoth network and download them if found.
 This means your node can receive the latest features, security updates, and bug fixes without your intervention.
@@ -872,44 +901,40 @@ Some of the dependencies developed by Shoggoth Systems include:
 #### Sonic
 
 Sonic is an HTTP server and client library for the C programming language. Sonic is the library used for implementing the Shoggoth Node API and the Shoggoth Client.
-You can read the [Sonic documentation](/explorer/docs/sonic) for more information. 
-
+You can read the [Sonic documentation](/explorer/docs/sonic) for more information.
 
 #### Camel
 
 Camel is a testing framework for the C programming language. It can be used for writing unit tests, integration tests, functional tests, and fuzz tests. Camel is the framework used for testing Shoggoth, Sonic, and Tuwi.
-You can read the [Camel documentation](/explorer/docs/camel) for more information. 
-
+You can read the [Camel documentation](/explorer/docs/camel) for more information.
 
 #### Tuwi
 
 Tuwi is a terminal user interface framework for the C programming language. Tuwi is the framework used for implementing the terminal UI of Shoggoth and Camel.
 You can read the [Tuwi documentation](/explorer/docs/tuwi) for more information.
 
-
 #### Other Dependencies
 
 The below dependencies are used in the Shoggoth project, sourced from external open-source projects:
 
-* [cjson](https://github.com/DaveGamble/cJSON)
-* [tomlc](https://github.com/cktan/tomlc99)
-* [redis](https://github.com/redis/redis)
-* [redisjson](https://github.com/RedisJSON/RedisJSON) (NOTE: RedisJSON's source code is open, but it has a proprietary license. We are working on replacing this dependency)
-* [md4c](https://github.com/mity/md4c/)
+- [cjson](https://github.com/DaveGamble/cJSON)
+- [tomlc](https://github.com/cktan/tomlc99)
+- [redis](https://github.com/redis/redis)
+- [redisjson](https://github.com/RedisJSON/RedisJSON) (NOTE: RedisJSON's source code is open, but it has a proprietary license. We are working on replacing this dependency)
+- [md4c](https://github.com/mity/md4c/)
 
 #### Required System Utilities
 
 The below commands are required to be installed on a computer in order to run a Shoggoth Node.
 All these commands are usually already pre-installed on macOS and Linux operating systems, so they don't have to be installed again.
 
-* git
-* GNU tar (not the default tar on macOS. install it on macOS using homebrew "brew install gnu-tar")
-* cat
-* sha256sum
-* addr2line
-* find
-* sort
-
+- git
+- GNU tar (not the default tar on macOS. install it on macOS using homebrew "brew install gnu-tar")
+- cat
+- sha256sum
+- addr2line
+- find
+- sort
 
 ## More Information
 
@@ -931,11 +956,9 @@ Shoggoth is licensed under the MIT license. Read the LICENSE file in the source 
 Shoggoth uses a few dependencies which have their own licences. The dependencies in the ./lib/ directory of the Shoggoth source code are independent of the MIT license used for Shoggoth.
 The source code for each dependecy includes a LICENSE file indicating the license that covers it.
 
-
 ### Community
 
 Join the [Discord community](https://discord.com/invite/AG3duN5yKP).
-
 
 ### Popular nodes
 
@@ -948,4 +971,3 @@ Some popular nodes include:
 [https://node2.shoggoth.systems](https://node1.shoggoth.systems)
 
 {{> end}}
-

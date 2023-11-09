@@ -5,10 +5,10 @@ body {
 }
 
 pre {
-	margin-top: 20px;
-	margin-bottom: 20px;
-	
-	overflow-x: auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+
+  overflow-x: auto;
   width: 100%;
 }
 
@@ -21,7 +21,8 @@ tr {
   border: 2px solid gray;
 }
 
-td, th {
+td,
+th {
   text-align: left;
   padding: 8px;
   border: 2px solid gray;
@@ -53,7 +54,7 @@ h4 {
   margin-bottom: 5px;
 }
 
-p { 
+p {
   margin-top: 20px;
   margin-bottom: 10px;
   line-height: 160%;
@@ -63,7 +64,7 @@ code {
   padding: 4px;
   padding-top: 2px;
   padding-bottom: 2px;
-  
+
   background: #333;
   border-radius: 8px;
   max-width: 80vw;
@@ -89,6 +90,7 @@ code {
 
 .table-of-contents {
   color: white;
+  margin: 0 auto;
 }
 
 .table-of-contents h2 {
@@ -105,4 +107,3 @@ code {
   margin-left: 40px;
   list-style-type: none;
 }
-

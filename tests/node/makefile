@@ -19,7 +19,7 @@ TARGET_DIR = ../../target
 ROOT_DIR = ../../
 
 # static libraries
-STATIC_LIBS = ../../lib/netlibc/target/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 
 CC = gcc
 LD = gcc
@@ -112,11 +112,11 @@ run-functional-tests:
 	cd $(TARGET_DIR)/tests/node/functional/pin/ && ./test
 	
 build-functional-tests: target-dir prepare-shoggoth build-shoggoth-static camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/api/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/functional/api/test
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/publish/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/functional/publish/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/api/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/functional/api/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/publish/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/functional/publish/test
 	
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/discovery/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/functional/discovery/test
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/pin/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/functional/pin/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/discovery/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/functional/discovery/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/pin/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/functional/pin/test
 
 
 #========================================================================================
@@ -130,9 +130,9 @@ run-unit-tests:
 	cd $(TARGET_DIR)/tests/node/unit/ && ./test_utils
 	
 build-unit-tests: target-dir build-shoggoth-static camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/unit/test
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test_args.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/unit/test_args
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test_utils.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/unit/test_utils
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/unit/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test_args.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/unit/test_args
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test_utils.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/unit/test_utils
 
 #========================================================================================
 
@@ -142,7 +142,7 @@ run-integration-tests:
 	cd $(TARGET_DIR)/tests/node/integration/ && ./test
 	
 build-integration-tests: target-dir build-shoggoth-static camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./integration/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/integration/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./integration/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/integration/test
 
 #========================================================================================
 
@@ -152,7 +152,7 @@ run-fuzz-tests:
 	cd $(TARGET_DIR)/tests/node/fuzz/ && ./test
 	
 build-fuzz-tests: target-dir build-shoggoth-static camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./fuzz/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/node/fuzz/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./fuzz/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/node/fuzz/test
 
 #========================================================================================
 

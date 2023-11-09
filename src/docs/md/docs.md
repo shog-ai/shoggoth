@@ -328,7 +328,7 @@ When a node receives a new version of an existing profile and verifies that it w
 For example, if you change some code in a code repository, you have to republish your entire profile.
 Nodes that pin that profile will then replace their copy of the profile with the new one.
 
-<div id="#how-to-use-shoggoth"></div>
+<div id="how-to-use-shoggoth"></div>
 
 ## How to use Shoggoth - Overview
 
@@ -350,7 +350,7 @@ The below command starts a Shoggoth node:
 shog node run
 ```
 
-<div id="#creating-and-publishing-a-profile"></div>
+<div id="creating-and-publishing-a-profile"></div>
 
 ### Creating and Publishing a Profile
 
@@ -385,14 +385,14 @@ then run the below command to publish it:
 shog client publish
 ```
 
-<div id="#updating-modifying-a-profile"></div>
+<div id="updating-modifying-a-profile"></div>
 
 #### Updating/Modifying a Profile
 
 To update or modify your profile, change the content of the `shoggoth-profile` folder on your local machine, then publish the profile again.
 When a node receives your new profile, it simply replaces the old one with the new one. Since your profile is a folder, you can simply drag and drop or copy files into it, then run the publish command again to update your profile on the network.
 
-<div id="#downloading-profiles-and-resources"></div>
+<div id="downloading-profiles-and-resources"></div>
 
 ### Downloading Profiles and Resources
 

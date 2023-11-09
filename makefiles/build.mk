@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid)
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion
@@ -70,7 +70,7 @@ target-dir:
 	mkdir -p $(TARGET_DIR)
 
 setup-linux:
-	sudo apt install build-essential libssl-dev uuid-dev pkgconf
+	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang
 
 
 # LIBRARIES

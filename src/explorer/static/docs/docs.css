@@ -86,3 +86,23 @@ code {
 
   margin-bottom: 50px;
 }
+
+.table-of-contents {
+  color: white;
+}
+
+.table-of-contents h2 {
+  text-align: left;
+}
+
+.table-of-contents ul li {
+  margin-left: 10px;
+  margin-top: 10px;
+  list-style-type: none;
+}
+
+.table-of-contents ul ul {
+  margin-left: 40px;
+  list-style-type: none;
+}
+

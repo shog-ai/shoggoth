@@ -19,7 +19,7 @@ TARGET_DIR = ../../target
 ROOT_DIR = ../../
 
 # static libraries
-STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
+STATIC_LIBS = $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 
 CC = gcc
 LD = gcc
@@ -48,7 +48,7 @@ run-functional-tests:
 	cd $(TARGET_DIR)/tests/client/functional/ && ./test
 	
 build-functional-tests: target-dir build camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/client/functional/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./functional/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/client/functional/test
 
 
 #========================================================================================
@@ -60,7 +60,7 @@ run-unit-tests:
 	cd $(TARGET_DIR)/tests/client/unit/ && ./test
 	
 build-unit-tests: target-dir build camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/client/unit/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./unit/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/client/unit/test
 
 #========================================================================================
 
@@ -70,7 +70,7 @@ run-integration-tests:
 	cd $(TARGET_DIR)/tests/client/integration/ && ./test
 	
 build-integration-tests: target-dir build camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./integration/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/client/integration/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./integration/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/client/integration/test
 
 #========================================================================================
 
@@ -80,7 +80,7 @@ run-fuzz-tests:
 	cd $(TARGET_DIR)/tests/client/fuzz/ && ./test
 	
 build-fuzz-tests: target-dir build camel
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./fuzz/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) -o $(TARGET_DIR)/tests/client/fuzz/test
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) ./fuzz/test.c $(TARGET_DIR)/libshoggoth.a $(STATIC_LIBS) $(TARGET_DIR)/camel.a $(LDFLAGS) ../../lib/netlibc/target/libnetlibc.a -o $(TARGET_DIR)/tests/client/fuzz/test
 
 #========================================================================================
 

@@ -107,3 +107,21 @@ code {
   margin-left: 40px;
   list-style-type: none;
 }
+
+.scroll-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+
+.scroll-to-top a {
+  background-color: #863e00;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.scroll-to-top a:hover {
+  background-color: #5f2d00;
+}

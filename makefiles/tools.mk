@@ -30,31 +30,14 @@ version:
 downstream:
 	git fetch && git pull
 	
-# upstream:
-# git add .
-# @read -p "Enter commit message: " message; \
-# git commit -m "$$message"
-# git push
-
 
 sync: sync-libs-headers
-
-# sync-camel:
-# 	rm -rf ./lib/camel/
-# 	rsync -av --exclude='target' --exclude='.git' ../camel/ ./lib/camel/
-
-# sync-sonic:
-# 	rm -rf ./lib/sonic/
-# 	rsync -av --exclude='target' --exclude='.git' ../sonic/ ./lib/sonic/
-
-# sync-tuwi:
-# 	rm -rf ./lib/tuwi/
-# 	rsync -av --exclude='target' --exclude='.git' ../tuwi/ ./lib/tuwi/
 
 sync-libs-headers:
 	cp ./lib/camel/camel.h ./src/include/camel.h
 	cp ./lib/sonic/sonic.h ./src/include/sonic.h
 	cp ./lib/tuwi/tuwi.h ./src/include/tuwi.h
+	cp ./lib/shogdb/src/client/client.h ./src/include/shogdb_client.h
 
 kill-redis:
 	killall -v -w -s 9 redis-server

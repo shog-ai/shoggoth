@@ -78,6 +78,10 @@ $(TARGET_DIR)/tuwi.a:
 	cd ./lib/tuwi/ && make
 	cp ./lib/tuwi/target/libtuwi.a $(TARGET_DIR)/tuwi.a
 
+# $(TARGET_DIR)/libshogdb.a:
+# 	cd ./lib/shogdb/ && make client
+# 	cp ./lib/shogdb/target/libshogdb.a $(TARGET_DIR)/libshogdb.a
+
 $(TARGET_DIR)/libnetlibc.a:
 	cd ./lib/netlibc/ && make
 	cp ./lib/netlibc/target/libnetlibc.a $(TARGET_DIR)/libnetlibc.a

@@ -8,43 +8,14 @@
  *
  ****/
 
-#ifndef SONIC_COMMON_H
-#define SONIC_COMMON_H
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef int8_t s8;
-typedef int16_t s16;
-typedef int32_t s32;
-typedef int64_t s64;
-
-typedef float f32;
-typedef double f64;
-
-typedef size_t usize;
-
-#define LOOP()                                                                 \
-  for (;;) {                                                                   \
-  }
-
-#ifdef __APPLE__ // This macro is defined on macOS
-#define U64_FORMAT_SPECIFIER "%lld"
-#else
-#define U64_FORMAT_SPECIFIER "%lu"
-#endif
-
-#endif
-
 #ifndef SONIC_H
 #define SONIC_H
+
+#include <netlibc.h>
+#include <netlibc/error.h>
+#include <netlibc/fs.h>
+#include <netlibc/log.h>
+#include <netlibc/string.h>
 
 typedef enum {
   CLIENT_ERROR_NONE,
@@ -228,8 +199,9 @@ void sonic_free_request(sonic_request_t *req);
 
 void sonic_free_response(sonic_response_t *resp);
 
-void sonic_request_set_response_callback(
-    sonic_request_t *req, response_callback_func_t callback_func, void *user_pointer);
+void sonic_request_set_response_callback(sonic_request_t *req,
+                                         response_callback_func_t callback_func,
+                                         void *user_pointer);
 
 sonic_response_t *sonic_send_request(sonic_request_t *req);
 

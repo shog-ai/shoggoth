@@ -154,26 +154,26 @@ char *get_file_extension(char *file_path) {
  * returns the content of a file as an allocated string
  *
  ****/
-result_t read_file_to_string(const char *filePath) {
-  long inputFileLen;
-  FILE *inputFile;
-  char *filestr;
+result_t read_file_to_string(const char *file_path) {
+  long input_file_len;
+  FILE *input_file;
+  char *file_str;
 
-  if (!(inputFile = fopen(filePath, "r")))
+  if (!(input_file = fopen(file_path, "r")))
     return ERR("Error reading file");
-  if (fseek(inputFile, 0, SEEK_END) == -1)
-    return fclose(inputFile), ERR("Error seeking file");
-  if ((inputFileLen = ftell(inputFile)) == -1)
-    return fclose(inputFile), ERR("Error getting file length");
-  if (fseek(inputFile, 0, SEEK_SET) == -1)
-    return fclose(inputFile), ERR("Error rewinding file");
-  if (!(filestr = (char *)malloc((size_t)inputFileLen)))
-    return fclose(inputFile), ERR("Error allocating memory for file content");
-  if (!fread(filestr, 1, (size_t)inputFileLen, inputFile))
-    return fclose(inputFile), free(filestr), ERR("Error reading file");
-  fclose(inputFile);
+  if (fseek(input_file, 0, SEEK_END) == -1)
+    return fclose(input_file), ERR("Error seeking file");
+  if ((input_file_len = ftell(input_file)) == -1)
+    return fclose(input_file), ERR("Error getting file length");
+  if (fseek(input_file, 0, SEEK_SET) == -1)
+    return fclose(input_file), ERR("Error rewinding file");
+  if (!(file_str = (char *)malloc((size_t)input_file_len)))
+    return fclose(input_file), ERR("Error allocating memory for file content");
+  if (!fread(file_str, 1, (size_t)input_file_len, input_file))
+    return fclose(input_file), free(file_str), ERR("Error reading file");
+  fclose(input_file);
 
-  return OK(filestr);
+  return OK(file_str);
 }
 
 char *escape_character(char *input, char character) {

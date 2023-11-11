@@ -51,7 +51,7 @@ void api_clone_route(sonic_server_request_t *req) {
     target = RESOURCE;
   }
 
-  if (strlen(shoggoth_id) != 36) {
+  if (shoggoth_id == NULL || strlen(shoggoth_id) != 36) {
     respond_error(req, "invalid Shoggoth ID");
 
     return;

@@ -45,6 +45,7 @@ result_t openssl_generate_key_pair(const char *private_key_file,
 
   if (!PEM_write_RSAPrivateKey(private_key_fp, rsa_keypair, NULL, NULL, 0, NULL,
                                NULL)) {
+    fclose(private_key_fp);
     return ERR("PEM_write_RSAPrivateKey failed");
   }
 

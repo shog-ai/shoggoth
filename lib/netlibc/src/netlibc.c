@@ -154,26 +154,26 @@ char *get_file_extension(char *file_path) {
  * returns the content of a file as an allocated string
  *
  ****/
-result_t read_file_to_string(const char *file_path) {
-  FILE *file = fopen(file_path, "r");
-  if (file == NULL) {
-    return ERR("Error opening file: %s", strerror(errno));
-  }
+result_t read_file_to_string(const char *filePath) {
+  long inputFileLen;
+  FILE *inputFile;
+  char *filestr;
 
-  fseek(file, 0, SEEK_END);
-  u32 file_size = (u32)ftell(file);
-  fseek(file, 0, SEEK_SET);
-
-  char *file_content = (char *)malloc(file_size + 1);
-
-  size_t bytes_read = fread(file_content, 1, file_size, file);
-  if (bytes_read != file_size) {
+  if (!(inputFile = fopen(filePath, "r")))
     return ERR("Error reading file");
-  }
+  if (fseek(inputFile, 0, SEEK_END) == -1)
+    return fclose(inputFile), ERR("Error seeking file");
+  if ((inputFileLen = ftell(inputFile)) == -1)
+    return fclose(inputFile), ERR("Error getting file length");
+  if (fseek(inputFile, 0, SEEK_SET) == -1)
+    return fclose(inputFile), ERR("Error rewinding file");
+  if (!(filestr = (char *)malloc((size_t)inputFileLen)))
+    return fclose(inputFile), ERR("Error allocating memory for file content");
+  if (!fread(filestr, 1, (size_t)inputFileLen, inputFile))
+    return fclose(inputFile), free(filestr), ERR("Error reading file");
+  fclose(inputFile);
 
-  file_content[file_size] = '\0';
-  fclose(file);
-  return OK(file_content);
+  return OK(filestr);
 }
 
 char *escape_character(char *input, char character) {
@@ -353,12 +353,10 @@ result_t delete_dir(const char *dir_path) {
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
         result_t res = delete_dir(filePath);
-
         if (!is_ok(res)) {
           closedir(dir);
+          PROPAGATE(res);
         }
-
-        PROPAGATE(res);
       }
     } else {
       // Delete regular files
@@ -513,6 +511,7 @@ result_t copy_file(const char *source_file_path,
 
   FILE *destinationFile = fopen(destination_file_path, "wb");
   if (destinationFile == NULL) {
+    fclose(sourceFile);
     return ERR("Failed to open destination file");
   }
 
@@ -541,6 +540,7 @@ result_t copy_dir(char *src_path, char *dest_path) {
   if (mkdir(dest_path, 0777) == -1) {
     if (errno != EEXIST) {
       perror("mkdir");
+      closedir(srcDir);
       return ERR("mkdir failed");
     }
   }
@@ -560,6 +560,7 @@ result_t copy_dir(char *src_path, char *dest_path) {
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
         result_t res = copy_dir(srcFile, destFile);
+        closedir(srcDir);
         PROPAGATE(res);
       }
     } else {
@@ -570,6 +571,8 @@ result_t copy_dir(char *src_path, char *dest_path) {
       if (srcFilePtr == NULL || destFilePtr == NULL) {
         perror("fopen");
         closedir(srcDir);
+        if (srcFilePtr) fclose(srcFilePtr);
+        if (destFilePtr) fclose(destFilePtr);
         return ERR("open error");
       }
 
@@ -756,6 +759,9 @@ result_t get_dir_size(char *path) {
         snprintf(child_path, sizeof(child_path), "%s/%s", path, entry->d_name);
 
         result_t res_child_size = get_dir_size(child_path);
+        if (!is_ok(res_child_size)) {
+          closedir(dir);
+        }
         u64 child_size = PROPAGATE_U64(res_child_size);
 
         total_size += child_size;

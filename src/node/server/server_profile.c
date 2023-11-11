@@ -49,7 +49,9 @@ void profile_resource_route(sonic_server_request_t *req) {
 
   resource_group_t resource_group = GROUP_NULL;
 
-  if (strcmp(resource_group_str, "code") == 0) {
+  if (resource_group_str == NULL) {
+    resource_group = GROUP_NULL;
+  } else if (strcmp(resource_group_str, "code") == 0) {
     resource_group = CODE;
   } else if (strcmp(resource_group_str, "models") == 0) {
     resource_group = MODELS;

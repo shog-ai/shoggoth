@@ -67,9 +67,13 @@ char *__read_file(char *path) {
 }
 
 int __await_process(process_t *process) {
-  int status;
+  if (!process) {
+    fprintf(stderr, "Cannot await a null process.\n");
+    return 1;
+  }
 
   // Wait for the child process to exit
+  int status;
   if (waitpid(process->pid, &status, 0) == -1) {
     perror("waitpid");
     return 1;

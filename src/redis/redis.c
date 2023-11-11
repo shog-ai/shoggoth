@@ -96,7 +96,7 @@ result_t send_data(int sockfd, char *com) {
     }
   }
 
-  if (bytes_read == -1) {
+  if (bytes_read == -1 || bytes_read == 0) {
     close(sockfd);
     perror("Receive failed");
     return ERR("receive redis data failed");

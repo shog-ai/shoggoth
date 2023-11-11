@@ -58,3 +58,6 @@ sync-libs-headers:
 
 kill-redis:
 	killall -v -w -s 9 redis-server
+
+fbinfer:
+	infer run --biabduction-unsafe-malloc -- make

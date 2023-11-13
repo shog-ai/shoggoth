@@ -39,7 +39,7 @@ check-path-arg:
 		exit 1; \
 	fi
 
-generate-runtime: check-path-arg build-explorer
+generate-runtime: check-path-arg build-explorer shogdb
 	mkdir -p $(RP)
 	
 	mkdir -p $(RP)/bin/
@@ -47,7 +47,7 @@ generate-runtime: check-path-arg build-explorer
 	mkdir -p $(RP)/scripts/
 	mkdir -p $(RP)/node
 	
-	mkdir -p $(RP)/node/bin $(RP)/node/keys $(RP)/node/tmp $(RP)/node/update
+	mkdir -p $(RP)/node/keys $(RP)/node/tmp $(RP)/node/update
 	mkdir -p $(RP)/client/keys $(RP)/client/tmp
 	
 	mkdir -p $(RP)/node/explorer $(RP)/node/explorer/docs/ $(RP)/node/explorer/static/ $(RP)/node/explorer/templates/
@@ -56,8 +56,8 @@ generate-runtime: check-path-arg build-explorer
 	cp ./src/client/default-client-config.toml $(RP)/client/config.toml
 	cp ./src/client/default-known-nodes.json $(RP)/client/known_nodes.json
 
-	cp $(TARGET_DIR)/redis-server $(RP)/node/bin/ && cp $(TARGET_DIR)/redisjson.so $(RP)/node/bin/
-	cp ./src/node/redis.conf $(RP)/node/
+	cp $(TARGET_DIR)/shogdb $(RP)/bin/
+	cp ./lib/shogdb/src/dbconfig.toml $(RP)/node/
 
 	cp -r $(TARGET_DIR)/explorer/out/* $(RP)/node/explorer/
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/
@@ -66,7 +66,7 @@ generate-runtime: check-path-arg build-explorer
 package-release:
 	$(eval PREFIX = release)
 
-	$(MAKE) build
+	$(MAKE) build-flat
 	
 	PREFIX=release $(MAKE) create-package
 
@@ -82,7 +82,7 @@ package-release:
 package-dev:
 	$(eval PREFIX = dev)
 
-	$(MAKE) build-dev
+	$(MAKE) build-sanitized
 	
 	PREFIX=dev $(MAKE) create-package
 

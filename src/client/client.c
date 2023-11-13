@@ -40,8 +40,7 @@ result_t add_node_to_known_nodes(client_ctx_t *ctx, char *new_node) {
 
   char *known_nodes_str = json_to_string(known_nodes_json);
   free_json(known_nodes_json);
-  write_to_file(known_nodes_path, known_nodes_str,
-                      strlen(known_nodes_str));
+  write_to_file(known_nodes_path, known_nodes_str, strlen(known_nodes_str));
   free(known_nodes_str);
 
   return OK(NULL);
@@ -308,8 +307,6 @@ result_t shog_init_client(args_t *args) {
   char default_runtime_path[FILE_PATH_SIZE];
   utils_get_default_runtime_path(default_runtime_path);
 
-  // WARN: custom runtime path must be an absolute path, else certain dynamic
-  // libraries will not load (particularly redisjson)
   if (args->set_runtime_path) {
     ctx->runtime_path = malloc((strlen(args->runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, args->runtime_path);

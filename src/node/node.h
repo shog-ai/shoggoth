@@ -104,7 +104,7 @@ typedef struct {
 typedef struct NODE_CTX {
   node_manifest_t *manifest;
   node_config_t *config;
-  pid_t redis_db_pid;
+  pid_t db_pid;
   pid_t node_pid;
 
   char *runtime_path;

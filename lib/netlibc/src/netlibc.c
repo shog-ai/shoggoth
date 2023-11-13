@@ -160,7 +160,7 @@ result_t read_file_to_string(const char *file_path) {
   char *file_str;
 
   if (!(input_file = fopen(file_path, "r")))
-    return ERR("Error opening file");
+    return ERR("Error opening file: %s : %s", strerror(errno), file_path);
   if (fseek(input_file, 0, SEEK_END) == -1)
     return fclose(input_file), ERR("Error seeking file");
   if ((input_file_len = ftell(input_file)) == -1)

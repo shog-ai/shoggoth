@@ -63,8 +63,6 @@ void utils_get_client_runtime_path(struct CLIENT_CTX *ctx,
 void utils_get_node_explorer_path(struct NODE_CTX *ctx,
                                   char node_explorer_path[]);
 
-void utils_get_node_bin_path(struct NODE_CTX *ctx, char node_bin_path[]);
-
 void utils_get_node_tmp_path(struct NODE_CTX *ctx, char node_tmp_path[]);
 
 void utils_get_client_tmp_path(struct CLIENT_CTX *ctx, char client_tmp_path[]);

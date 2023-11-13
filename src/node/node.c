@@ -161,14 +161,14 @@ void shoggoth_node_exit(int exit_code) {
     free(node_global_ctx->node_http_server);
   }
 
-  // Send a kill signal to the redis db process
-  if (kill(node_global_ctx->redis_db_pid, SIGTERM) == -1) {
-    PANIC("kill redis process failed");
+  // Send a kill signal to the db process
+  if (kill(node_global_ctx->db_pid, SIGTERM) == -1) {
+    PANIC("kill process failed");
   }
 
   // Wait for the child process to exit
   int status;
-  pid_t exited_pid = waitpid(node_global_ctx->redis_db_pid, &status, 0);
+  pid_t exited_pid = waitpid(node_global_ctx->db_pid, &status, 0);
 
   if (exited_pid == -1) {
     PANIC("waitpid failed");
@@ -176,7 +176,7 @@ void shoggoth_node_exit(int exit_code) {
 
   if (WIFEXITED(status)) {
   } else {
-    LOG(ERROR, "redis db child process did not exit normally");
+    LOG(ERROR, "db child process did not exit normally");
   }
 
   free(node_global_ctx->runtime_path);

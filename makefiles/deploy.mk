@@ -16,6 +16,10 @@ deploy-nodes: package-dev
 	cp ./deploy/2/2.toml ./target/shoggoth-deploy/2/node/config.toml
 	cp ./deploy/3/3.toml ./target/shoggoth-deploy/3/node/config.toml
 
+	cp ./deploy/1/dbconfig.toml ./target/shoggoth-deploy/1/node/dbconfig.toml
+	cp ./deploy/2/dbconfig.toml ./target/shoggoth-deploy/2/node/dbconfig.toml
+	cp ./deploy/3/dbconfig.toml ./target/shoggoth-deploy/3/node/dbconfig.toml
+	
 deploy:
 	cd $(TARGET_DIR) && mprocs "sleep 1 && ./shog-sanitized node run -r ./shoggoth-deploy/1" "./shog-sanitized node run -r ./shoggoth-deploy/2" "sleep 2 && ./shog-sanitized node run -r ./shoggoth-deploy/3"
 

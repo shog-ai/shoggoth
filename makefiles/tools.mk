@@ -21,9 +21,6 @@ clean-tuwi:
 clean-netlibc:
 	cd lib/netlibc && $(MAKE) clean
 
-clean-redis:
-	cd lib/redis && $(MAKE) clean
-
 version:
 	echo $(VERSION)
 
@@ -37,7 +34,7 @@ sync-libs-headers:
 	cp ./lib/camel/camel.h ./src/include/camel.h
 	cp ./lib/sonic/sonic.h ./src/include/sonic.h
 	cp ./lib/tuwi/tuwi.h ./src/include/tuwi.h
-	cp ./lib/shogdb/src/client/client.h ./src/include/shogdb_client.h
+	cp ./lib/shogdb/src/lib/lib.h ./src/include/shogdb.h
 
-kill-redis:
-	killall -v -w -s 9 redis-server
+kill-db:
+	killall -v -w -s 9 shogdb

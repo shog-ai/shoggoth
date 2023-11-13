@@ -96,7 +96,7 @@ Choose one of the following options to download the source code:
 Using git:
 
 ```bash
-git clone -b 0.1.5 https://github.com/shoggoth-systems/shoggoth shoggoth-source
+git clone -b 0.1.5 https://github.com/shoggoth-systems/shoggoth --depth 1 shoggoth-source
 ```
 
 Or download the source code:
@@ -920,8 +920,6 @@ The below dependencies are used in the Shoggoth project, sourced from external o
 
 - [cjson](https://github.com/DaveGamble/cJSON)
 - [tomlc](https://github.com/cktan/tomlc99)
-- [redis](https://github.com/redis/redis)
-- [redisjson](https://github.com/RedisJSON/RedisJSON) (NOTE: RedisJSON's source code is open, but it has a proprietary license. We are working on replacing this dependency)
 - [md4c](https://github.com/mity/md4c/)
 
 #### Required System Utilities

@@ -9,7 +9,6 @@
  ****/
 
 #include "../../json/json.h"
-#include "../manifest/manifest.h"
 #include "../db/db.h"
 #include "../manifest/manifest.h"
 
@@ -148,7 +147,7 @@ bool valid_node_id(node_manifest_t *manifest) {
   node_id_from_public_key(manifest->public_key, computed_node_id_string);
 
   bool valid = false;
-  
+
   if (strcmp(computed_node_id_string, manifest->node_id) == 0) {
     valid = true;
   }
@@ -173,6 +172,7 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
     PANIC(sonic_get_error());
   }
 
+  // FIXME: causes memory leak
   sonic_response_t *resp = sonic_send_request(req);
   if (resp->failed) {
     sonic_free_request(req);
@@ -321,21 +321,29 @@ void *dht_updater(void *thread_arg) {
 
         result_t res_unreachable_count =
             db_get_unreachable_count(arg->ctx, dht->items[i]->node_id);
-        char *unreachable_count_str = UNWRAP(res_unreachable_count);
-        assert(strlen(unreachable_count_str) > 2);
 
-        char *count_str = &unreachable_count_str[1];
-        count_str[strlen(count_str) - 1] = '\0';
+        if (is_ok(res_unreachable_count)) {
+          char *unreachable_count_str = VALUE(res_unreachable_count);
 
-        u64 count = strtoull(count_str, NULL, 10);
-        free(unreachable_count_str);
+          assert(strlen(unreachable_count_str) > 2);
 
-        u64 count_limit = 5;
+          char *count_str = &unreachable_count_str[1];
+          count_str[strlen(count_str) - 1] = '\0';
 
-        if (count >= count_limit) {
-          LOG(INFO, "REMOVING PEER %s", dht->items[i]->node_id);
-          db_dht_remove_item(arg->ctx, dht->items[i]->node_id);
+          u64 count = strtoull(count_str, NULL, 10);
+          free(unreachable_count_str);
+
+          u64 count_limit = 5;
+
+          if (count >= count_limit) {
+            LOG(INFO, "REMOVING PEER %s", dht->items[i]->node_id);
+            db_dht_remove_item(arg->ctx, dht->items[i]->node_id);
+          }
+        } else {
+          LOG(ERROR, "%s", res_unreachable_count.error_message);
         }
+
+        free_result(res_unreachable_count);
 
         sonic_free_request(req);
         sonic_free_response(resp);

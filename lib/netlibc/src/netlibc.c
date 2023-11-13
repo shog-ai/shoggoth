@@ -157,7 +157,7 @@ char *get_file_extension(char *file_path) {
 result_t read_file_to_string(const char *file_path) {
   FILE *file = fopen(file_path, "r");
   if (file == NULL) {
-    return ERR("Error opening file: %s", strerror(errno));
+    return ERR("Error opening file: %s : %s", strerror(errno), file_path);
   }
 
   fseek(file, 0, SEEK_END);

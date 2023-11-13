@@ -7,10 +7,13 @@ CC = gcc
 endif
 
 CFLAGS += -g -std=c11 -D_GNU_SOURCE -I ../netlibc/include $$(pkg-config --cflags openssl) 
-CFLAGS_SANITIZED = -fsanitize=address,undefined,leak
-
 LDFLAGS += -pthread $$(pkg-config --libs openssl)
+
+# sanitizers (only on linux)
+ifeq ($(shell uname), Linux)
+CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan
+endif
 
 STATIC_LIBS = ../../target/cjson.a ../../target/tomlc.a ../../target/sonic.a ../../target/libnetlibc.a
 

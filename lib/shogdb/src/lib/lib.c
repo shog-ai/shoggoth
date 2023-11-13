@@ -114,7 +114,7 @@ result_t shogdb_parse_message(char *msg) {
   } else if (value->value_type == VALUE_UINT) {
     u64 result = 0;
 
-    if (sscanf(msg_value, "%lu", &result) != 1) {
+    if (sscanf(msg_value, U64_FORMAT_SPECIFIER, &result) != 1) {
       return ERR("sscanf conversion failed");
     }
 
@@ -122,7 +122,7 @@ result_t shogdb_parse_message(char *msg) {
   } else if (value->value_type == VALUE_INT) {
     s64 result = 0;
 
-    if (sscanf(msg_value, "%ld", &result) != 1) {
+    if (sscanf(msg_value, S64_FORMAT_SPECIFIER, &result) != 1) {
       return ERR("sscanf conversion failed");
     }
 

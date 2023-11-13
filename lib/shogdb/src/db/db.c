@@ -48,12 +48,12 @@ char *serialize_data(db_ctx_t *ctx) {
       }
     } else if (value->value_type == VALUE_INT) {
       char val[256];
-      sprintf(val, "%ld", value->value_int);
+      sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
 
       cJSON_AddStringToObject(item_json, "value", val);
     } else if (value->value_type == VALUE_UINT) {
       char val[256];
-      sprintf(val, "%lu", value->value_uint);
+      sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
 
       cJSON_AddStringToObject(item_json, "value", val);
     } else if (value->value_type == VALUE_FLOAT) {
@@ -343,7 +343,7 @@ void get_route(sonic_server_request_t *req) {
       sonic_free_server_response(resp);
     } else if (value->value_type == VALUE_UINT) {
       char str[256];
-      sprintf(str, "%lu", value->value_uint);
+      sprintf(str, U64_FORMAT_SPECIFIER, value->value_uint);
 
       char *body = malloc((strlen(str) + 10) * sizeof(char));
       sprintf(body, "%s %s", value_type_to_str(VALUE_UINT), str);
@@ -358,7 +358,7 @@ void get_route(sonic_server_request_t *req) {
       sonic_free_server_response(resp);
     } else if (value->value_type == VALUE_INT) {
       char str[256];
-      sprintf(str, "%ld", value->value_int);
+      sprintf(str, S64_FORMAT_SPECIFIER, value->value_int);
 
       char *body = malloc((strlen(str) + 10) * sizeof(char));
       sprintf(body, "%s %s", value_type_to_str(VALUE_INT), str);
@@ -652,7 +652,7 @@ result_t db_restore_data(db_ctx_t *ctx) {
     } else if (value_type == VALUE_UINT) {
       u64 result = 0;
 
-      if (sscanf(value_str, "%lu", &result) != 1) {
+      if (sscanf(value_str, U64_FORMAT_SPECIFIER, &result) != 1) {
         return ERR("sscanf conversion failed");
       }
 
@@ -660,7 +660,7 @@ result_t db_restore_data(db_ctx_t *ctx) {
     } else if (value_type == VALUE_INT) {
       s64 result = 0;
 
-      if (sscanf(value_str, "%ld", &result) != 1) {
+      if (sscanf(value_str, S64_FORMAT_SPECIFIER, &result) != 1) {
         return ERR("sscanf conversion failed");
       }
 

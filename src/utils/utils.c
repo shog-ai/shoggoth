@@ -270,9 +270,6 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
   char node_explorer_path[FILE_PATH_SIZE];
   utils_get_node_explorer_path(ctx, node_explorer_path);
 
-  char node_bin_path[FILE_PATH_SIZE];
-  utils_get_node_bin_path(ctx, node_bin_path);
-
   char node_tmp_path[FILE_PATH_SIZE];
   utils_get_node_tmp_path(ctx, node_tmp_path);
 
@@ -291,10 +288,6 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
 
   if (!dir_exists(node_explorer_path)) {
     create_dir(node_explorer_path);
-  }
-
-  if (!dir_exists(node_bin_path)) {
-    create_dir(node_bin_path);
   }
 
   if (!dir_exists(node_tmp_path)) {
@@ -403,21 +396,6 @@ void utils_get_node_explorer_path(node_ctx_t *ctx, char node_explorer_path[]) {
   char *relative_path = "/explorer";
 
   sprintf(node_explorer_path, "%s%s", node_runtime_path, relative_path);
-}
-
-/****U
- * utility function to derive the node bin runtime path from the already
- * set runtime path in the ctx. If the default runtime path was used, the
- * bin runtime path should be $HOME/shoggoth/node/bin
- *
- ****/
-void utils_get_node_bin_path(node_ctx_t *ctx, char node_bin_path[]) {
-  char node_runtime_path[FILE_PATH_SIZE];
-  utils_get_node_runtime_path(ctx, node_runtime_path);
-
-  char *relative_path = "/bin";
-
-  sprintf(node_bin_path, "%s%s", node_runtime_path, relative_path);
 }
 
 /****U

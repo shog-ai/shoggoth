@@ -12,13 +12,14 @@ typedef struct {
   void *ok_ptr;
   int ok_int;
   u64 ok_u64;
+  s64 ok_s64;
+  f64 ok_f64;
   bool ok_bool;
 
   // ERR
   u64 error_code;
   char *error_message;
 } result_t;
-
 
 #define OK(value)                                                              \
   (result_t) {                                                                 \
@@ -35,6 +36,18 @@ typedef struct {
 #define OK_U64(value)                                                          \
   (result_t) {                                                                 \
     .failed = false, .ok_u64 = value, .error_message = NULL,                   \
+    .file = strdup(__FILE__), .line = __LINE__                                 \
+  }
+
+#define OK_S64(value)                                                          \
+  (result_t) {                                                                 \
+    .failed = false, .ok_s64 = value, .error_message = NULL,                   \
+    .file = strdup(__FILE__), .line = __LINE__                                 \
+  }
+
+#define OK_F64(value)                                                          \
+  (result_t) {                                                                 \
+    .failed = false, .ok_f64 = value, .error_message = NULL,                   \
     .file = strdup(__FILE__), .line = __LINE__                                 \
   }
 

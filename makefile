@@ -6,7 +6,7 @@ RUNTIME_PATH = $$HOME/shoggoth
 
 .PHONY: target-dir clean version
 
-all: build
+all: package-release
 
 include makefiles/build.mk
 include makefiles/tools.mk

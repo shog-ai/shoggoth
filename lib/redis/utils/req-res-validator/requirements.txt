@@ -1,2 +1,0 @@
-jsonschema==4.17.3
-redis==4.5.1

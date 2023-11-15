@@ -16,6 +16,24 @@ To learn more about Shoggoth, read the documentation at https://shoggoth.network
 
 You can install Shoggoth by following the instructions at https://shoggoth.network/explorer/docs#installation
 
+BUILD
+================================
+
+The following dependencies are required to build Shoggoth
+- gcc
+- GNU make
+- pkg-config
+- which
+- openssl (and its development headers)
+- libuuid (and its development headers)
+- libsanitizer (and its development headers)
+- GNU find
+- zip
+
+If on Void Linux, the following command should install the dependencies:
+`xbps-install pkg-config gcc make which openssl openssl-devel libuuid libuuid-devel libsanitizer-devel findutils zip`
+
+Then, run `make` on the shoggoth directory. You will have Shoggoth at `./target/shog-flat`.
 
 LICENSE
 =================================

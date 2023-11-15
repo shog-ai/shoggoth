@@ -934,6 +934,7 @@ All these commands are usually already pre-installed on macOS and Linux operatin
 - addr2line
 - find
 - sort
+- ImageMagick (install it on macOS using homebrew "brew install imagemagick")
 
 ## More Information
 

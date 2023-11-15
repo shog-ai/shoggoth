@@ -74,7 +74,7 @@ target-dir:
 	mkdir -p $(TARGET_DIR)
 
 configure-ubuntu:
-	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang
+	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang libmagickwand-dev
 
 
 # DEPENDENCIES

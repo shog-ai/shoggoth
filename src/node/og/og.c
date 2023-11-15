@@ -103,7 +103,7 @@ void add_wrapped_text(MagickWand *main_wand, const char *text, ssize_t pointsize
     DestroyDrawingWand(draw_wand);
 }
 
-unsigned char* generate_og_image(const char* title, const char* desc, ssize_t title_size, size_t title_wrap, ssize_t desc_size, size_t desc_wrap, size_t* image_len) {
+unsigned char* generate_og_image(const char* title, const char* desc, ssize_t title_size, size_t title_wrap, ssize_t desc_size, size_t desc_wrap, size_t* image_size) {
     MagickWand *magick_wand;
     DrawingWand *draw_wand;
     PixelWand *background_color;
@@ -136,9 +136,9 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
 
     MagickSetImageFormat(magick_wand, "PNG");
     unsigned char* png_as_string = NULL;
-    *image_len = 0;
+    *image_size = 0;
     MagickResetIterator(magick_wand);
-    png_as_string = MagickGetImageBlob(magick_wand, image_len);
+    png_as_string = MagickGetImageBlob(magick_wand, image_size);
 
     magick_wand = DestroyMagickWand(magick_wand);
     background_color = DestroyPixelWand(background_color);

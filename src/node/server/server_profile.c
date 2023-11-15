@@ -803,12 +803,12 @@ void profile_og_route(sonic_server_request_t *req) {
     og_description = "View Papers on Shoggoth";
   }
 
-  size_t image_len;
-  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 46, 32, &image_len);
+  size_t image_size;
+  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 46, 32, &image_size);
 
   sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
   resp->content_type = MIME_IMAGE_PNG;
-  sonic_response_set_body(resp, (char*)cooked, image_len);
+  sonic_response_set_body(resp, (char*)cooked, image_size);
   sonic_send_response(req, resp);
 
   free(cooked);
@@ -862,12 +862,12 @@ void profile_og_resource_route(sonic_server_request_t *req) {
   char *og_description = malloc(og_description_size * sizeof(char));
   snprintf(og_description, og_description_size, "View %s on Shoggoth", resource_path);
 
-  size_t image_len;
-  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 34, 32, &image_len);
+  size_t image_size;
+  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 34, 32, &image_size);
 
   sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
   resp->content_type = MIME_IMAGE_PNG;
-  sonic_response_set_body(resp, (char*)cooked, image_len);
+  sonic_response_set_body(resp, (char*)cooked, image_size);
   sonic_send_response(req, resp);
 
   free(cooked);

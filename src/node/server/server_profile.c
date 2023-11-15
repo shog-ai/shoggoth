@@ -11,6 +11,7 @@
 #include "../../json/json.h"
 #include "../../templating/templating.h"
 #include "../db/db.h"
+#include "../og/og.h"
 
 #include <stdlib.h>
 
@@ -435,10 +436,16 @@ void profile_resource_route(sonic_server_request_t *req) {
       read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
-  char head_template_data[256];
-  sprintf(head_template_data,
-          "{\"title\": \"Shoggoth Explorer - %s\", \"is_profile\": true}",
-          shoggoth_id);
+
+  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"description\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s/%s%s\", \"is_profile\": true}";
+  int json_len = snprintf(NULL, 0, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str, resource_name, inner_path);
+  if (json_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t json_template_size = (size_t)json_len + 1;
+  char *head_template_data = malloc(json_template_size * sizeof(char));
+  snprintf(head_template_data, json_template_size, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str, resource_name, inner_path);
+
   template_t *head_template =
       create_template(head_template_string, head_template_data);
   free(head_template_string);
@@ -728,10 +735,14 @@ void profile_route(sonic_server_request_t *req) {
       read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
-  char head_template_data[256];
-  sprintf(head_template_data,
-          "{\"title\": \"Shoggoth Explorer - %s\", \"is_profile\": true}",
-          shoggoth_id);
+  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"description\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s\", \"is_profile\": true}";
+  int json_len = snprintf(NULL, 0, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str);
+  if (json_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t json_template_size = (size_t)json_len + 1;
+  char *head_template_data = malloc(json_template_size * sizeof(char));
+  snprintf(head_template_data, json_template_size, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str);
 
   template_t *head_template =
       create_template(head_template_string, head_template_data);
@@ -769,6 +780,103 @@ void profile_route(sonic_server_request_t *req) {
   sonic_free_server_response(resp);
 }
 
+void profile_og_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+  char *resource_group_str = sonic_get_path_segment(req, "resource_group");
+
+  int og_title_len = snprintf(NULL, 0, "%s / %s", shoggoth_id, resource_group_str);
+  if (og_title_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t og_title_size = (size_t)og_title_len + 1;
+  char *og_title = malloc(og_title_size * sizeof(char));
+  snprintf(og_title, og_title_size, "%s / %s", shoggoth_id, resource_group_str);
+
+  char *og_description;
+  if (strcmp(resource_group_str, "code") == 0) {
+    og_description = "View Code on Shoggoth";
+  } else if (strcmp(resource_group_str, "models") == 0) {
+    og_description = "View ML Models on Shoggoth";
+  } else if (strcmp(resource_group_str, "datasets") == 0) {
+    og_description = "View Datasets on Shoggoth";
+  } else if (strcmp(resource_group_str, "papers") == 0) {
+    og_description = "View Papers on Shoggoth";
+  }
+
+  size_t image_len;
+  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 46, 32, &image_len);
+
+  sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
+  resp->content_type = MIME_IMAGE_PNG;
+  sonic_response_set_body(resp, (char*)cooked, image_len);
+  sonic_send_response(req, resp);
+
+  free(cooked);
+  free(og_title);
+  sonic_free_server_response(resp);
+}
+
+void profile_og_resource_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+  char *resource_name = sonic_get_path_segment(req, "resource_name");
+  char *resource_group_str = sonic_get_path_segment(req, "resource_group");
+
+  char inner_path[FILE_PATH_SIZE];
+  sprintf(inner_path, "");
+
+  bool is_inner = req->matched_route->path->has_wildcard;
+  if (is_inner) {
+    sonic_wildcard_segments_t segments = sonic_get_path_wildcard_segments(req);
+
+    for (u64 i = 0; i < segments.count; i++) {
+      char buf[FILE_PATH_SIZE];
+      sprintf(buf, "/%s", segments.segments[i]);
+
+      strcat(inner_path, buf);
+    }
+
+    sonic_free_path_wildcard_segments(segments);
+  }
+
+  int resource_path_len = snprintf(NULL, 0, "%s%s", resource_name, inner_path);
+  if (resource_path_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t resource_path_size = (size_t)resource_path_len + 1;
+  char *resource_path = malloc(resource_path_size * sizeof(char));
+  snprintf(resource_path, resource_path_size, "%s%s", resource_name, inner_path);
+
+  int og_title_len = snprintf(NULL, 0, "%s / %s", shoggoth_id, resource_group_str);
+  if (og_title_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t og_title_size = (size_t)og_title_len + 1;
+  char *og_title = malloc(og_title_size * sizeof(char));
+  snprintf(og_title, og_title_size, "%s / %s", shoggoth_id, resource_group_str);
+
+  int og_description_len = snprintf(NULL, 0, "View %s on Shoggoth", resource_path);
+  if (og_description_len < 0) {
+    PANIC("snprintf failed");
+  }
+  size_t og_description_size = (size_t)og_description_len + 1;
+  char *og_description = malloc(og_description_size * sizeof(char));
+  snprintf(og_description, og_description_size, "View %s on Shoggoth", resource_path);
+
+  size_t image_len;
+  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 34, 32, &image_len);
+
+  sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
+  resp->content_type = MIME_IMAGE_PNG;
+  sonic_response_set_body(resp, (char*)cooked, image_len);
+  sonic_send_response(req, resp);
+
+  free(cooked);
+  free(resource_path);
+  free(og_title);
+  free(og_description);
+  sonic_free_server_response(resp);
+}
+
 void add_profile_routes(node_ctx_t *ctx, sonic_server_t *server) {
   profile_ctx = ctx;
 
@@ -786,4 +894,8 @@ void add_profile_routes(node_ctx_t *ctx, sonic_server_t *server) {
       server,
       "/explorer/profile/{shoggoth_id}/{resource_group}/{resource_name}/{*}",
       METHOD_GET, profile_resource_route);
+
+  sonic_add_route(server, "/explorer/profile_og/{shoggoth_id}/{resource_group}", METHOD_GET, profile_og_route);
+  sonic_add_route(server, "/explorer/profile_og/{shoggoth_id}/{resource_group}/{resource_name}", METHOD_GET, profile_og_resource_route);
+  sonic_add_route(server, "/explorer/profile_og/{shoggoth_id}/{resource_group}/{resource_name}/{*}", METHOD_GET, profile_og_resource_route);
 }

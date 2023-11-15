@@ -1,4 +1,8 @@
-#include <MagickWand/MagickWand.h>
+#ifdef MAGICKWAND_7
+    #include <MagickWand/MagickWand.h>
+#else
+    #include <wand/MagickWand.h>
+#endif
 #include <string.h>
 #include <stdbool.h>
 
@@ -86,7 +90,11 @@ void add_wrapped_text(MagickWand *main_wand, const char *text, ssize_t pointsize
     ssize_t text_wand_height = current_y - pointsize;
     ssize_t y_from_bottom = (ssize_t)IMG_HEIGHT - text_wand_height - (ssize_t)PADDING_VERTICAL;
     ssize_t y = is_gravity_south ? y_from_bottom : (ssize_t)PADDING_VERTICAL;
+#ifdef MAGICKWAND_7
     MagickCompositeImage(main_wand, text_wand, OverCompositeOp, MagickTrue, x, y);
+#else
+    MagickCompositeImage(main_wand, text_wand, OverCompositeOp, x, y);
+#endif
 
     free(modified_text);
     DestroyMagickWand(text_wand);
@@ -119,7 +127,11 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
 
     MagickWand *logo_wand = NewMagickWand();
     MagickReadImage(logo_wand, "./node/explorer/static/img/icon/icon-250x250.png");
+#ifdef MAGICKWAND_7
     MagickCompositeImage(magick_wand, logo_wand, OverCompositeOp, MagickTrue, 94, IMG_HEIGHT / 2 - ICON_SIZE / 2);
+#else
+    MagickCompositeImage(magick_wand, logo_wand, OverCompositeOp, 94, IMG_HEIGHT / 2 - ICON_SIZE / 2);
+#endif
     DestroyMagickWand(logo_wand);
 
     MagickSetImageFormat(magick_wand, "PNG");

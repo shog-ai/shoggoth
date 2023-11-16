@@ -151,6 +151,7 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
 
     magick_wand = DestroyMagickWand(magick_wand);
     background_color = DestroyPixelWand(background_color);
+    text_color = DestroyPixelWand(text_color);
     draw_wand = DestroyDrawingWand(draw_wand);
 
     return png_as_string;

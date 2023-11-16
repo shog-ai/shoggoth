@@ -437,7 +437,7 @@ void profile_resource_route(sonic_server_request_t *req) {
   char *head_template_string = UNWRAP(res_head_template_string);
 
 
-  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"description\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s/%s%s\", \"url\": \"/explorer/profile/%s/%s/%s%s\", \"is_profile\": true}";
+  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s/%s%s\", \"url\": \"/explorer/profile/%s/%s/%s%s\", \"is_profile\": true}";
   int json_len = snprintf(NULL, 0, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str, resource_name, inner_path, shoggoth_id, resource_group_str, resource_name, inner_path);
   if (json_len < 0) {
     PANIC("snprintf failed");
@@ -735,7 +735,7 @@ void profile_route(sonic_server_request_t *req) {
       read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
-  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"description\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s\", \"url\": \"/explorer/profile/%s/%s\", \"is_profile\": true}";
+  char *json_template = "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth - Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/profile_og/%s/%s\", \"url\": \"/explorer/profile/%s/%s\", \"is_profile\": true}";
   int json_len = snprintf(NULL, 0, json_template, shoggoth_id, shoggoth_id, shoggoth_id, resource_group_str, shoggoth_id, resource_group_str);
   if (json_len < 0) {
     PANIC("snprintf failed");
@@ -792,19 +792,19 @@ void profile_og_route(sonic_server_request_t *req) {
   char *og_title = malloc(og_title_size * sizeof(char));
   snprintf(og_title, og_title_size, "%s / %s", shoggoth_id, resource_group_str);
 
-  char *og_description;
+  char *og_desc;
   if (strcmp(resource_group_str, "code") == 0) {
-    og_description = "View Code on Shoggoth";
+    og_desc = "View Code on Shoggoth";
   } else if (strcmp(resource_group_str, "models") == 0) {
-    og_description = "View ML Models on Shoggoth";
+    og_desc = "View ML Models on Shoggoth";
   } else if (strcmp(resource_group_str, "datasets") == 0) {
-    og_description = "View Datasets on Shoggoth";
+    og_desc = "View Datasets on Shoggoth";
   } else if (strcmp(resource_group_str, "papers") == 0) {
-    og_description = "View Papers on Shoggoth";
+    og_desc = "View Papers on Shoggoth";
   }
 
   size_t image_size;
-  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 46, 32, &image_size);
+  unsigned char* cooked = generate_og_image(og_title, og_desc, 46, 24, 46, 32, &image_size);
 
   sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
   resp->content_type = MIME_IMAGE_PNG;
@@ -859,19 +859,19 @@ void profile_og_resource_route(sonic_server_request_t *req) {
 
   ellipsis_text(og_title, 85);
 
-  char *og_description;
+  char *og_desc;
   if (strcmp(resource_group_str, "code") == 0) {
-    og_description = "View Code on Shoggoth";
+    og_desc = "View Code on Shoggoth";
   } else if (strcmp(resource_group_str, "models") == 0) {
-    og_description = "View ML Models on Shoggoth";
+    og_desc = "View ML Models on Shoggoth";
   } else if (strcmp(resource_group_str, "datasets") == 0) {
-    og_description = "View Datasets on Shoggoth";
+    og_desc = "View Datasets on Shoggoth";
   } else if (strcmp(resource_group_str, "papers") == 0) {
-    og_description = "View Papers on Shoggoth";
+    og_desc = "View Papers on Shoggoth";
   }
 
   size_t image_size;
-  unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 34, 32, &image_size);
+  unsigned char* cooked = generate_og_image(og_title, og_desc, 46, 24, 34, 32, &image_size);
 
   sonic_server_response_t *resp = sonic_new_response(STATUS_200, MIME_TEXT_HTML);
   resp->content_type = MIME_IMAGE_PNG;

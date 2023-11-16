@@ -119,7 +119,6 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
     PixelWand *background_color;
     PixelWand *text_color;
 
-    MagickWandGenesis();
     magick_wand = NewMagickWand();
 
     background_color = NewPixelWand();
@@ -153,7 +152,14 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
     magick_wand = DestroyMagickWand(magick_wand);
     background_color = DestroyPixelWand(background_color);
     draw_wand = DestroyDrawingWand(draw_wand);
-    MagickWandTerminus();
 
     return png_as_string;
+}
+
+void og_init_magickwand() {
+    MagickWandGenesis();
+}
+
+void og_deinit_magickwand() {
+    MagickWandTerminus();
 }

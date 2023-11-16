@@ -18,7 +18,7 @@ char* wordwrap(const char* text, size_t width) {
     }
 
     size_t text_len = strlen(text);
-    char* wrapped_text = malloc((text_len + text_len / width + 3) * sizeof(char)); // text_width, every line and null-terminator
+    char* wrapped_text = malloc((2 * text_len + 1) * sizeof(char));
 
     size_t current_width = 0;
     size_t wrapped_text_index = 0;

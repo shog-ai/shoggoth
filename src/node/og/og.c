@@ -59,6 +59,16 @@ char* wordwrap(const char* text, size_t width) {
     return wrapped_text;
 }
 
+void ellipsis_text(char *text, size_t width) {
+    size_t length = strlen(text);
+    if (length > width) {
+        text[width - 3] = '.';
+        text[width - 2] = '.';
+        text[width - 1] = '.';
+        text[width] = '\0';
+    }
+}
+
 void add_wrapped_text(MagickWand *main_wand, const char *text, ssize_t pointsize, size_t width, size_t height, ssize_t x, size_t wrap_at, bool is_gravity_south) {
     char *modified_text = wordwrap(text, wrap_at);
     if (modified_text == NULL) {
@@ -122,8 +132,8 @@ unsigned char* generate_og_image(const char* title, const char* desc, ssize_t ti
     DrawSetFillColor(draw_wand, text_color);
     DrawSetGravity(draw_wand, NorthWestGravity);
 
-    add_wrapped_text(magick_wand, title, title_size, 700, 300, 415, title_wrap, false);
-    add_wrapped_text(magick_wand, desc, desc_size, 700, 300, 415, desc_wrap, true);
+    add_wrapped_text(magick_wand, title, title_size, 750, 300, 415, title_wrap, false);
+    add_wrapped_text(magick_wand, desc, desc_size, 750, 300, 415, desc_wrap, true);
 
     MagickWand *logo_wand = NewMagickWand();
     MagickReadImage(logo_wand, "./node/explorer/static/img/icon/icon-250x250.png");

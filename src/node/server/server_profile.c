@@ -821,21 +821,24 @@ void profile_og_resource_route(sonic_server_request_t *req) {
   char *resource_name = sonic_get_path_segment(req, "resource_name");
   char *resource_group_str = sonic_get_path_segment(req, "resource_group");
 
-  char inner_path[FILE_PATH_SIZE];
-  sprintf(inner_path, "");
+  char *inner_path;
 
   bool is_inner = req->matched_route->path->has_wildcard;
   if (is_inner) {
     sonic_wildcard_segments_t segments = sonic_get_path_wildcard_segments(req);
+    inner_path = malloc((FILE_PATH_SIZE + 3 * segments.count) * sizeof(char));
 
     for (u64 i = 0; i < segments.count; i++) {
-      char buf[FILE_PATH_SIZE];
-      sprintf(buf, "/%s", segments.segments[i]);
+      char buf[FILE_PATH_SIZE + 3];
+      sprintf(buf, " / %s", segments.segments[i]);
 
       strcat(inner_path, buf);
     }
 
     sonic_free_path_wildcard_segments(segments);
+  }
+  else {
+    inner_path = "";
   }
 
   int resource_path_len = snprintf(NULL, 0, "%s%s", resource_name, inner_path);
@@ -846,21 +849,26 @@ void profile_og_resource_route(sonic_server_request_t *req) {
   char *resource_path = malloc(resource_path_size * sizeof(char));
   snprintf(resource_path, resource_path_size, "%s%s", resource_name, inner_path);
 
-  int og_title_len = snprintf(NULL, 0, "%s / %s", shoggoth_id, resource_group_str);
+  int og_title_len = snprintf(NULL, 0, "%s / %s / %s", shoggoth_id, resource_group_str, resource_path);
   if (og_title_len < 0) {
     PANIC("snprintf failed");
   }
   size_t og_title_size = (size_t)og_title_len + 1;
   char *og_title = malloc(og_title_size * sizeof(char));
-  snprintf(og_title, og_title_size, "%s / %s", shoggoth_id, resource_group_str);
+  snprintf(og_title, og_title_size, "%s / %s / %s", shoggoth_id, resource_group_str, resource_path);
 
-  int og_description_len = snprintf(NULL, 0, "View %s on Shoggoth", resource_path);
-  if (og_description_len < 0) {
-    PANIC("snprintf failed");
+  ellipsis_text(og_title, 85);
+
+  char *og_description;
+  if (strcmp(resource_group_str, "code") == 0) {
+    og_description = "View Code on Shoggoth";
+  } else if (strcmp(resource_group_str, "models") == 0) {
+    og_description = "View ML Models on Shoggoth";
+  } else if (strcmp(resource_group_str, "datasets") == 0) {
+    og_description = "View Datasets on Shoggoth";
+  } else if (strcmp(resource_group_str, "papers") == 0) {
+    og_description = "View Papers on Shoggoth";
   }
-  size_t og_description_size = (size_t)og_description_len + 1;
-  char *og_description = malloc(og_description_size * sizeof(char));
-  snprintf(og_description, og_description_size, "View %s on Shoggoth", resource_path);
 
   size_t image_size;
   unsigned char* cooked = generate_og_image(og_title, og_description, 46, 24, 34, 32, &image_size);
@@ -873,7 +881,6 @@ void profile_og_resource_route(sonic_server_request_t *req) {
   free(cooked);
   free(resource_path);
   free(og_title);
-  free(og_description);
   sonic_free_server_response(resp);
 }
 

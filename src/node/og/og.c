@@ -89,12 +89,14 @@ void add_wrapped_text(MagickWand *main_wand, const char *text, ssize_t pointsize
     DrawSetFontSize(draw_wand, pointsize);
     DrawSetTextAlignment(draw_wand, LeftAlign);
 
-    char *line = strtok(modified_text, "\n");
+    char *line;
+    char *saveptr;
+    line = strtok_r(modified_text, "\n", &saveptr);
     ssize_t current_y = pointsize;
     while (line != NULL) {
         MagickAnnotateImage(text_wand, draw_wand, 0, current_y, 0, line);
         current_y += (ssize_t)(pointsize * LINE_HEIGHT);
-        line = strtok(NULL, "\n");
+        line = strtok_r(NULL, "\n", &saveptr);
     }
 
     ssize_t text_wand_height = current_y - pointsize;

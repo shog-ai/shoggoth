@@ -827,6 +827,7 @@ void profile_og_resource_route(sonic_server_request_t *req) {
   if (is_inner) {
     sonic_wildcard_segments_t segments = sonic_get_path_wildcard_segments(req);
     inner_path = malloc((FILE_PATH_SIZE + 3 * segments.count) * sizeof(char));
+    inner_path[0] = '\0';
 
     for (u64 i = 0; i < segments.count; i++) {
       char buf[FILE_PATH_SIZE + 3];

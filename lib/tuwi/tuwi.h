@@ -1,3 +1,13 @@
+/**** tuwi.h ****
+ *
+ *  Copyright (c) 2023 Shoggoth Systems
+ *
+ * Part of the Tuwi framework, under the MIT License.
+ * See LICENCE file for license information.
+ * SPDX-License-Identifier: MIT
+ *
+ ****/
+
 #ifndef TUWI_H
 #define TUWI_H
 
@@ -7,7 +17,11 @@
 #include <netlibc/log.h>
 #include <netlibc/string.h>
 
+#ifdef _WIN32
+#else
 #include <termios.h>
+#endif
+
 #include <wchar.h>
 
 typedef struct RGB {

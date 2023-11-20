@@ -11,16 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: configure
+      run: ./configure
     - name: build with make
       run: make
-    # - name: make test
-      # run: make test
-
+  
   build-windows:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: configure
+      run: ./configure-windows
     - name: build with make
-      run: make
-    # - name: make test
-      # run: make test
+      run: make windows
+
+

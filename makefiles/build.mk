@@ -117,6 +117,7 @@ $(TARGET_DIR)/shogdb:
 	cd ./lib/shogdb/ && make
 	cp ./lib/shogdb/target/shogdb $(TARGET_DIR)/
 
+
 dev: package-dev
 
 shogdb: $(TARGET_DIR)/shogdb
@@ -141,7 +142,7 @@ build-objects-debug:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/templating/templating.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/profile/profile.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/utils/utils.c
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(CLIENT_SRC_DIR)/client.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(CLIENT_SRC_DIR)/clone.c
@@ -177,7 +178,7 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/args/args.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/profile/profile.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/utils/utils.c
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) -Wno-deprecated-declarations $(CFLAGS_SANITIZE) -c $(SRC_DIR)/openssl/openssl.c 
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations $(CFLAGS_SANITIZE) -c $(SRC_DIR)/openssl/openssl.c 
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(CLIENT_SRC_DIR)/client.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(CLIENT_SRC_DIR)/clone.c
@@ -213,7 +214,7 @@ build-objects-flat:
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/templating/templating.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/profile/profile.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/utils/utils.c
-	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
+	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
 
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(CLIENT_SRC_DIR)/client.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(CLIENT_SRC_DIR)/clone.c

@@ -40,7 +40,7 @@ run: build
 ./target/shogdb: target-dir
 	echo "Building shogdb..."
 	
-	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) $(LDFLAGS) ./src/main.c ./src/lib/lib.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) -o ./target/shogdb
+	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/lib/lib.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 target-dir:
 	mkdir -p target

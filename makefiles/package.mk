@@ -10,7 +10,7 @@ build-docs: build-static $(STATIC_LIBS)
 
 	cp -r ./src/docs/md/ $(TARGET_DIR)/explorer/docs/md/
 
-	$(CC) $(CFLAGS) ./src/docs/main.c ./src/docs/docs_api.c ./src/md_to_html/md_to_html.c ./lib/md4c/src/entity.c ./lib/md4c/src/md4c.c ./lib/md4c/src/md4c-html.c ./target/libshoggoth.a $(STATIC_LIBS) $(LDFLAGS) -o $(TARGET_DIR)/docsgen
+	$(CC) $(CFLAGS) -U _WIN32 ./src/docs/main.c ./src/docs/docs_api.c ./src/md_to_html/md_to_html.c ./lib/md4c/src/entity.c ./lib/md4c/src/md4c.c ./lib/md4c/src/md4c-html.c ./target/libshoggoth.a $(STATIC_LIBS) $(LDFLAGS) -o $(TARGET_DIR)/docsgen
 	cd $(TARGET_DIR) && ./docsgen
 
 build-explorer: build-static $(STATIC_LIBS)

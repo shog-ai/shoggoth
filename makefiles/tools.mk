@@ -44,5 +44,8 @@ sync-libs-headers:
 	cp ./lib/tuwi/tuwi.h ./src/include/tuwi.h
 	cp ./lib/shogdb/src/lib/lib.h ./src/include/shogdb.h
 
+fbinfer:
+	infer run --biabduction-unsafe-malloc -- make
+
 kill-db:
 	killall -v -w -s 9 shogdb

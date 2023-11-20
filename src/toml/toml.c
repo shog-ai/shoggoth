@@ -18,8 +18,6 @@
 #include <stdlib.h>
 
 result_t toml_string_to_node_config(char *config_str) {
-  node_config_t *config = calloc(1, sizeof(node_config_t));
-
   char errbuf[200];
   toml_table_t *config_toml = toml_parse(config_str, errbuf, sizeof(errbuf));
   if (config_toml == NULL) {
@@ -31,6 +29,8 @@ result_t toml_string_to_node_config(char *config_str) {
   if (network_table == NULL) {
     PANIC("TOML: Could not parse network table \n");
   }
+
+  node_config_t *config = calloc(1, sizeof(node_config_t));
 
   toml_datum_t network_host = toml_string_in(network_table, "host");
   config->network.host = strdup(network_host.u.s);

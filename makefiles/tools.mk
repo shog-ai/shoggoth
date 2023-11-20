@@ -4,6 +4,8 @@ clean:
 	$(MAKE) clean-camel
 	$(MAKE) clean-tuwi
 	$(MAKE) clean-netlibc
+	$(MAKE) clean-tomlc
+	$(MAKE) clean-cjson
 
 clean-shoggoth: target-dir
 	rm -rf ./target/*
@@ -20,6 +22,12 @@ clean-tuwi:
 
 clean-netlibc:
 	cd lib/netlibc && $(MAKE) clean
+
+clean-tomlc:
+	cd lib/tomlc && $(MAKE) clean
+
+clean-cjson:
+	cd lib/cjson && $(MAKE) clean
 
 version:
 	echo $(VERSION)

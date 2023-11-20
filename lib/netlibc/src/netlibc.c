@@ -18,17 +18,16 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include <direct.h>
-#include <windows.h>
-#else
 #include <sys/stat.h>
 #include <sys/types.h>
-#endif
 
 #include <dlfcn.h>
 #include <errno.h>
+
+#ifdef __linux__
 #include <execinfo.h>
+#endif
+
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/mman.h>
@@ -42,17 +41,11 @@
  *
  ****/
 bool dir_exists(char *dir_path) {
-#ifdef _WIN32
-  DWORD attrib = GetFileAttributesA(dir_path);
-  return (attrib != INVALID_FILE_ATTRIBUTES &&
-          (attrib & FILE_ATTRIBUTE_DIRECTORY));
-#else
   struct stat st;
   if (stat(dir_path, &st) == 0) {
     return S_ISDIR(st.st_mode);
   }
   return false;
-#endif
 }
 
 /****
@@ -71,13 +64,7 @@ bool file_exists(const char *file_path) {
  * creates a new directory
  *
  ****/
-void create_dir(const char *dir_path) {
-#ifdef _WIN32
-  _mkdir(dir_path);
-#else
-  mkdir(dir_path, 0777);
-#endif
-}
+void create_dir(const char *dir_path) { mkdir(dir_path, 0777); }
 
 /****
  * creates a new file
@@ -789,6 +776,8 @@ void modify_symbol_string(char *input) {
 }
 
 void print_backtrace() {
+#ifndef _WIN32
+#ifndef __APPLE__
   void *call_stack[10];
   int num_frames = backtrace(call_stack, 10);
   char **symbols = backtrace_symbols(call_stack, num_frames);
@@ -822,6 +811,10 @@ void print_backtrace() {
   }
 
   free(symbols);
+  return;
+#endif
+#endif
+  printf("No backtrace for this platform \n");
 }
 
 /****

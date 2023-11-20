@@ -1,3 +1,13 @@
+/**** tuwi.c ****
+ *
+ *  Copyright (c) 2023 Shoggoth Systems
+ *
+ * Part of the Tuwi framework, under the MIT License.
+ * See LICENCE file for license information.
+ * SPDX-License-Identifier: MIT
+ *
+ ****/
+
 #include "../tuwi.h"
 
 #include <assert.h>
@@ -5,9 +15,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef _WIN32
 #include <sys/ioctl.h>
+#else
+#include <windows.h>
+#endif
+
 #include <unistd.h>
 
+#ifndef _WIN32
 cords_t tuwi_get_terminal_size() {
   struct winsize view_size;
   ioctl(0, TIOCGWINSZ, &view_size);
@@ -16,6 +33,17 @@ cords_t tuwi_get_terminal_size() {
 
   return cords;
 }
+#else
+cords_t tuwi_get_terminal_size() {
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+  cords_t cords = {csbi.srWindow.Right - csbi.srWindow.Left + 1,
+                   csbi.srWindow.Bottom - csbi.srWindow.Top + 1};
+
+  return cords;
+}
+#endif
 
 bool tuwi_terminal_resized(cords_t former_size) {
   cords_t size = tuwi_get_terminal_size();

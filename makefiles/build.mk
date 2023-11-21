@@ -14,7 +14,7 @@ endif
 LD = $(CC)
 
 # flags
-CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl) $$(pkg-config --cflags MagickWand) -I ./lib/netlibc/include
+CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ./lib/netlibc/include
 CFLAGS_FLAT = -DNDEBUG
 
 ifeq ($(CC), gcc)
@@ -23,11 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-ifeq ($(shell pkg-config --exists 'MagickWand >= 7' && echo "YES" || echo "NO"), YES)
-    CFLAGS += -DMAGICKWAND_7
-endif
-
-LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) $$(pkg-config --libs MagickWand) -pthread
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion
@@ -74,7 +70,7 @@ target-dir:
 	mkdir -p $(TARGET_DIR)
 
 configure-ubuntu:
-	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang libmagickwand-dev
+	sudo apt install build-essential libssl-dev uuid-dev pkgconf clang
 
 
 # DEPENDENCIES

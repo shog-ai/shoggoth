@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread -lm
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion

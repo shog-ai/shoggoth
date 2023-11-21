@@ -978,4 +978,8 @@ void add_profile_routes(node_ctx_t *ctx, sonic_server_t *server) {
       server,
       "/explorer/profile_og/{shoggoth_id}/{resource_group}/{resource_name}",
       METHOD_GET, og_profile_resource_route);
+  sonic_add_route(
+      server,
+      "/explorer/profile_og/{shoggoth_id}/{resource_group}/{resource_name}/{*}",
+      METHOD_GET, og_profile_resource_route);
 }

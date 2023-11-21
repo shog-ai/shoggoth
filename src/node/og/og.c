@@ -1,10 +1,31 @@
 #include <netlibc/log.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 unsigned char *ttf_buffer = NULL;
 unsigned char *logo_data = NULL;
@@ -113,16 +134,16 @@ void render_line(unsigned char *image, stbtt_fontinfo *font, const char *text, i
                     if (image_x < 0 || image_x >= IMG_WIDTH || image_y < 0 || image_y >= IMG_HEIGHT) continue;
                     int byte_index = (image_x + image_y * IMG_WIDTH) * 3;
                     unsigned char alpha = bitmap[i + j * w];
-                    image[byte_index] = (alpha * 255 + (255 - alpha) * image[byte_index]) / 255;
-                    image[byte_index + 1] = (alpha * 255 + (255 - alpha) * image[byte_index + 1]) / 255;
-                    image[byte_index + 2] = (alpha * 255 + (255 - alpha) * image[byte_index + 2]) / 255;
+                    image[byte_index] = (unsigned char)((alpha * 255 + (0xFF - alpha) * image[byte_index]) / 0xFF);
+                    image[byte_index + 1] = (unsigned char)((alpha * 255 + (0xFF - alpha) * image[byte_index + 1]) / 0xFF);
+                    image[byte_index + 2] = (unsigned char)((alpha * 255 + (0xFF - alpha) * image[byte_index + 2]) / 0xFF);
                 }
             }
         }
 
         int advance;
         stbtt_GetCodepointHMetrics(font, *p, &advance, NULL);
-        x += (int)(advance * scale);
+        x += (int)((float)advance * scale);
 
         if (bitmap) {
             stbtt_FreeBitmap(bitmap, NULL);
@@ -134,10 +155,10 @@ void render_wrapped_text(unsigned char *image, stbtt_fontinfo *font, const char 
     char *saveptr;
     char *modified_text = wordwrap(text, wrapat);
     char *line = strtok_r(modified_text, "\n", &saveptr);
-    float baseline_y = y - pointsize * (LINE_HEIGHT - 1);
+    float baseline_y = (float)y - pointsize * (LINE_HEIGHT - 1);
     int i = is_gravity_south ? count_lines(modified_text) : 1;
     while (line != NULL) {
-        float y_offset = i * pointsize * LINE_HEIGHT;
+        float y_offset = (float)i * pointsize * LINE_HEIGHT;
         if (is_gravity_south) {
             render_line(image, font, line, (int)(baseline_y - y_offset), pointsize);
             i--;
@@ -187,9 +208,9 @@ unsigned char* generate_og_image(const char* title, const char* desc, float titl
 
             unsigned char alpha = logo_channels >= 4 ? logo_data[png_index + 3] : 255;
 
-            image[image_index] = (alpha * logo_data[png_index] + (255 - alpha) * image[image_index]) / 255;
-            image[image_index + 1] = (alpha * logo_data[png_index + 1] + (255 - alpha) * image[image_index + 1]) / 255;
-            image[image_index + 2] = (alpha * logo_data[png_index + 2] + (255 - alpha) * image[image_index + 2]) / 255;
+            image[image_index] = (unsigned char)((alpha * logo_data[png_index] + (255 - alpha) * image[image_index]) / 255);
+            image[image_index + 1] = (unsigned char)((alpha * logo_data[png_index + 1] + (255 - alpha) * image[image_index + 1]) / 255);
+            image[image_index + 2] = (unsigned char)((alpha * logo_data[png_index + 2] + (255 - alpha) * image[image_index + 2]) / 255);
         }
     }
 

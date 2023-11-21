@@ -20,20 +20,30 @@ BUILD
 ================================
 
 The following dependencies are required to build Shoggoth
-- gcc
+- gcc or clang
 - GNU make
 - pkg-config
-- which
 - openssl (and its development headers)
 - libuuid (and its development headers)
 - libsanitizer (and its development headers)
 - GNU find
 - zip
 
-If on Void Linux, the following command should install the dependencies:
-`xbps-install pkg-config gcc make which openssl openssl-devel libuuid libuuid-devel libsanitizer-devel findutils zip`
+If building on a UNIX system like Linux or macOS, run the configure script to automatically install the above dependencies:
 
-Then, run `make` on the shoggoth directory. You will have Shoggoth at `./target/shog-flat`.
+$ ./configure
+
+Then, run `make` on the shoggoth directory:
+
+$ make
+
+This will build Shoggoth with supporting runtime files into a zip file ./target/shoggoth-release-<VERSION>-<OS>-<ARCH>.zip for example ./target/shoggoth-release-v0.1.5-Linux-x86_64.zip
+
+After building, to install Shoggoth for the current user run:
+
+$ make install
+
+NOTE: do not use sudo. Shoggoth will not be installed globally, so sudo is not required.
 
 LICENSE
 =================================

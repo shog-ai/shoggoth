@@ -27,7 +27,6 @@ The following dependencies are required to build Shoggoth
 - pkg-config
 - openssl (and its development headers)
 - libuuid (and its development headers)
-- libsanitizer (and its development headers)
 - GNU find
 - zip
 
@@ -39,7 +38,7 @@ Then, run `make` on the shoggoth directory:
 
 $ make
 
-This will build Shoggoth with supporting runtime files into a zip file ./target/shoggoth-release-<VERSION>-<OS>-<ARCH>.zip for example ./target/shoggoth-release-v0.1.5-Linux-x86_64.zip
+This will build Shoggoth with supporting runtime files into a zip file ./target/shoggoth-release-<VERSION>-<OS>-<ARCH>.zip for example ./target/shoggoth-release-v0.1.6-Linux-x86_64.zip
 
 After building, to install Shoggoth for the current user, run:
 

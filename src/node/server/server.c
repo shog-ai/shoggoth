@@ -45,9 +45,9 @@ void *start_node_server(void *thread_args) {
   args->ctx->node_http_server = server;
   args->ctx->node_server_started = true;
 
-  og_init_magickwand();
+  og_init_stb();
   int failed = sonic_start_server(server);
-  og_deinit_magickwand();
+  og_deinit_stb();
   if (failed) {
     LOG(ERROR, "start node server failed");
     shoggoth_node_exit(1);

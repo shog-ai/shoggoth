@@ -1,16 +1,54 @@
-#ifdef MAGICKWAND_7
-    #include <MagickWand/MagickWand.h>
-#else
-    #include <wand/MagickWand.h>
-#endif
-#include <string.h>
-#include <stdbool.h>
+#include <netlibc/log.h>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-size_t IMG_WIDTH = 1132;
-size_t IMG_HEIGHT = 566;
-size_t ICON_SIZE = 250;
-size_t PADDING_VERTICAL = 138;
-double LINE_HEIGHT = 1.225;
+unsigned char *ttf_buffer = NULL;
+unsigned char *logo_data = NULL;
+int logo_width = 0;
+int logo_height = 0;
+int logo_channels = 0;
+
+#define TTF_BUFFER_SIZE 1 << 20
+#define IMG_WIDTH 1132
+#define IMG_HEIGHT 566
+#define ICON_SIZE 250
+
+#define MARGIN_LEFT 415
+#define PADDING_HORIZONTAL 94
+#define PADDING_VERTICAL 138
+
+#define LINE_HEIGHT 1.225f
+
+#define BACKGROUND_COLOR_R 134
+#define BACKGROUND_COLOR_G 62
+#define BACKGROUND_COLOR_B 0
+
+#define LOGO_FILEPATH "./node/explorer/static/img/icon/icon-250x250.png"
+#define FONT_FILEPATH "./node/explorer/static/font/Roboto-Regular.ttf"
+
+void ellipsis_text(char *text, size_t width) {
+    size_t length = strlen(text);
+    if (length > width) {
+        text[width - 3] = '.';
+        text[width - 2] = '.';
+        text[width - 1] = '.';
+        text[width] = '\0';
+    }
+}
+
+int count_lines(const char *text) {
+    int count = 0;
+    for (const char *p = text; *p; p++) {
+        if (*p == '\n') {
+            count++;
+        }
+    }
+    return count;
+}
 
 char* wordwrap(const char* text, size_t width) {
     if (text == NULL || width <= 0) {
@@ -59,110 +97,134 @@ char* wordwrap(const char* text, size_t width) {
     return wrapped_text;
 }
 
-void ellipsis_text(char *text, size_t width) {
-    size_t length = strlen(text);
-    if (length > width) {
-        text[width - 3] = '.';
-        text[width - 2] = '.';
-        text[width - 1] = '.';
-        text[width] = '\0';
+void render_line(unsigned char *image, stbtt_fontinfo *font, const char *text, int baseline_y, float pointsize) {
+    float scale = stbtt_ScaleForPixelHeight(font, pointsize*LINE_HEIGHT);
+    int x = MARGIN_LEFT;
+
+    for (const char *p = text; *p; p++) {
+        int w, h, xoff, yoff;
+        unsigned char *bitmap = stbtt_GetCodepointBitmap(font, scale, scale, *p, &w, &h, &xoff, &yoff);
+
+        if (bitmap) {
+            for (int j = 0; j < h; ++j) {
+                for (int i = 0; i < w; ++i) {
+                    int image_x = x + i + xoff;
+                    int image_y = baseline_y + j + yoff;
+                    if (image_x < 0 || image_x >= IMG_WIDTH || image_y < 0 || image_y >= IMG_HEIGHT) continue;
+                    int byte_index = (image_x + image_y * IMG_WIDTH) * 3;
+                    unsigned char alpha = bitmap[i + j * w];
+                    image[byte_index] = (alpha * 255 + (255 - alpha) * image[byte_index]) / 255;
+                    image[byte_index + 1] = (alpha * 255 + (255 - alpha) * image[byte_index + 1]) / 255;
+                    image[byte_index + 2] = (alpha * 255 + (255 - alpha) * image[byte_index + 2]) / 255;
+                }
+            }
+        }
+
+        int advance;
+        stbtt_GetCodepointHMetrics(font, *p, &advance, NULL);
+        x += (int)(advance * scale);
+
+        if (bitmap) {
+            stbtt_FreeBitmap(bitmap, NULL);
+        }
     }
 }
 
-void add_wrapped_text(MagickWand *main_wand, const char *text, ssize_t pointsize, size_t width, size_t height, ssize_t x, size_t wrap_at, bool is_gravity_south) {
-    char *modified_text = wordwrap(text, wrap_at);
-    if (modified_text == NULL) {
-        // text was empty
-        return;
-    }
-
-    MagickWand *text_wand = NewMagickWand();
-    PixelWand *background_color = NewPixelWand();
-    PixelWand *text_color = NewPixelWand();
-
-    PixelSetColor(background_color, "transparent");
-    PixelSetColor(text_color, "white");
-    MagickNewImage(text_wand, width, height, background_color);
-
-    DrawingWand *draw_wand = NewDrawingWand();
-    DrawSetFillColor(draw_wand, text_color);
-    DrawSetFontSize(draw_wand, pointsize);
-    DrawSetTextAlignment(draw_wand, LeftAlign);
-
-    char *line;
+void render_wrapped_text(unsigned char *image, stbtt_fontinfo *font, const char *text, int y, float pointsize, size_t wrapat, bool is_gravity_south) {
     char *saveptr;
-    line = strtok_r(modified_text, "\n", &saveptr);
-    ssize_t current_y = pointsize;
+    char *modified_text = wordwrap(text, wrapat);
+    char *line = strtok_r(modified_text, "\n", &saveptr);
+    float baseline_y = y - pointsize * (LINE_HEIGHT - 1);
+    int i = is_gravity_south ? count_lines(modified_text) : 1;
     while (line != NULL) {
-        MagickAnnotateImage(text_wand, draw_wand, 0, current_y, 0, line);
-        current_y += (ssize_t)(pointsize * LINE_HEIGHT);
+        float y_offset = i * pointsize * LINE_HEIGHT;
+        if (is_gravity_south) {
+            render_line(image, font, line, (int)(baseline_y - y_offset), pointsize);
+            i--;
+        }
+        else {
+            render_line(image, font, line, (int)(baseline_y + y_offset), pointsize);
+            i++;
+        }
         line = strtok_r(NULL, "\n", &saveptr);
     }
-
-    ssize_t text_wand_height = current_y - pointsize;
-    ssize_t y_from_bottom = (ssize_t)IMG_HEIGHT - text_wand_height - (ssize_t)PADDING_VERTICAL;
-    ssize_t y = is_gravity_south ? y_from_bottom : (ssize_t)PADDING_VERTICAL;
-#ifdef MAGICKWAND_7
-    MagickCompositeImage(main_wand, text_wand, OverCompositeOp, MagickTrue, x, y);
-#else
-    MagickCompositeImage(main_wand, text_wand, OverCompositeOp, x, y);
-#endif
-
     free(modified_text);
-    DestroyMagickWand(text_wand);
-    DestroyPixelWand(background_color);
-    DestroyPixelWand(text_color);
-    DestroyDrawingWand(draw_wand);
 }
 
-unsigned char* generate_og_image(const char* title, const char* desc, ssize_t title_size, size_t title_wrap, ssize_t desc_size, size_t desc_wrap, size_t* image_size) {
-    MagickWand *magick_wand;
-    DrawingWand *draw_wand;
-    PixelWand *background_color;
-    PixelWand *text_color;
+unsigned char* generate_og_image(const char* title, const char* desc, float title_size, size_t title_wrap, float desc_size, size_t desc_wrap, int* image_size) {
 
-    magick_wand = NewMagickWand();
+    stbtt_fontinfo *font = (stbtt_fontinfo*)malloc(sizeof(stbtt_fontinfo));
+    if (!stbtt_InitFont(font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer, 0))) {
+        free(font);
+        unsigned char *dummy_buffer = malloc(1);
+        dummy_buffer[0] = '\0';
+        *image_size = 1;
+        return dummy_buffer;
+    }
 
-    background_color = NewPixelWand();
-    PixelSetColor(background_color, "#863e00");
-    text_color = NewPixelWand();
-    PixelSetColor(text_color, "#ffffff");
-    MagickNewImage(magick_wand, IMG_WIDTH, IMG_HEIGHT, background_color);
+    unsigned char *image = (unsigned char*)malloc(IMG_WIDTH * IMG_HEIGHT * 3);
+    for (size_t i = 0; i < IMG_WIDTH * IMG_HEIGHT * 3; i += 3) {
+        image[i] = BACKGROUND_COLOR_R;
+        image[i + 1] = BACKGROUND_COLOR_G;
+        image[i + 2] = BACKGROUND_COLOR_B;
+    }
 
-    draw_wand = NewDrawingWand();
-    DrawSetFillColor(draw_wand, text_color);
-    DrawSetGravity(draw_wand, NorthWestGravity);
+    render_wrapped_text(image, font, title, PADDING_VERTICAL, title_size, title_wrap, false);
+    render_wrapped_text(image, font, desc, IMG_HEIGHT - PADDING_VERTICAL, desc_size, desc_wrap, true);
 
-    add_wrapped_text(magick_wand, title, title_size, 750, 300, 415, title_wrap, false);
-    add_wrapped_text(magick_wand, desc, desc_size, 750, 300, 415, desc_wrap, true);
+    int offset_x = PADDING_HORIZONTAL;
+    int offset_y = IMG_HEIGHT / 2 - ICON_SIZE / 2;
 
-    MagickWand *logo_wand = NewMagickWand();
-    MagickReadImage(logo_wand, "./node/explorer/static/img/icon/icon-250x250.png");
-#ifdef MAGICKWAND_7
-    MagickCompositeImage(magick_wand, logo_wand, OverCompositeOp, MagickTrue, 94, IMG_HEIGHT / 2 - ICON_SIZE / 2);
-#else
-    MagickCompositeImage(magick_wand, logo_wand, OverCompositeOp, 94, IMG_HEIGHT / 2 - ICON_SIZE / 2);
-#endif
-    DestroyMagickWand(logo_wand);
+    for (int y = 0; y < logo_height; ++y) {
+        for (int x = 0; x < logo_width; ++x) {
+            int target_x = x + offset_x;
+            int target_y = y + offset_y;
 
-    MagickSetImageFormat(magick_wand, "PNG");
-    unsigned char* png_as_string = NULL;
-    *image_size = 0;
-    MagickResetIterator(magick_wand);
-    png_as_string = MagickGetImageBlob(magick_wand, image_size);
+            if (target_x >= IMG_WIDTH || target_y >= IMG_HEIGHT || target_x < 0 || target_y < 0) continue;
 
-    magick_wand = DestroyMagickWand(magick_wand);
-    background_color = DestroyPixelWand(background_color);
-    text_color = DestroyPixelWand(text_color);
-    draw_wand = DestroyDrawingWand(draw_wand);
+            int png_index = (x + y * logo_width) * logo_channels;
+            int image_index = (target_x + target_y * IMG_WIDTH) * 3;
 
-    return png_as_string;
+            unsigned char alpha = logo_channels >= 4 ? logo_data[png_index + 3] : 255;
+
+            image[image_index] = (alpha * logo_data[png_index] + (255 - alpha) * image[image_index]) / 255;
+            image[image_index + 1] = (alpha * logo_data[png_index + 1] + (255 - alpha) * image[image_index + 1]) / 255;
+            image[image_index + 2] = (alpha * logo_data[png_index + 2] + (255 - alpha) * image[image_index + 2]) / 255;
+        }
+    }
+
+    unsigned char *png_buffer = stbi_write_png_to_mem(image, IMG_WIDTH * 3, IMG_WIDTH, IMG_HEIGHT, 3, image_size);
+    if (!png_buffer) {
+        free(image);
+        free(font);
+        unsigned char *dummy_buffer = malloc(1);
+        dummy_buffer[0] = '\0';
+        *image_size = 1;
+        return dummy_buffer;
+    }
+
+    free(image);
+    free(font);
+    return png_buffer;
 }
 
-void og_init_magickwand() {
-    MagickWandGenesis();
+void og_init_stb() {
+    ttf_buffer = (unsigned char*)malloc(TTF_BUFFER_SIZE);
+
+    FILE *fontFile = fopen(FONT_FILEPATH, "rb");
+    if (!fontFile) {
+        PANIC("Error opening font file\n");
+    }
+    fread(ttf_buffer, 1, TTF_BUFFER_SIZE, fontFile);
+    fclose(fontFile);
+
+    logo_data = stbi_load(LOGO_FILEPATH, &logo_width, &logo_height, &logo_channels, 0);
+    if (!logo_data) {
+        PANIC("Error loading PNG file\n");
+    }
 }
 
-void og_deinit_magickwand() {
-    MagickWandTerminus();
+void og_deinit_stb() {
+    free(ttf_buffer);
+    stbi_image_free(logo_data);
 }

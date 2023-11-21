@@ -43,7 +43,7 @@ You can download Shoggoth from [shoggoth.systems/download.html](https://shoggoth
 Once the download is complete, verify the checksum with the following command to ensure it was not tampered with in transit:
 
 ```bash
-sha256sum shoggoth-v0.1.5-Linux-x86_64.zip
+sha256sum shoggoth-v0.1.6-Linux-x86_64.zip
 ```
 
 Ensure that the printed checksum is the same as the one displayed on the download page.
@@ -51,7 +51,7 @@ Ensure that the printed checksum is the same as the one displayed on the downloa
 Extract the zip archive into your home directory:
 
 ```bash
-unzip -o -q shoggoth-v0.1.5-Linux-x86_64.zip -d $HOME/shoggoth/
+unzip -o -q shoggoth-v0.1.6-Linux-x86_64.zip -d $HOME/shoggoth/
 ```
 
 Your home directory should now contain a `shoggoth` directory. Shoggoth uses this directory as the runtime where essential data is stored.
@@ -102,13 +102,13 @@ git clone -b 0.1.5 https://github.com/shoggoth-systems/shoggoth --depth 1 shoggo
 Or download the source code:
 
 ```bash
-wget https://shoggoth.systems/download/v0.1.5/shoggoth-source-v0.1.5.zip
+wget https://shoggoth.systems/download/v0.1.6/shoggoth-source-v0.1.6.zip
 ```
 
 Then extract the downloaded zip:
 
 ```bash
-  unzip -o -q ./shoggoth-source-v0.1.5.zip -d ./shoggoth-source
+  unzip -o -q ./shoggoth-source-v0.1.6.zip -d ./shoggoth-source
 ```
 
 <div id="build-with-make"></div>

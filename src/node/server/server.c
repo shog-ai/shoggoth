@@ -9,9 +9,9 @@
  ****/
 
 #include "../../json/json.h"
+#include "../og/og.h"
 #include "api.h"
 #include "server_explorer.h"
-#include "../og/og.h"
 
 /****
  * starts a http server exposing the Shoggoth Node API and Shoggoth Explorer
@@ -45,7 +45,7 @@ void *start_node_server(void *thread_args) {
   args->ctx->node_http_server = server;
   args->ctx->node_server_started = true;
 
-  og_init_stb();
+  og_init_stb(args->ctx);
   int failed = sonic_start_server(server);
   og_deinit_stb();
   if (failed) {

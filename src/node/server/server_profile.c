@@ -433,11 +433,11 @@ void profile_resource_route(sonic_server_request_t *req) {
       "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth - "
       "Shoggoth is a peer-to-peer, anonymous network for publishing and "
       "distributing open-source code, Machine Learning models, datasets, and "
-      "research papers.\", \"og_url\": \"%s/explorer/profile_og/%s/%s/%s%s\", "
+      "research papers.\", \"og_url\": \"%s/explorer/profile_og/%s/%s/%s\", "
       "\"url\": \"%s/explorer/profile/%s/%s/%s%s\", \"is_profile\": true}";
   int json_len = snprintf(NULL, 0, json_template, shoggoth_id, shoggoth_id,
                           profile_ctx->config->network.public_host, shoggoth_id,
-                          resource_group_str, resource_name, inner_path,
+                          resource_group_str, resource_name,
                           profile_ctx->config->network.public_host, shoggoth_id,
                           resource_group_str, resource_name, inner_path);
   if (json_len < 0) {
@@ -447,7 +447,7 @@ void profile_resource_route(sonic_server_request_t *req) {
   char *head_template_data = malloc(json_template_size * sizeof(char));
   snprintf(head_template_data, json_template_size, json_template, shoggoth_id,
            shoggoth_id, profile_ctx->config->network.public_host, shoggoth_id,
-           resource_group_str, resource_name, inner_path,
+           resource_group_str, resource_name,
            profile_ctx->config->network.public_host, shoggoth_id,
            resource_group_str, resource_name, inner_path);
 

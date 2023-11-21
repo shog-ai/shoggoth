@@ -40,16 +40,16 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   char *head_data = NULL;
   if (gen_type == DOCS) {
-    head_data = "{\"title\": \"Shoggoth Documentation\", \"is_docs\": true}";
+    head_data = "{\"title\": \"Shoggoth Documentation\", \"desc\": \"Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/static/img/og/docs.png\", \"url\": \"/explorer/docs\", \"is_docs\": true}";
   } else if (gen_type == SONIC) {
     head_data =
-        "{\"title\": \"Sonic - Shoggoth Documentation\", \"is_docs\": true}";
+        "{\"title\": \"Sonic — Shoggoth Documentation\", \"desc\": \"Sonic is an HTTP library for the C programming language.\", \"og_url\": \"/explorer/static/img/og/sonic.png\", \"url\": \"/explorer/docs/sonic\", \"is_docs\": true}";
   } else if (gen_type == CAMEL) {
     head_data =
-        "{\"title\": \"Camel - Shoggoth Documentation\", \"is_docs\": true}";
+        "{\"title\": \"Camel — Shoggoth Documentation\", \"desc\": \"Camel is a testing framework for the C programming language.\", \"og_url\": \"/explorer/static/img/og/camel.png\", \"url\": \"/explorer/docs/camel\", \"is_docs\": true}";
   } else if (gen_type == TUWI) {
     head_data =
-        "{\"title\": \"Tuwi - Shoggoth Documentation\", \"is_docs\": true}";
+        "{\"title\": \"Tuwi — Shoggoth Documentation\", \"desc\": \"Tuwi is a terminal user interface framework written in the C programming language.\", \"og_url\": \"/explorer/static/img/og/tuwi.png\", \"url\": \"/explorer/docs/tuwi\", \"is_docs\": true}";
   } else {
     PANIC("unhandled gen type");
   }

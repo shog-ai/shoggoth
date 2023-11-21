@@ -23,7 +23,7 @@ else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 endif
 
-LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread
+LDFLAGS = $$(pkg-config --libs openssl) $$(pkg-config --cflags --libs uuid) -pthread -lm
 
 # warning flags
 WARN_CFLAGS += -Werror -Wall -Wextra -Wformat -Wformat-security -Warray-bounds -Wconversion
@@ -40,7 +40,7 @@ MAIN_OBJ = $(TARGET_DIR)/main.o
 
 # object files for node
 OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
-OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/pin.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/garbage_collector.o
+OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/pin.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/garbage_collector.o $(TARGET_DIR)/og.o
 OBJS += $(TARGET_DIR)/server_explorer.o $(TARGET_DIR)/server_profile.o $(TARGET_DIR)/templating.o
 
 # object files for client
@@ -153,6 +153,7 @@ build-objects-debug:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/pins/pins.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/garbage_collector/garbage_collector.c
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -Wno-error=sign-conversion -Wno-error=conversion -c $(NODE_SRC_DIR)/og/og.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/pin.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/api.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c
@@ -189,6 +190,7 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/pins/pins.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/garbage_collector/garbage_collector.c
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -Wno-error=sign-conversion -Wno-error=conversion $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/og/og.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/pin.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/api.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/server_explorer.c
@@ -225,6 +227,7 @@ build-objects-flat:
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/pins/pins.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/garbage_collector/garbage_collector.c
+	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -Wno-error=sign-conversion -Wno-error=conversion -c $(NODE_SRC_DIR)/og/og.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/pin.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/api.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c

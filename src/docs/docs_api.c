@@ -270,7 +270,7 @@ result_t gen_api_docs() {
 
   template_t *head_template = create_template(
       head_template_string,
-      "{\"title\": \"Shoggoth API Reference\", \"is_api\": true}");
+      "{\"title\": \"Shoggoth API Reference\", \"desc\": \"Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/static/img/og/docs_api.png\", \"url\": \"/explorer/docs/api\", \"is_api\": true}");
   free(head_template_string);
 
   result_t res_api_template_string =

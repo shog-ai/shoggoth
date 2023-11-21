@@ -17,6 +17,38 @@ To learn more about Shoggoth, read the documentation at https://shoggoth.network
 You can install Shoggoth by following the instructions at https://shoggoth.network/explorer/docs#installation
 
 
+
+BUILD
+================================
+
+The following dependencies are required to build Shoggoth
+- gcc or clang
+- GNU make
+- pkg-config
+- openssl (and its development headers)
+- libuuid (and its development headers)
+- libsanitizer (and its development headers)
+- GNU find
+- zip
+
+If building on a UNIX system like Linux or macOS, run the configure script to automatically install the above dependencies:
+
+$ ./configure
+
+Then, run `make` on the shoggoth directory:
+
+$ make
+
+This will build Shoggoth with supporting runtime files into a zip file ./target/shoggoth-release-<VERSION>-<OS>-<ARCH>.zip for example ./target/shoggoth-release-v0.1.5-Linux-x86_64.zip
+
+After building, to install Shoggoth for the current user, run:
+
+$ make install
+
+NOTE: do not use sudo. Shoggoth will not be installed globally, so sudo is not required.
+
+
+
 LICENSE
 =================================
 
@@ -24,6 +56,7 @@ Shoggoth is licensed under the MIT license. Read the LICENSE file for more infor
 
 Shoggoth uses a few dependencies which have their own licenses. The dependencies in the ./lib/ directory are independent of the MIT license used for Shoggoth.
 The source code for each dependency includes a LICENSE file indicating the license that covers it.
+
 
 
 LINKS

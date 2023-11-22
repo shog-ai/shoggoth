@@ -96,7 +96,7 @@ Choose one of the following options to download the source code:
 Using git:
 
 ```bash
-git clone -b 0.1.5 https://github.com/shoggoth-systems/shoggoth --depth 1 shoggoth-source
+git clone -b 0.1.6 https://github.com/shoggoth-systems/shoggoth --depth 1 shoggoth-source
 ```
 
 Or download the source code:

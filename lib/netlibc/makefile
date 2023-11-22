@@ -26,7 +26,12 @@ uninstall:
 
 ./target/libnetlibc.a: target-dir
 	$(CC) $(CFLAGS) -c ./src/netlibc.c -o ./target/netlibc.o
-	ar rcs ./target/libnetlibc.a ./target/netlibc.o
+	$(CC) $(CFLAGS) -c ./src/error.c -o ./target/error.o
+	$(CC) $(CFLAGS) -c ./src/fs.c -o ./target/fs.o
+	$(CC) $(CFLAGS) -c ./src/log.c -o ./target/log.o
+	$(CC) $(CFLAGS) -c ./src/string.c -o ./target/string.o
+	
+	ar rcs ./target/libnetlibc.a ./target/netlibc.o ./target/error.o ./target/fs.o ./target/log.o ./target/string.o
 
 target-dir:
 	mkdir -p target

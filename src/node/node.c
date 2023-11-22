@@ -57,14 +57,10 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char keys_path[FILE_PATH_SIZE];
-  sprintf(keys_path, "%s/keys", node_runtime_path);
+  char *keys_path = string_from(node_runtime_path, "/keys", NULL);
 
-  char private_key_path[FILE_PATH_SIZE];
-  sprintf(private_key_path, "%s/private.txt", keys_path);
-
-  char public_key_path[FILE_PATH_SIZE];
-  sprintf(public_key_path, "%s/public.txt", keys_path);
+  char *private_key_path = string_from(keys_path, "/private.txt", NULL);
+  char *public_key_path = string_from(keys_path, "/public.txt", NULL);
 
   if (!dir_exists(keys_path)) {
     create_dir(keys_path);
@@ -76,19 +72,20 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
     PROPAGATE(res);
   }
 
-  char pins_path[FILE_PATH_SIZE];
-  sprintf(pins_path, "%s/pins", node_runtime_path);
+  free(keys_path);
 
+  char *pins_path = string_from(node_runtime_path, "/pins", NULL);
   if (!dir_exists(pins_path)) {
     create_dir(pins_path);
   }
+  free(pins_path);
 
-  char config_path[FILE_PATH_SIZE];
+  char *config_path = NULL;
 
   if (args->set_config) {
-    strcpy(config_path, args->config_path);
+    config_path = string_from(args->config_path, NULL);
   } else {
-    sprintf(config_path, "%s/config.toml", node_runtime_path);
+    config_path = string_from(node_runtime_path, "config.toml", NULL);
   }
 
   if (!file_exists(config_path)) {
@@ -97,6 +94,8 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
 
   result_t res_config_str = read_file_to_string(config_path);
   char *config_str = PROPAGATE(res_config_str);
+
+  free(config_path);
 
   result_t res_config = toml_string_to_node_config(config_str);
   node_config_t *config = PROPAGATE(res_config);
@@ -107,6 +106,9 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
 
   result_t res_public_key_string = read_file_to_string(public_key_path);
   char *public_key_string = PROPAGATE(res_public_key_string);
+
+  free(public_key_path);
+  free(private_key_path);
 
   result_t res_manifest_str =
       generate_node_manifest(public_key_string, config->network.public_host,
@@ -381,35 +383,37 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
   } else if (pid == 0) {
     // CHILD PROCESS
 
-    char runtime_path[FILE_PATH_SIZE];
-    strcpy(runtime_path, ctx->runtime_path);
+    char *runtime_path = string_from(ctx->runtime_path, NULL);
 
     char node_runtime_path[FILE_PATH_SIZE];
     utils_get_node_runtime_path(ctx, node_runtime_path);
 
-    char node_config_path[FILE_PATH_SIZE];
-
+    char *node_config_path = NULL;
     if (args->set_config) {
-      sprintf(node_config_path, "%s", args->config_path);
+      node_config_path = string_from(args->config_path, NULL);
     } else {
-      sprintf(node_config_path, "%s/node/config.toml", runtime_path);
+      node_config_path = string_from(runtime_path, "/node/config.toml", NULL);
     }
 
-    char node_logs_path[FILE_PATH_SIZE];
-    sprintf(node_logs_path, "%s/node_service_logs.txt", node_runtime_path);
+    char *node_logs_path =
+        string_from(node_runtime_path, "/node_service_logs.txt", NULL);
 
-    char node_pid_path[FILE_PATH_SIZE];
-    sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
+    char *node_pid_path =
+        string_from(node_runtime_path, "/node_service_pid.txt", NULL);
 
     pid_t node_pid = getpid();
     char node_pid_str[120];
     sprintf(node_pid_str, "%d", node_pid);
     write_to_file(node_pid_path, node_pid_str, strlen(node_pid_str));
 
+    free(node_pid_path);
+
     int logs_fd = open(node_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (logs_fd == -1) {
       PANIC("could not open node log file");
     }
+
+    free(node_logs_path);
 
     // Redirect stdin to the read end of the pipe
     dup2(parent_to_child_pipe[0], STDIN_FILENO);
@@ -420,17 +424,21 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
 
     // Execute the node executable
 
-    char node_executable[FILE_PATH_SIZE];
-    sprintf(node_executable, "%s/bin/shog", runtime_path);
+    char *node_executable = string_from(runtime_path, "/bin/shog", NULL);
 
-    char config_arg[FILE_PATH_SIZE];
-    strcpy(config_arg, node_config_path);
+    char *config_arg = strdup(node_config_path);
 
-    char node_runtime_arg[FILE_PATH_SIZE];
-    strcpy(node_runtime_arg, runtime_path);
+    free(node_config_path);
+
+    char *node_runtime_arg = strdup(runtime_path);
+
+    free(runtime_path);
 
     execlp("nohup", "nohup", node_executable, "node", "run", "-c", config_arg,
            "-r", node_runtime_arg, NULL);
+
+    free(config_arg);
+    free(node_runtime_arg);
 
     close(logs_fd);
     PANIC("error occured while launching node executable \n");
@@ -445,10 +453,12 @@ result_t check_node_service(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char node_pid_path[FILE_PATH_SIZE];
-  sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
+  char *node_pid_path =
+      string_from(node_runtime_path, "/node_service_pid.txt", NULL);
 
   result_t res_node_pid_str = read_file_to_string(node_pid_path);
+  free(node_pid_path);
+
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -474,10 +484,11 @@ result_t stop_node_service(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char node_pid_path[FILE_PATH_SIZE];
-  sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
+  char *node_pid_path =
+      string_from(node_runtime_path, "/node_service_pid.txt", NULL);
 
   result_t res_node_pid_str = read_file_to_string(node_pid_path);
+
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -503,6 +514,8 @@ result_t stop_node_service(node_ctx_t *ctx) {
 
   delete_file(node_pid_path);
 
+  free(node_pid_path);
+
   LOG(INFO, "Node service stopped");
 
   return OK(NULL);
@@ -512,10 +525,12 @@ result_t print_node_service_logs(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char node_logs_path[FILE_PATH_SIZE];
-  sprintf(node_logs_path, "%s/node_service_logs.txt", node_runtime_path);
+  char *node_logs_path =
+      string_from(node_runtime_path, "/node_service_logs.txt", NULL);
 
   result_t res_node_logs_str = read_file_to_string(node_logs_path);
+  free(node_logs_path);
+
   char *node_logs_str = PROPAGATE(res_node_logs_str);
 
   if (node_logs_str == NULL) {
@@ -535,10 +550,11 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char node_pid_path[FILE_PATH_SIZE];
-  sprintf(node_pid_path, "%s/node_service_pid.txt", node_runtime_path);
+  char *node_pid_path =
+      string_from(node_runtime_path, "/node_service_pid.txt", NULL);
 
   result_t res_node_pid_str = read_file_to_string(node_pid_path);
+
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
   if (node_pid_str == NULL) {
@@ -566,6 +582,8 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
     }
 
     delete_file(node_pid_path);
+
+    free(node_pid_path);
 
     LOG(INFO, "Node service stopped");
 

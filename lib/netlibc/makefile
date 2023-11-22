@@ -8,6 +8,8 @@ endif
 
 CFLAGS = -g
 
+.PHONY: ./target/libnetlibc.a
+
 all: ./target/libnetlibc.a
 
 install:

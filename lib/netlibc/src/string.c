@@ -8,8 +8,49 @@
  *
  ****/
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+char *string_from(const char *str1, ...) {
+  va_list args;
+  va_start(args, str1);
+
+  // Calculate the total length of the concatenated string
+  size_t total_length = strlen(str1);
+
+  // Concatenate the strings
+  const char *current_str = va_arg(args, const char *);
+  while (current_str != NULL) {
+    total_length += strlen(current_str);
+    current_str = va_arg(args, const char *);
+  }
+
+  va_end(args);
+
+  // Allocate memory for the concatenated string
+  char *result = (char *)malloc(total_length + 1);
+
+  if (result == NULL) {
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(EXIT_FAILURE);
+  }
+
+  // Concatenate the strings again
+  strcpy(result, str1);
+
+  va_start(args, str1);
+  current_str = va_arg(args, const char *);
+  while (current_str != NULL) {
+    strcat(result, current_str);
+    current_str = va_arg(args, const char *);
+  }
+
+  va_end(args);
+
+  return result;
+}
 
 char *escape_character(char *input, char character) {
   if (input == NULL) {

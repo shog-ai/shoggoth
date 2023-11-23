@@ -178,7 +178,7 @@ void profile_resource_route(sonic_server_request_t *req) {
       sprintf(link_url, "/explorer/profile/%s/%s/%s/%s", shoggoth_id,
               resource_group_str, resource_name, files_list->files[i]);
 
-      char new_res[256];
+      char new_res[512];
       sprintf(new_res,
               "<a href=\\\"%s\\\"><div "
               "class=\\\"resource-item\\\"><b>%s</b></div></a>",
@@ -379,30 +379,58 @@ void profile_resource_route(sonic_server_request_t *req) {
 
   free(content);
 
+  char *download_link =
+      string_from("/api/download/", shoggoth_id, "/", resource_group_str, "/",
+                  resource_name, NULL);
+
+  u64 resource_size = UNWRAP_U64(get_dir_size(resource_path));
+
+  char resource_size_str[256];
+  if (resource_size < 1024) {
+    sprintf(resource_size_str, U64_FORMAT_SPECIFIER " B", resource_size);
+  } else if (resource_size < 1024 * 1024) {
+    sprintf(resource_size_str, "%.2f KB\n", (float)resource_size / 1024);
+  } else if (resource_size < 1024 * 1024 * 1024) {
+    sprintf(resource_size_str, "%.2f MB\n",
+            (float)resource_size / (1024 * 1024));
+  } else {
+    sprintf(resource_size_str, "%.2f GB\n",
+            (float)resource_size / (1024 * 1024 * 1024));
+  }
+
   char *template_data = NULL;
 
   if (!is_inner) {
-    template_data = malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
-                            strlen(resource_name) + strlen(shoggoth_id) +
-                            strlen(main_content) + strlen(tabs_str) + 1 + 128) *
-                           sizeof(char));
+    template_data =
+        malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
+                strlen(resource_name) + strlen(shoggoth_id) +
+                strlen(main_content) + strlen(tabs_str) +
+                strlen(download_link) + strlen(resource_size_str) + 1 + 128) *
+               sizeof(char));
 
     sprintf(template_data,
             "{\"title\": \"%s/%s/%s\", \"shoggoth_id\": \"%s\", "
-            "\"main_content\": \"%s\", \"tabs\": \"%s\"}",
+            "\"main_content\": \"%s\", \"tabs\": \"%s\", \"is_resource\": "
+            "true, \"download_link\": "
+            "\"%s\", \"size\": \"%s\"}",
             shoggoth_id, resource_group_str, resource_name, shoggoth_id,
-            main_content, tabs_str);
+            main_content, tabs_str, download_link, resource_size_str);
   } else {
-    template_data = malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
-                            strlen(resource_name) + strlen(shoggoth_id) +
-                            strlen(main_content) + strlen(tabs_str) + 1 + 128) *
-                           sizeof(char));
+    template_data =
+        malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
+                strlen(resource_name) + strlen(shoggoth_id) +
+                strlen(main_content) + strlen(tabs_str) +
+                strlen(download_link) + strlen(resource_size_str) + 1 + 128) *
+               sizeof(char));
 
     sprintf(template_data,
             "{\"title\": \"%s/%s/%s%s\", \"shoggoth_id\": \"%s\", "
-            "\"main_content\": \"%s\", \"tabs\": \"%s\"}",
+            "\"main_content\": \"%s\", \"tabs\": \"%s\", \"is_resource\": "
+            "true, \"download_link\": "
+            "\"%s\", \"size\": \"%s\"}",
             shoggoth_id, resource_group_str, resource_name, inner_path,
-            shoggoth_id, main_content, tabs_str);
+            shoggoth_id, main_content, tabs_str, download_link,
+            resource_size_str);
   }
 
   free(tabs_str);

@@ -36,6 +36,148 @@ void respond_error(sonic_server_request_t *req, char *error_message) {
   sonic_free_server_response(resp);
 }
 
+void api_download_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+  char *group_name = sonic_get_path_segment(req, "group_name");
+  char *resource_name = sonic_get_path_segment(req, "resource_name");
+
+  resource_name[strlen(resource_name) - 4] = '\0';
+
+  LOG(INFO, "RES: %s", resource_name);
+
+  if (strlen(shoggoth_id) != 36) {
+    respond_error(req, "invalid Shoggoth ID");
+
+    return;
+  }
+
+  char runtime_path[FILE_PATH_SIZE];
+  utils_get_node_runtime_path(api_ctx, runtime_path);
+
+  char pin_dir_path[FILE_PATH_SIZE];
+  sprintf(pin_dir_path, "%s/pins/%s", runtime_path, shoggoth_id);
+
+  char target_dir_path[FILE_PATH_SIZE];
+  sprintf(target_dir_path, "%s/pins/%s/%s/%s", runtime_path, shoggoth_id,
+          group_name, resource_name);
+
+  char target_tarball_path[FILE_PATH_SIZE];
+  sprintf(target_tarball_path, "%s/tmp/%s.%s.%s.tar", runtime_path, shoggoth_id,
+          group_name, resource_name);
+
+  char target_tmp_path[FILE_PATH_SIZE];
+  sprintf(target_tmp_path, "%s/tmp/%s.%s.%s", runtime_path, shoggoth_id,
+          group_name, resource_name);
+
+  // FIXME: run checks on the value of group_name and resource_name to ensure it
+  // does not contain unsafe characters like a dot "." or slash "/"
+
+  if (!file_exists(pin_dir_path)) {
+    result_t res_peers_with_pin = db_get_peers_with_pin(api_ctx, shoggoth_id);
+    SERVER_ERR(res_peers_with_pin);
+    char *peers_with_pin = VALUE(res_peers_with_pin);
+
+    result_t res_peers = json_string_to_dht(peers_with_pin);
+    SERVER_ERR(res_peers);
+    dht_t *peers = VALUE(res_peers);
+
+    free(peers_with_pin);
+
+    if (peers->items_count > 0) {
+      char location[256];
+      sprintf(location, "%s/api/download/%s/%s/%s.tar", peers->items[0]->host,
+              shoggoth_id, group_name, resource_name);
+
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_302, MIME_TEXT_PLAIN);
+      sonic_response_add_header(resp, "Location", location);
+
+      sonic_send_response(req, resp);
+      sonic_free_server_response(resp);
+    } else {
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+      sonic_send_response(req, resp);
+      sonic_free_server_response(resp);
+    }
+
+    free_dht(peers);
+  } else {
+    if (!dir_exists(target_dir_path)) {
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_404, MIME_TEXT_HTML);
+
+      char *body = "the resource was not found";
+
+      sonic_response_set_body(resp, body, (u64)strlen(body));
+
+      sonic_send_response(req, resp);
+
+      sonic_free_server_response(resp);
+
+      return;
+    }
+
+    result_t res_target_tmp_lock =
+        acquire_file_lock(target_tmp_path, 1000, 20000);
+    SERVER_ERR(res_target_tmp_lock);
+    file_lock_t *target_tmp_lock = VALUE(res_target_tmp_lock);
+
+    result_t res_copy = copy_dir(target_dir_path, target_tmp_path);
+    SERVER_ERR(res_copy);
+
+    result_t res_tarball =
+        utils_create_tarball(target_tmp_path, target_tarball_path);
+    SERVER_ERR(res_tarball);
+
+    result_t res_delete = delete_dir(target_tmp_path);
+    SERVER_ERR(res_delete);
+
+    result_t res_file_mapping = map_file(target_tarball_path);
+    SERVER_ERR(res_file_mapping);
+    file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_200, MIME_APPLICATION_OCTET_STREAM);
+    sonic_response_set_body(resp, file_mapping->content,
+                            (u64)file_mapping->info.st_size);
+
+    char fingerprint_path[FILE_PATH_SIZE];
+    sprintf(fingerprint_path,
+            "%s/pins/%s/%s/.shoggoth/fingerprints/%s/fingerprint.json",
+            runtime_path, shoggoth_id, group_name, resource_name);
+
+    result_t res_fingerprint_str = read_file_to_string(fingerprint_path);
+    SERVER_ERR(res_fingerprint_str);
+    char *fingerprint_str = VALUE(res_fingerprint_str);
+
+    sonic_response_add_header(resp, "fingerprint", fingerprint_str);
+
+    char signature_path[FILE_PATH_SIZE];
+    sprintf(signature_path,
+            "%s/pins/%s/%s/.shoggoth/fingerprints/%s/signature.txt",
+            runtime_path, shoggoth_id, group_name, resource_name);
+
+    result_t res_signature_str = read_file_to_string(signature_path);
+    SERVER_ERR(res_signature_str);
+    char *signature_str = VALUE(res_signature_str);
+
+    sonic_response_add_header(resp, "signature", signature_str);
+
+    sonic_send_response(req, resp);
+
+    unmap_file(file_mapping);
+    free(fingerprint_str);
+    free(signature_str);
+    sonic_free_server_response(resp);
+
+    res_delete = delete_file(target_tarball_path);
+    SERVER_ERR(res_delete);
+
+    release_file_lock(target_tmp_lock);
+  }
+}
+
 void api_clone_route(sonic_server_request_t *req) {
   char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
   char *group_name = sonic_get_path_segment(req, "group_name");
@@ -859,13 +1001,15 @@ void add_api_routes(node_ctx_t *ctx, sonic_server_t *server) {
 
   sonic_add_route(server, "/api/clone/{shoggoth_id}", METHOD_GET,
                   api_clone_route);
-
   sonic_add_route(server, "/api/clone/{shoggoth_id}/{group_name}", METHOD_GET,
                   api_clone_route);
-
   sonic_add_route(server,
                   "/api/clone/{shoggoth_id}/{group_name}/{resource_name}",
                   METHOD_GET, api_clone_route);
+
+  sonic_add_route(server,
+                  "/api/download/{shoggoth_id}/{group_name}/{resource_name}",
+                  METHOD_GET, api_download_route);
 
   sonic_add_route(server, "/api/publish", METHOD_GET,
                   api_negotiate_publish_route);

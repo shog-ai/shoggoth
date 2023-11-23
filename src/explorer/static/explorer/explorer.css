@@ -44,8 +44,9 @@
   align-items: center;
   justify-content: center;
 
-  border-radius: 20%;
+  border-radius: 20px;
   font-size: 20px;
+  color: white;
 
   cursor: pointer;
 

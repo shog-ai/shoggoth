@@ -4,6 +4,16 @@
 #include "../netlibc.h"
 #include "./error.h"
 
+// typedef struct {
+// char *str;
+// } string_t;
+
+char *new_string();
+
+char *string_from(const char *str1, ...);
+
+void free_string(char *str);
+
 char *remove_newlines_except_quotes(char *input);
 
 char *escape_newlines(char *input);

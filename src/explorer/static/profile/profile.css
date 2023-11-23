@@ -25,6 +25,43 @@
   overflow-y: hidden;
 }
 
+.profile-resource-info {
+  width: 80vw;
+  height: 100%;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ac6a14e5;
+
+  flex-wrap: wrap;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.profile-download-btn {
+  background: #d56200;
+  width: 100px;
+  height: 45px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  font-size: 17px;
+  color: white;
+  cursor: pointer;
+
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 .profile-nav a {
   color: white;
 }

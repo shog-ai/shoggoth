@@ -85,7 +85,7 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   if (args->set_config) {
     config_path = string_from(args->config_path, NULL);
   } else {
-    config_path = string_from(node_runtime_path, "config.toml", NULL);
+    config_path = string_from(node_runtime_path, "/config.toml", NULL);
   }
 
   if (!file_exists(config_path)) {
@@ -595,6 +595,94 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   return OK(NULL);
 }
 
+result_t node_backup(node_ctx_t *ctx) {
+  LOG(INFO, "Starting node backup ...");
+
+  char *node_runtime_path = string_from(ctx->runtime_path, "/node", NULL);
+  char *backup_path = string_from(node_runtime_path, "/tmp/backup", NULL);
+
+  create_dir(backup_path);
+
+  char *config_path = string_from(node_runtime_path, "/config.toml", NULL);
+  char *backup_config_path = string_from(backup_path, "/config.toml", NULL);
+  UNWRAP(copy_file(config_path, backup_config_path));
+  free(config_path);
+  free(backup_config_path);
+
+  char *dbconfig_path = string_from(node_runtime_path, "/dbconfig.toml", NULL);
+  char *backup_dbconfig_path = string_from(backup_path, "/dbconfig.toml", NULL);
+  UNWRAP(copy_file(dbconfig_path, backup_dbconfig_path));
+  free(dbconfig_path);
+  free(backup_dbconfig_path);
+
+  char *dbsave_path = string_from(node_runtime_path, "/save.sdb", NULL);
+  char *backup_dbsave_path = string_from(backup_path, "/save.sdb", NULL);
+  UNWRAP(copy_file(dbsave_path, backup_dbsave_path));
+  free(dbsave_path);
+  free(backup_dbsave_path);
+
+  char *pins_path = string_from(node_runtime_path, "/pins", NULL);
+  char *backup_pins_path = string_from(backup_path, "/pins", NULL);
+  UNWRAP(copy_dir(pins_path, backup_pins_path));
+  free(pins_path);
+  free(backup_pins_path);
+
+  char *tarball_path = string_from(node_runtime_path, "/backup.tar", NULL);
+  UNWRAP(utils_create_tarball(backup_path, tarball_path));
+  free(tarball_path);
+
+  delete_dir(backup_path);
+
+  free(node_runtime_path);
+  free(backup_path);
+
+  LOG(INFO, "Node backup finished");
+
+  return OK(NULL);
+}
+
+result_t node_restore(node_ctx_t *ctx) {
+  LOG(INFO, "Starting node restore ...");
+
+  char *node_runtime_path = string_from(ctx->runtime_path, "/node", NULL);
+  char *backup_path = string_from(node_runtime_path, "/tmp/backup", NULL);
+
+  char *tarball_path = string_from(node_runtime_path, "/backup.tar", NULL);
+  UNWRAP(utils_extract_tarball(tarball_path, backup_path));
+  free(tarball_path);
+
+  char *config_path = string_from(node_runtime_path, "/config.toml", NULL);
+  char *backup_config_path = string_from(backup_path, "/config.toml", NULL);
+  UNWRAP(copy_file(backup_config_path, config_path));
+  free(config_path);
+  free(backup_config_path);
+
+  char *dbconfig_path = string_from(node_runtime_path, "/dbconfig.toml", NULL);
+  char *backup_dbconfig_path = string_from(backup_path, "/dbconfig.toml", NULL);
+  UNWRAP(copy_file(backup_dbconfig_path, dbconfig_path));
+  free(dbconfig_path);
+  free(backup_dbconfig_path);
+
+  char *dbsave_path = string_from(node_runtime_path, "/save.sdb", NULL);
+  char *backup_dbsave_path = string_from(backup_path, "/save.sdb", NULL);
+  UNWRAP(copy_file(backup_dbsave_path, dbsave_path));
+  free(dbsave_path);
+  free(backup_dbsave_path);
+
+  char *pins_path = string_from(node_runtime_path, "/pins", NULL);
+  char *backup_pins_path = string_from(backup_path, "/pins", NULL);
+  UNWRAP(copy_dir(backup_pins_path, pins_path));
+  free(pins_path);
+  free(backup_pins_path);
+
+  free(node_runtime_path);
+  free(backup_path);
+
+  LOG(INFO, "Node restore finished");
+
+  return OK(NULL);
+}
+
 /****
  * handles a node session.
  *
@@ -644,6 +732,18 @@ result_t handle_node_session(args_t *args) {
       node_ctx_t *ctx = PROPAGATE(res_ctx);
 
       result_t res = node_print_id(ctx);
+      PROPAGATE(res);
+    } else if (strcmp(args->command_arg, "backup") == 0) {
+      result_t res_ctx = shog_init_node(args, true);
+      node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+      result_t res = node_backup(ctx);
+      PROPAGATE(res);
+    } else if (strcmp(args->command_arg, "restore") == 0) {
+      result_t res_ctx = shog_init_node(args, true);
+      node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+      result_t res = node_restore(ctx);
       PROPAGATE(res);
     } else {
       return ERR("ARGS: invalid node subcommand: '%s'", args->command_arg);

@@ -15,14 +15,3 @@ jobs:
       run: ./configure
     - name: build with make
       run: make
-  
-  build-windows:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure-windows
-    - name: build with make
-      run: make windows
-
-

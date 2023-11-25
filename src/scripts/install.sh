@@ -1,13 +1,15 @@
-#!/bin/bash
-
-mkdir -p ~/bin && cp ./scripts/shog.sh ~/bin/shog 
+mkdir -p ~/bin && cp ./scripts/shog.sh ~/bin/shog
 
 if [ "$SHELL" = "/bin/bash" ]; then
     echo -e '\nexport PATH=$PATH:~/bin' >> ~/.bashrc
 elif [ "$SHELL" = "/bin/zsh" ]; then
     echo -e '\nexport PATH=$PATH:~/bin' >> ~/.zshrc
+elif [ "$SHELL" = "/usr/bin/fish" ]; then
+    echo 'set PATH $PATH ~/bin' >> ~/.config/fish/config.fish
+elif [ "$SHELL" = "/usr/local/bin/fish" ]; then
+    echo 'set PATH $PATH ~/bin' >> ~/.config/fish/config.fish
 else
-    echo "Current shell is neither bash nor zsh. ensure to manually add ~/bin to PATH"
+    echo "Current shell is not bash, zsh or fish. ensure to manually add ~/bin to PATH"
 fi
 
 if [ "$SHELL" = "/bin/bash" ]; then
@@ -27,8 +29,14 @@ echo ""
 
 echo "To configure your current shell, run:"
 
-if [ "$SHELL" = "/bin/bash" ]; then 
-  echo "source ~/.bashrc" 
-elif [ "$SHELL" = "/bin/zsh" ]; then 
-  echo "source ~/.zshrc" 
-fi 
+if [ "$SHELL" = "/bin/bash" ]; then
+  echo "source ~/.bashrc"
+elif [ "$SHELL" = "/bin/zsh" ]; then
+  echo "source ~/.zshrc"
+elif [ "$SHELL" = "/usr/bin/fish" ]; then
+  echo "source ~/.config/fish/config.fish"
+elif [ "$SHELL" = "/usr/local/bin/fish" ]; then
+  echo "source ~/.config/fish/config.fish"
+else
+  echo "Current shell is not bash, zsh or fish. ensure to manually add ~/bin to PATH"
+fi

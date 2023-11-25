@@ -1,22 +1,28 @@
+#!/bin/bash
+
+shell_name=$(basename "$SHELL")
+
 mkdir -p ~/bin && cp ./scripts/shog.sh ~/bin/shog
 
-if [ "$SHELL" = "/bin/bash" ]; then
+case "$shell_name" in
+  bash)
     echo -e '\nexport PATH=$PATH:~/bin' >> ~/.bashrc
-elif [ "$SHELL" = "/bin/zsh" ]; then
+    ;;
+  zsh)
     echo -e '\nexport PATH=$PATH:~/bin' >> ~/.zshrc
-elif [ "$SHELL" = "/usr/bin/fish" ]; then
+    ;;
+  fish)
     echo 'set PATH $PATH ~/bin' >> ~/.config/fish/config.fish
-elif [ "$SHELL" = "/usr/local/bin/fish" ]; then
-    echo 'set PATH $PATH ~/bin' >> ~/.config/fish/config.fish
-else
-    echo "Current shell is not bash, zsh or fish. ensure to manually add ~/bin to PATH"
-fi
+    ;;
+  *)
+    echo "Current shell is not bash, zsh, or fish. Ensure to manually add ~/bin to PATH"
+    ;;
+esac
 
-if [ "$SHELL" = "/bin/bash" ]; then
+if [ "$shell_name" = "bash" ]; then
     mkdir -p ~/.bash_completion.d/ && cp ./scripts/shog_completions.sh ~/.bash_completion.d/
-    # echo "Bash completions script copied to ~/.bash_completion.d/"
 else
-    echo "Current shell is not Bash. completion script not available."
+    echo "Bash completion script is not available for $shell_name."
 fi
 
 echo "Installation complete!"
@@ -29,14 +35,17 @@ echo ""
 
 echo "To configure your current shell, run:"
 
-if [ "$SHELL" = "/bin/bash" ]; then
-  echo "source ~/.bashrc"
-elif [ "$SHELL" = "/bin/zsh" ]; then
-  echo "source ~/.zshrc"
-elif [ "$SHELL" = "/usr/bin/fish" ]; then
-  echo "source ~/.config/fish/config.fish"
-elif [ "$SHELL" = "/usr/local/bin/fish" ]; then
-  echo "source ~/.config/fish/config.fish"
-else
-  echo "Current shell is not bash, zsh or fish. ensure to manually add ~/bin to PATH"
-fi
+case "$shell_name" in
+  bash)
+    echo "source ~/.bashrc"
+    ;;
+  zsh)
+    echo "source ~/.zshrc"
+    ;;
+  fish)
+    echo "source ~/.config/fish/config.fish"
+    ;;
+  *)
+    echo "Ensure to manually update your PATH in the shell configuration."
+    ;;
+esac

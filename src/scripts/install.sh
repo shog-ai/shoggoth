@@ -22,7 +22,7 @@ esac
 if [ "$shell_name" = "bash" ]; then
     mkdir -p ~/.bash_completion.d/ && cp ./scripts/shog_completions.sh ~/.bash_completion.d/
 else
-    echo "Bash completion script is not available for $shell_name."
+    echo "completion script is not available for $shell_name."
 fi
 
 echo "Installation complete!"
@@ -46,6 +46,6 @@ case "$shell_name" in
     echo "source ~/.config/fish/config.fish"
     ;;
   *)
-    echo "Ensure to manually update your PATH in the shell configuration."
+    echo "unrecognized shell. ensure to manually update your PATH in the shell configuration."
     ;;
 esac

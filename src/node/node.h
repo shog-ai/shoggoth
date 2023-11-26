@@ -116,7 +116,8 @@ typedef struct NODE_CTX {
   sonic_server_t *node_http_server;
 } node_ctx_t;
 
-// void node_self_restart();
+result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor);
+
 result_t handle_node_session(args_t *args);
 
 void shoggoth_node_exit(int exit_code);

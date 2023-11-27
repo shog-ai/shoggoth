@@ -405,7 +405,7 @@ void profile_resource_route(sonic_server_request_t *req) {
         malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
                 strlen(resource_name) + strlen(shoggoth_id) +
                 strlen(main_content) + strlen(tabs_str) +
-                strlen(download_link) + strlen(resource_size_str) + 1 + 128) *
+                strlen(download_link) + strlen(resource_size_str) + 1 + 256) *
                sizeof(char));
 
     sprintf(template_data,
@@ -418,9 +418,9 @@ void profile_resource_route(sonic_server_request_t *req) {
   } else {
     template_data =
         malloc((strlen(shoggoth_id) + strlen(resource_group_str) +
-                strlen(resource_name) + strlen(shoggoth_id) +
-                strlen(main_content) + strlen(tabs_str) +
-                strlen(download_link) + strlen(resource_size_str) + 1 + 128) *
+                strlen(resource_name) + strlen(inner_path) +
+                strlen(shoggoth_id) + strlen(main_content) + strlen(tabs_str) +
+                strlen(download_link) + strlen(resource_size_str) + 1 + 256) *
                sizeof(char));
 
     sprintf(template_data,

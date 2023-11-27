@@ -367,8 +367,95 @@ result_t node_print_id(node_ctx_t *ctx) {
   return OK(NULL);
 }
 
-result_t start_node_service(node_ctx_t *ctx, args_t *args) {
+void sigchld_handler(int signo) {
+  (void)signo; // To silence the unused parameter warning
+
+  // Reap all child processes
+  while (waitpid(-1, NULL, WNOHANG) > 0)
+    ;
+}
+
+result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
+  ctx = (void *)ctx;
+
+  LOG(INFO, "Starting node monitor");
+
+  pid_t pid = fork();
+
+  // Create a pipe to send mesages to the child process STDIN
+  int parent_to_child_pipe[2];
+  if (pipe(parent_to_child_pipe) == -1) {
+    PANIC("could not create parent_to_child pipe");
+  }
+
+  if (pid == -1) {
+    PANIC("could not fork monitor process \n");
+  } else if (pid == 0) {
+    // CHILD PROCESS
+
+    // Set up the SIGCHLD signal handler
+    // prevents node process from becoming a zombie
+    struct sigaction sa;
+    sa.sa_handler = sigchld_handler;
+    sigaction(SIGCHLD, &sa, NULL);
+
+    char node_runtime_path[FILE_PATH_SIZE];
+    utils_get_node_runtime_path(ctx, node_runtime_path);
+
+    char *monitor_logs_path =
+        string_from(node_runtime_path, "/monitor_logs.txt", NULL);
+
+    int logs_fd = open(monitor_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (logs_fd == -1) {
+      PANIC("could not open node monitor log file");
+    }
+
+    free(monitor_logs_path);
+
+    // Redirect stdin to the read end of the pipe
+    dup2(parent_to_child_pipe[0], STDIN_FILENO);
+
+    // Redirect stdout and stderr to the logs file
+    dup2(logs_fd, STDOUT_FILENO);
+    dup2(logs_fd, STDERR_FILENO);
+
+    char *node_pid_path =
+        string_from(node_runtime_path, "/node_service_pid.txt", NULL);
+
+    for (;;) {
+      sleep(5);
+
+      result_t res_node_pid_str = read_file_to_string(node_pid_path);
+
+      char *node_pid_str = UNWRAP(res_node_pid_str);
+
+      if (node_pid_str == NULL) {
+        PANIC("Node service is not running (pid file not readable)");
+      }
+
+      int pid = atoi(node_pid_str);
+      free(node_pid_str);
+
+      int result = kill(pid, 0);
+
+      if (result == 0) {
+        LOG(INFO, "Node is running\n");
+      } else if (result == -1) {
+        LOG(INFO, "Node is not running\n");
+
+        start_node_service(ctx, args, false);
+      }
+    }
+  }
+
+  return OK(NULL);
+}
+
+result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
   LOG(INFO, "Starting node as a service");
+
+  char node_runtime_path[FILE_PATH_SIZE];
+  utils_get_node_runtime_path(ctx, node_runtime_path);
 
   pid_t pid = fork();
 
@@ -383,16 +470,12 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
   } else if (pid == 0) {
     // CHILD PROCESS
 
-    char *runtime_path = string_from(ctx->runtime_path, NULL);
-
-    char node_runtime_path[FILE_PATH_SIZE];
-    utils_get_node_runtime_path(ctx, node_runtime_path);
-
     char *node_config_path = NULL;
     if (args->set_config) {
       node_config_path = string_from(args->config_path, NULL);
     } else {
-      node_config_path = string_from(runtime_path, "/node/config.toml", NULL);
+      node_config_path =
+          string_from(ctx->runtime_path, "/node/config.toml", NULL);
     }
 
     char *node_logs_path =
@@ -424,15 +507,13 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
 
     // Execute the node executable
 
-    char *node_executable = string_from(runtime_path, "/bin/shog", NULL);
+    char *node_executable = string_from(ctx->runtime_path, "/bin/shog", NULL);
 
     char *config_arg = strdup(node_config_path);
 
     free(node_config_path);
 
-    char *node_runtime_arg = strdup(runtime_path);
-
-    free(runtime_path);
+    char *node_runtime_arg = strdup(ctx->runtime_path);
 
     execlp("nohup", "nohup", node_executable, "node", "run", "-c", config_arg,
            "-r", node_runtime_arg, NULL);
@@ -442,8 +523,10 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args) {
 
     close(logs_fd);
     PANIC("error occured while launching node executable \n");
-  } else {
-    // PARENT PROCESS
+  }
+
+  if (monitor) {
+    UNWRAP(start_node_monitor(ctx, args));
   }
 
   return OK(NULL);
@@ -494,6 +577,9 @@ result_t stop_node_service(node_ctx_t *ctx) {
   if (node_pid_str == NULL) {
     return ERR("Node service is not running");
   }
+
+  result_t res_delete = delete_file(node_pid_path);
+  PROPAGATE(res_delete);
 
   int pid = atoi(node_pid_str);
   free(node_pid_str);
@@ -587,7 +673,7 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
 
     LOG(INFO, "Node service stopped");
 
-    start_node_service(ctx, args);
+    start_node_service(ctx, args, true);
   } else if (result == -1) {
     printf("Node is not running\n");
   }
@@ -701,7 +787,7 @@ result_t handle_node_session(args_t *args) {
       result_t res_ctx = shog_init_node(args, true);
       node_ctx_t *ctx = PROPAGATE(res_ctx);
 
-      result_t res = start_node_service(ctx, args);
+      result_t res = start_node_service(ctx, args, true);
       PROPAGATE(res);
     } else if (strcmp(args->command_arg, "restart") == 0) {
       result_t res_ctx = shog_init_node(args, true);

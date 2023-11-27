@@ -9,7 +9,7 @@ host = "127.0.0.1"
 port = 6961
 
 [peers]
-bootstrap_peers = ["https://shoggoth.network"]
+bootstrap_peers = ["http://shoggoth.network:6969"]
 
 [explorer]
 enable = true

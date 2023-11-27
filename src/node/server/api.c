@@ -43,8 +43,6 @@ void api_download_route(sonic_server_request_t *req) {
 
   resource_name[strlen(resource_name) - 4] = '\0';
 
-  LOG(INFO, "RES: %s", resource_name);
-
   if (strlen(shoggoth_id) != 36) {
     respond_error(req, "invalid Shoggoth ID");
 

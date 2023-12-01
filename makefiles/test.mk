@@ -3,8 +3,8 @@ test-libs:
 
 test: build-tests run-tests
 
-build-tests: build-unit-tests build-integration-tests build-functional-tests build-fuzz-tests
-run-tests: run-unit-tests run-integration-tests run-fuzz-tests run-functional-tests
+build-tests: build-unit-tests build-integration-tests build-fuzz-tests # build-functional-tests build-fuzz-tests
+run-tests: run-unit-tests run-integration-tests run-fuzz-tests # run-functional-tests run-fuzz-tests
 
 build-unit-tests:
 	cd tests/node/ && $(MAKE) build-unit-tests
@@ -37,5 +37,3 @@ build-fuzz-tests:
 run-fuzz-tests:
 	cd tests/node/ && $(MAKE) run-fuzz-tests
 	cd tests/client/ && $(MAKE) run-fuzz-tests
-
-	

@@ -41,6 +41,8 @@ NODE COMMANDS:\n\
   restart                  Restart the Shoggoth Node service\n\
   status                   Check the status of the Shoggoth Node service\n\
   logs                     Print the logs of the Shoggoth Node service\n\
+  backup                   Backup the node pins and configuration\n\
+  restore                  Restore node pins and configuration from backup file\n\
 \n\
 EXAMPLES:\n\
   shog node start\n\

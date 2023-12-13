@@ -24,6 +24,23 @@ typedef enum {
   RESOURCE,
 } request_target_t;
 
+void respond_shog_id_invalid(sonic_server_request_t *req, char *shoggoth_id){
+   sonic_server_response_t *resp =
+        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
+
+    char *body = "invalid Shoggoth ID";
+
+    if(strlen(shoggoth_id) == 37 && strncmp(shoggoth_id, "SHOGN", strlen("SHOGN")) == 0){
+      body = "You've entered a Shoggoth Node ID (starts with SHOGN). Shoggoth Profile ID (starts with SHOG) was expected.";
+    }
+
+    sonic_response_set_body(resp, body, (u64)strlen(body));
+
+    sonic_send_response(req, resp);
+
+    sonic_free_server_response(resp);
+}
+
 void respond_error(sonic_server_request_t *req, char *error_message) {
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
@@ -44,8 +61,8 @@ void api_download_route(sonic_server_request_t *req) {
   resource_name[strlen(resource_name) - 4] = '\0';
 
   if (strlen(shoggoth_id) != 36) {
-    respond_error(req, "invalid Shoggoth ID");
-
+    respond_shog_id_invalid(req, shoggoth_id);
+    
     return;
   }
 
@@ -192,7 +209,7 @@ void api_clone_route(sonic_server_request_t *req) {
   }
 
   if (strlen(shoggoth_id) != 36) {
-    respond_error(req, "invalid Shoggoth ID");
+    respond_shog_id_invalid(req, shoggoth_id);
 
     return;
   }

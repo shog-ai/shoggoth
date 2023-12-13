@@ -12,6 +12,7 @@
 #include "../../templating/templating.h"
 #include "../db/db.h"
 #include "../og/og.h"
+#include "api.h"
 
 #include <stdlib.h>
 
@@ -76,17 +77,7 @@ void profile_resource_route(sonic_server_request_t *req) {
   }
 
   if (strlen(shoggoth_id) != 36) {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
-
-    char *body = "invalid Shoggoth ID";
-
-    sonic_response_set_body(resp, body, (u64)strlen(body));
-
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
+    respond_shog_id_invalid(req, shoggoth_id);
     return;
   }
 
@@ -563,17 +554,7 @@ void profile_route(sonic_server_request_t *req) {
   }
 
   if (strlen(shoggoth_id) != 36) {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
-
-    char *body = "invalid Shoggoth ID";
-
-    sonic_response_set_body(resp, body, (u64)strlen(body));
-
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
+    respond_shog_id_invalid(req, shoggoth_id);
     return;
   }
 
@@ -855,17 +836,7 @@ void og_profile_route(sonic_server_request_t *req) {
   }
 
   if (strlen(shoggoth_id) != 36) {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
-
-    char *body = "invalid Shoggoth ID";
-
-    sonic_response_set_body(resp, body, (u64)strlen(body));
-
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
+    respond_shog_id_invalid(req, shoggoth_id);
     return;
   }
 
@@ -933,17 +904,7 @@ void og_profile_resource_route(sonic_server_request_t *req) {
   }
 
   if (strlen(shoggoth_id) != 36) {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
-
-    char *body = "invalid Shoggoth ID";
-
-    sonic_response_set_body(resp, body, (u64)strlen(body));
-
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
+    respond_shog_id_invalid(req, shoggoth_id);
     return;
   }
 

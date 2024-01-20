@@ -73,38 +73,20 @@ result_t args_parse(const int argc, char **argv) {
       }
     } else {
       args->has_command = true;
-      if (strcmp(current_arg, "node") == 0) {
-        args->command = COMMAND_NODE;
-        if (i + 1 < argc) {
-          args->command_arg = argv[++i];
-          if (args->command_arg != NULL &&
-              strcmp(args->command_arg, "clone") == 0) {
-            if (i + 1 < argc) {
-              args->subcommand_arg = argv[++i];
-            } else {
-              args->no_subcommand_arg = true;
-            }
-          }
-        } else {
-          args->no_command_arg = true;
+      args->command = current_arg;
+
+      if (i + 1 < argc) {
+        args->has_command_arg = true;
+        args->command_arg = argv[i + 1];
+
+        if (i + 2 < argc) {
+          args->has_subcommand_arg = true;
+          args->subcommand_arg = argv[i + 2];
+
+          i++;
         }
-      } else if (strcmp(current_arg, "client") == 0) {
-        args->command = COMMAND_CLIENT;
-        if (i + 1 < argc) {
-          args->command_arg = argv[++i];
-          if (args->command_arg != NULL &&
-              strcmp(args->command_arg, "clone") == 0) {
-            if (i + 1 < argc) {
-              args->subcommand_arg = argv[++i];
-            } else {
-              args->no_subcommand_arg = true;
-            }
-          }
-        } else {
-          args->no_command_arg = true;
-        }
-      } else {
-        args->invalid_command = current_arg;
+
+        i++;
       }
     }
   }

@@ -30,7 +30,7 @@ int main() {
 
   // building a request with custom method
   sonic_request_t *req =
-      sonic_new_request(METHOD_GET, "https://shoggoth.systems");
+      sonic_new_request(METHOD_GET, "https://shog.ai");
   resp = sonic_send_request(req);
 
   if (resp->failed) {

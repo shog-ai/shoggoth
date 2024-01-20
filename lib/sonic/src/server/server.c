@@ -1,6 +1,6 @@
 /**** server.c ****
  *
- *  Copyright (c) 2023 Shoggoth Systems - https://shoggoth.systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Sonic HTTP library, under the MIT License.
  * See LICENCE file for license information.
@@ -91,7 +91,31 @@ void server_send_response(sonic_server_request_t *req,
   send(req->client_sock, head_str, strlen(head_str), 0);
   free(head_str);
 
-  send(req->client_sock, resp->response_body, resp->response_body_size, 0);
+  u64 sent = 0;
+
+  u64 chunk_size = 1000000;
+
+  while (sent < resp->response_body_size) {
+    u64 sending = 0;
+
+    if (resp->response_body_size <= chunk_size) {
+      sending = resp->response_body_size;
+    } else {
+      if (sent + chunk_size < resp->response_body_size) {
+        sending = chunk_size;
+      } else {
+        sending = resp->response_body_size - sent;
+      }
+    }
+
+    if (sent == 0) {
+      send(req->client_sock, resp->response_body, sending, 0);
+    } else {
+      send(req->client_sock, &resp->response_body[(sent - 1)], sending, 0);
+    }
+
+    sent += sending;
+  }
 }
 
 void not_found_route(sonic_server_request_t *req) {

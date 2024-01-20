@@ -8,7 +8,6 @@
  *
  ****/
 
-#include "../client/client.h"
 #include "../include/cjson.h"
 #include "../node/dht/dht.h"
 #include "../node/server/server.h"
@@ -29,65 +28,6 @@ char *json_to_string(json_t *json) {
   cJSON *cjson = (cJSON *)json;
 
   return cJSON_Print(cjson);
-}
-
-result_t json_client_manifest_to_json(client_manifest_t manifest) {
-  cJSON *manifest_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(manifest_json, "public_key", manifest.public_key);
-
-  cJSON_AddStringToObject(manifest_json, "shoggoth_id", manifest.shoggoth_id);
-  return OK(manifest_json);
-}
-
-result_t json_fingerprint_to_json(fingerprint_t fingerprint) {
-  cJSON *fingerprint_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(fingerprint_json, "public_key",
-                          fingerprint.public_key);
-
-  cJSON_AddStringToObject(fingerprint_json, "shoggoth_id",
-                          fingerprint.shoggoth_id);
-
-  cJSON_AddStringToObject(fingerprint_json, "hash", fingerprint.hash);
-
-  cJSON_AddStringToObject(fingerprint_json, "timestamp", fingerprint.timestamp);
-
-  return OK(fingerprint_json);
-}
-
-result_t json_resource_fingerprint_to_json(resource_fingerprint_t fingerprint) {
-  cJSON *fingerprint_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(fingerprint_json, "public_key",
-                          fingerprint.public_key);
-
-  cJSON_AddStringToObject(fingerprint_json, "shoggoth_id",
-                          fingerprint.shoggoth_id);
-
-  cJSON_AddStringToObject(fingerprint_json, "hash", fingerprint.hash);
-
-  cJSON_AddStringToObject(fingerprint_json, "resource_name",
-                          fingerprint.resource_name);
-
-  return OK(fingerprint_json);
-}
-
-result_t json_group_fingerprint_to_json(group_fingerprint_t fingerprint) {
-  cJSON *fingerprint_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(fingerprint_json, "public_key",
-                          fingerprint.public_key);
-
-  cJSON_AddStringToObject(fingerprint_json, "shoggoth_id",
-                          fingerprint.shoggoth_id);
-
-  cJSON_AddStringToObject(fingerprint_json, "hash", fingerprint.hash);
-
-  cJSON_AddStringToObject(fingerprint_json, "group_name",
-                          fingerprint.group_name);
-
-  return OK(fingerprint_json);
 }
 
 result_t json_dht_item_to_json(dht_item_t item) {
@@ -163,38 +103,6 @@ pins_t *json_to_pins(json_t *json) {
   return pins;
 }
 
-result_t json_known_nodes_to_json(known_nodes_t known_nodes) {
-  cJSON *known_nodes_json = cJSON_CreateArray();
-
-  for (u64 k = 0; k < known_nodes.nodes_count; k++) {
-    cJSON *node_json = cJSON_CreateString(known_nodes.nodes[k]);
-
-    cJSON_AddItemToArray(known_nodes_json, node_json);
-  }
-
-  return OK(known_nodes_json);
-}
-
-known_nodes_t *json_to_known_nodes(json_t *json) {
-  cJSON *known_nodes_json = (cJSON *)json;
-
-  known_nodes_t *nodes = calloc(1, sizeof(known_nodes_t));
-  nodes->nodes = NULL;
-  nodes->nodes_count = 0;
-
-  const cJSON *node_json = NULL;
-  cJSON_ArrayForEach(node_json, known_nodes_json) {
-    char *node_str = node_json->valuestring;
-
-    nodes->nodes =
-        realloc(nodes->nodes, (nodes->nodes_count + 1) * sizeof(char *));
-    nodes->nodes[nodes->nodes_count] = strdup(node_str);
-    nodes->nodes_count++;
-  }
-
-  return nodes;
-}
-
 result_t json_to_dht_item(json_t *json) {
   cJSON *dht_item_json = (cJSON *)json;
 
@@ -262,50 +170,6 @@ result_t json_string_to_pins(char *pins_str) {
   cJSON_Delete(pins_json);
 
   return OK(pins);
-}
-
-result_t json_string_to_known_nodes(char *nodes_str) {
-  cJSON *known_nodes_json = cJSON_Parse(nodes_str);
-  if (known_nodes_json == NULL) {
-    return ERR("Could not parse known nodes json \n");
-  }
-
-  known_nodes_t *nodes = json_to_known_nodes((void *)known_nodes_json);
-
-  cJSON_Delete(known_nodes_json);
-
-  return OK(nodes);
-}
-
-client_manifest_t *json_to_client_manifest(json_t *json) {
-  cJSON *manifest_json = (cJSON *)json;
-
-  char *public_key =
-      strdup(cJSON_GetObjectItemCaseSensitive(manifest_json, "public_key")
-                 ->valuestring);
-  char *shoggoth_id =
-      strdup(cJSON_GetObjectItemCaseSensitive(manifest_json, "shoggoth_id")
-                 ->valuestring);
-
-  client_manifest_t *manifest = calloc(1, sizeof(client_manifest_t));
-
-  manifest->public_key = public_key;
-  manifest->shoggoth_id = shoggoth_id;
-
-  return manifest;
-}
-
-result_t json_string_to_client_manifest(char *manifest_str) {
-  cJSON *manifest_json = cJSON_Parse(manifest_str);
-  if (manifest_json == NULL) {
-    return ERR("Could not parse manifest json \n");
-  }
-
-  client_manifest_t *manifest = json_to_client_manifest((void *)manifest_json);
-
-  cJSON_Delete(manifest_json);
-
-  return OK(manifest);
 }
 
 upload_info_t *json_to_upload_info(json_t *json) {
@@ -394,127 +258,3 @@ result_t json_string_to_node_manifest(char *manifest_str) {
   return OK(manifest);
 }
 
-fingerprint_t *json_to_fingerprint(json_t *json) {
-  cJSON *fingerprint_json = (cJSON *)json;
-
-  char *public_key =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "public_key")
-                 ->valuestring);
-
-  char *shoggoth_id =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "shoggoth_id")
-                 ->valuestring);
-
-  char *hash = strdup(
-      cJSON_GetObjectItemCaseSensitive(fingerprint_json, "hash")->valuestring);
-
-  char *timestamp =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "timestamp")
-                 ->valuestring);
-
-  fingerprint_t *fingerprint = calloc(1, sizeof(fingerprint_t));
-
-  fingerprint->public_key = public_key;
-  fingerprint->shoggoth_id = shoggoth_id;
-  fingerprint->hash = hash;
-  fingerprint->timestamp = timestamp;
-
-  return fingerprint;
-}
-
-resource_fingerprint_t *json_to_resource_fingerprint(json_t *json) {
-  cJSON *fingerprint_json = (cJSON *)json;
-
-  char *public_key =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "public_key")
-                 ->valuestring);
-
-  char *shoggoth_id =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "shoggoth_id")
-                 ->valuestring);
-
-  char *hash = strdup(
-      cJSON_GetObjectItemCaseSensitive(fingerprint_json, "hash")->valuestring);
-
-  char *resource_name =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "resource_name")
-                 ->valuestring);
-
-  resource_fingerprint_t *fingerprint =
-      calloc(1, sizeof(resource_fingerprint_t));
-  fingerprint->public_key = public_key;
-  fingerprint->shoggoth_id = shoggoth_id;
-  fingerprint->hash = hash;
-  fingerprint->resource_name = resource_name;
-
-  return fingerprint;
-}
-
-group_fingerprint_t *json_to_group_fingerprint(json_t *json) {
-  cJSON *fingerprint_json = (cJSON *)json;
-
-  char *public_key =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "public_key")
-                 ->valuestring);
-
-  char *shoggoth_id =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "shoggoth_id")
-                 ->valuestring);
-
-  char *hash = strdup(
-      cJSON_GetObjectItemCaseSensitive(fingerprint_json, "hash")->valuestring);
-
-  char *group_name =
-      strdup(cJSON_GetObjectItemCaseSensitive(fingerprint_json, "group_name")
-                 ->valuestring);
-
-  group_fingerprint_t *fingerprint = calloc(1, sizeof(group_fingerprint_t));
-
-  fingerprint->public_key = public_key;
-  fingerprint->shoggoth_id = shoggoth_id;
-  fingerprint->hash = hash;
-  fingerprint->group_name = group_name;
-
-  return fingerprint;
-}
-
-result_t json_string_to_fingerprint(char *fingerprint_str) {
-  cJSON *fingerprint_json = cJSON_Parse(fingerprint_str);
-  if (fingerprint_json == NULL) {
-    return ERR("Could not parse fingerprint json \n");
-  }
-
-  fingerprint_t *fingerprint = json_to_fingerprint((void *)fingerprint_json);
-
-  cJSON_Delete(fingerprint_json);
-
-  return OK(fingerprint);
-}
-
-result_t json_string_to_resource_fingerprint(char *fingerprint_str) {
-  cJSON *fingerprint_json = cJSON_Parse(fingerprint_str);
-  if (fingerprint_json == NULL) {
-    return ERR("Could not parse resource fingerprint json \n");
-  }
-
-  resource_fingerprint_t *fingerprint =
-      json_to_resource_fingerprint((void *)fingerprint_json);
-
-  cJSON_Delete(fingerprint_json);
-
-  return OK(fingerprint);
-}
-
-result_t json_string_to_group_fingerprint(char *fingerprint_str) {
-  cJSON *fingerprint_json = cJSON_Parse(fingerprint_str);
-  if (fingerprint_json == NULL) {
-    return ERR("Could not parse group fingerprint json \n");
-  }
-
-  group_fingerprint_t *fingerprint =
-      json_to_group_fingerprint((void *)fingerprint_json);
-
-  cJSON_Delete(fingerprint_json);
-
-  return OK(fingerprint);
-}

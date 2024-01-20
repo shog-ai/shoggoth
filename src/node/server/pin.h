@@ -13,8 +13,8 @@
 
 #include "../../include/sonic.h"
 
-result_t process_pin_request(node_ctx_t *ctx, char *tmp_path, char *shoggoth_id,
-                             fingerprint_t *fingerprint, char *fingerprint_Str,
-                             char *received_signature);
+// result_t process_pin_request(node_ctx_t *ctx, char *tmp_path, char *shoggoth_id,
+                             // fingerprint_t *fingerprint, char *fingerprint_Str,
+                             // char *received_signature);
 
 #endif

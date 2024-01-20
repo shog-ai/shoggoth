@@ -8,7 +8,7 @@
 int main() {
   // build a request
   sonic_request_t *req =
-      sonic_new_request(METHOD_GET, "https://shoggoth.systems");
+      sonic_new_request(METHOD_GET, "https://shog.ai");
 
   sonic_redirect_policy_t policy = {0};
   policy.max_hops = 3;
@@ -35,7 +35,7 @@ int main() {
   }
 
   // build a request
-  req = sonic_new_request(METHOD_GET, "http://shoggoth.systems");
+  req = sonic_new_request(METHOD_GET, "http://shog.ai");
 
   sonic_redirect_policy_t no_redirect = {0};
   no_redirect.no_redirect = true;

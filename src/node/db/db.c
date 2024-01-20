@@ -299,7 +299,7 @@ result_t db_get_unreachable_count(node_ctx_t *ctx, char *node_id) {
  * adds an item to the database pins
  *
  ****/
-result_t db_pins_add_profile(node_ctx_t *ctx, char *shoggoth_id) {
+result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id) {
   result_t res_str = shogdb_get(ctx, "pins/add_profile", shoggoth_id);
   char *str = PROPAGATE(res_str);
   free(str);
@@ -307,7 +307,7 @@ result_t db_pins_add_profile(node_ctx_t *ctx, char *shoggoth_id) {
   return OK(NULL);
 }
 
-result_t db_pins_remove_profile(node_ctx_t *ctx, char *shoggoth_id) {
+result_t db_pins_remove_resource(node_ctx_t *ctx, char *shoggoth_id) {
   result_t res_str = shogdb_get(ctx, "pins/remove_profile", shoggoth_id);
   char *str = PROPAGATE(res_str);
   free(str);
@@ -379,12 +379,12 @@ result_t db_verify_data(node_ctx_t *ctx) {
   files_list_t *pins_list = PROPAGATE(res_pins_list);
 
   for (u64 i = 0; i < pins_list->files_count; i++) {
-    result_t res_pin_str = remove_file_extension(pins_list->files[i]);
-    char *pin_str = PROPAGATE(res_pin_str);
+    // result_t res_pin_str = remove_file_extension(pins_list->files[i]);
+    // char *pin_str = PROPAGATE(res_pin_str);
 
-    db_pins_add_profile(ctx, pin_str);
+    db_pins_add_resource(ctx, pins_list->files[i]);
 
-    free(pin_str);
+    // free(pin_str);
   }
 
   free_files_list(pins_list);

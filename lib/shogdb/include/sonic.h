@@ -1,6 +1,6 @@
 /**** sonic.h ****
  *
- *  Copyright (c) 2023 Shoggoth Systems - https://shoggoth.systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Sonic HTTP library, under the MIT License.
  * See LICENCE file for license information.

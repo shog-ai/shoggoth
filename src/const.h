@@ -1,6 +1,6 @@
 /**** const.h ****
  *
- *  Copyright (c) 2023 Shoggoth Systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Shoggoth project, under the MIT License.
  * See LICENCE file for license information.
@@ -24,17 +24,10 @@ OPTIONS:\n\
   -r <directory>           Specifies a runtime directory\n\
 \n\
 COMMANDS:\n\
-  node                     Shoggoth Node\n\
-  client                   Shoggoth Client\n\
-\n\
-CLIENT COMMANDS:\n\
-  id                       Display your Shoggoth ID\n\
-  clone <ShoggothID>       Download a Shoggoth profile\n\
-  init                     Create a new Shoggoth profile\n\
-  publish                  Publish a Shoggoth profile\n\
-\n\
-NODE COMMANDS:\n\
   id                       Display your Node ID\n\
+  pin <file>               Pin a file as a Shoggoth resource\n\
+  unpin <ShoggothID>       Unpin a resource\n\
+  clone <ShoggothID>       Pin a remote resource\n\
   run                      Run a Shoggoth Node\n\
   start                    Start a Shoggoth Node as a service\n\
   stop                     Stop the Shoggoth Node service\n\
@@ -45,16 +38,13 @@ NODE COMMANDS:\n\
   restore                  Restore node pins and configuration from backup file\n\
 \n\
 EXAMPLES:\n\
-  shog node start\n\
-  shog client clone SHOGed21b1a13c07a5cba894bb9326d72133\n\
-  shog client init\n\
-  shog client publish\n\
+  shog run\n\
 \n"
 
 #define SHOG_VERSION                                                           \
   "\
-Part of the Shoggoth Project - https://shoggoth.systems\n\
-Copyright (c) 2023 Shoggoth Systems\n\
+Part of the Shoggoth Project - https://shog.ai\n\
+Copyright (c) 2023 ShogAI\n\
 Shoggoth comes with absolutely NO WARRANTY of any kind\n\
 You may redistribute copies of Shoggoth under the MIT License.\n\
 \n"
@@ -64,18 +54,6 @@ You may redistribute copies of Shoggoth under the MIT License.\n\
   "This includes a 'PUBLIC KEY' which is used to identify you on the "         \
   "network, and a 'PRIVATE KEY' which is used to sign activities by "          \
   "your node\n"                                                                \
-  "Your public key is shared on the network but YOUR PRIVATE KEY MUST "        \
-  "BE KEPT SECRET\n"                                                           \
-  "DO NOT SHARE YOUR PRIVATE KEY ON THE INTERNET OR STORE IT IN A "            \
-  "PUBLIC PLACE\n"                                                             \
-  "\n"                                                                         \
-  "press ENTER to generate a new key pair\n"
-
-#define CLIENT_KEYS_WARNING                                                    \
-  "To join the Shoggoth network, you need a pair of cryptographic keys \n"     \
-  "This includes a 'PUBLIC KEY' which is used to identify you on the "         \
-  "network, and a 'PRIVATE KEY' which is used to sign activities by "          \
-  "your client\n"                                                              \
   "Your public key is shared on the network but YOUR PRIVATE KEY MUST "        \
   "BE KEPT SECRET\n"                                                           \
   "DO NOT SHARE YOUR PRIVATE KEY ON THE INTERNET OR STORE IT IN A "            \

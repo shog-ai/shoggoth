@@ -13,7 +13,7 @@
 #include <netlibc/log.h>
 #include <netlibc/string.h>
 
-#include "client/client.h"
+#include "./args/args.h"
 #include "const.h"
 #include "node/node.h"
 
@@ -47,18 +47,8 @@ int main(int argc, char **argv) {
     EXIT(1, "invalid command: %s", args->invalid_command);
   }
 
-  if (args->command == COMMAND_CLIENT) {
-    result_t res = handle_client_session(args);
-
-    if (is_err(res)) {
-      EXIT(1, res.error_message);
-    }
-  } else if (args->command == COMMAND_NODE) {
-    result_t res = handle_node_session(args);
-    UNWRAP(res);
-  } else {
-    PANIC("unhandled args command");
-  }
+  result_t res = handle_node_session(args);
+  UNWRAP(res);
 
   return 0;
 }

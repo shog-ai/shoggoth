@@ -14,14 +14,14 @@ Nodes and clients operate anonymously with identifiers decoupled from real-world
 Anyone can freely join the network and immediately begin publishing or accessing resources.
 
 The purpose of Shoggoth is to combat software censorship and empower software developers to create and distribute software, without a centralized hosting service or platform.
-Shoggoth is developed and maintained by [Shoggoth Systems](https://shoggoth.systems), and its development is funded by [donations and sponsorships](#donate).
+Shoggoth is developed and maintained by [ShogAI](https://shog.ai), and its development is funded by [donations and sponsorships](#donate).
 
 ### ⚠️Disclaimer⚠️
 
 Shoggoth is still in its beta stage. There is no guarantee that it will function as intended, and security vulnerabilities are likely to be present.
 Shoggoth is rapidly evolving and all features/APIs are subject to change. Shoggoth should be considered experimental software.
 
-Shoggoth comes with absolutely NO WARRANTY of any kind. Please email reports of any bugs/issues to netrunner@shoggoth.systems
+Shoggoth comes with absolutely NO WARRANTY of any kind. Please email reports of any bugs/issues to netrunner@shog.ai
 
 This documentation is a work in progress. It is not complete and may contain outdated information as Shoggoth is rapidly evolving.
 
@@ -39,11 +39,11 @@ Shoggoth currently supports only Linux and macOS operating systems. Windows supp
 
 ### Download Precompiled Binaries
 
-You can download Shoggoth from [shoggoth.systems/download.html](https://shoggoth.systems/download.html).
+You can download Shoggoth from [https://shog.ai/download.html](https://shog.ai/download.html).
 Once the download is complete, verify the checksum with the following command to ensure it was not tampered with in transit:
 
 ```bash
-sha256sum shoggoth-v0.1.7-Linux-x86_64.zip
+sha256sum shoggoth-v0.2.1-Linux-x86_64.zip
 ```
 
 Ensure that the printed checksum is the same as the one displayed on the download page.
@@ -51,7 +51,7 @@ Ensure that the printed checksum is the same as the one displayed on the downloa
 Extract the zip archive into your home directory:
 
 ```bash
-unzip -o -q shoggoth-v0.1.7-Linux-x86_64.zip -d $HOME/shoggoth/
+unzip -o -q shoggoth-v0.2.1-Linux-x86_64.zip -d $HOME/shoggoth/
 ```
 
 Your home directory should now contain a `shoggoth` directory. Shoggoth uses this directory as the runtime where essential data is stored.
@@ -83,32 +83,32 @@ shog --version
 You can build Shoggoth from source. Since Shoggoth is written in the C programming language, all you need to build it is a C compiler and GNU make.
 Follow the below instructions to obtain the source code and build Shoggoth:
 
-NOTE: if you encounter any problems while building Shoggoth from source, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub, or join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
+NOTE: if you encounter any problems while building Shoggoth from source, you can [create an issue](https://github.com/shog-ai/shoggoth/issues) on GitHub, or join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
 <div id="download-the-source-code"></div>
 
 #### Download the Source Code
 
-You can obtain the Shoggoth source code either by using git to clone the repository or by downloading it as a Zip archive from the Shoggoth Systems website.
+You can obtain the Shoggoth source code either by using git to clone the repository or by downloading it as a Zip archive from the ShogAI website.
 
 Choose one of the following options to download the source code:
 
 Using git:
 
 ```bash
-git clone -b 0.1.7 https://github.com/shoggoth-systems/shoggoth --depth 1 shoggoth-source
+git clone -b 0.2.1 https://github.com/shog-ai/shoggoth --depth 1 shoggoth-source
 ```
 
 Or download the source code:
 
 ```bash
-wget https://shoggoth.systems/download/v0.1.7/shoggoth-source-v0.1.7.zip
+wget https://shog.ai/download/v0.2.1/shoggoth-source-v0.2.1.zip
 ```
 
 Then extract the downloaded zip:
 
 ```bash
-  unzip -o -q ./shoggoth-source-v0.1.7.zip -d ./shoggoth-source
+  unzip -o -q ./shoggoth-source-v0.2.1.zip -d ./shoggoth-source
 ```
 
 <div id="build-with-make"></div>
@@ -335,7 +335,7 @@ Nodes that pin that profile will then replace their copy of the profile with the
 Once you have installed Shoggoth, you can use the `shog` command to perform various actions such as running a Shoggoth node or downloading/publishing resources as a client.
 Here is an overview of how to use the `shog` command. A more detailed step-by-step guide is available in [the next section](#using-shoggoth-step-by-step).
 
-NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub.
+NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shog-ai/shoggoth/issues) on GitHub.
 If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
 The below command uses the Shoggoth client to clone a code repository:
@@ -429,7 +429,7 @@ shog -h
 
 ## Using Shoggoth - Step-by-Step Examples
 
-NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shoggoth-systems/shoggoth/issues) on GitHub.
+NOTE: if you encounter any problems while following the below instructions, you can [create an issue](https://github.com/shog-ai/shoggoth/issues) on GitHub.
 If you need some assistance or have questions, join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
 <div id="publishing-your-profile-for-the-first-time"></div>
@@ -653,7 +653,7 @@ This already existing node that a new node uses to join the network is also call
 
 Once the new node obtains the DHT of the bootstrap node, it will add all the peers of the bootstrap node to its local DHT and also request for the DHTs of its new peers to increase its network reach.
 
-There are many public nodes available that can be used as bootstrap nodes. One of them is [https://shoggoth.network](https://shoggoth.network) which is run and maintained by Shoggoth Systems.
+There are many public nodes available that can be used as bootstrap nodes. One of them is [https://shoggoth.network](https://shoggoth.network) which is run and maintained by ShogAI.
 This is the default bootstrap node which can easily be changed in a [configuration file](#configuration). If you know someone who already runs a node, you can use theirs as a bootstrap node. All you need is the public address of the node.
 This public address can be its domain name like `http://shoggoth.network`, only an IP address (assuming port 80) like `http://8.8.8.8`, or an IP address with a specified port like `http://8.8.8.8:6969`
 
@@ -813,9 +813,9 @@ A machine with at least 1GB of RAM and 25GB of storage can be considered the bar
 
 ## Contributing to Shoggoth
 
-The Shoggoth project is currently being developed on [Github](https://github.com/shoggoth-systems).
+The Shoggoth project is currently being developed on [Github](https://github.com/shog-ai).
 
-Before making pull requests, first create a new issue on the [issues page](https://github.com/shoggoth-systems/shoggoth/issues) outlining the problems you want to solve, the feature you want to add, or the bug you want to fix.
+Before making pull requests, first create a new issue on the [issues page](https://github.com/shog-ai/shoggoth/issues) outlining the problems you want to solve, the feature you want to add, or the bug you want to fix.
 
 There are dependencies in `./lib/`. Some of these dependencies are external dependencies, meaning they are not part of the Shoggoth project.
 To contribute to external dependencies, please refer to their respective GitHub repositories listed in [dependencies](#dependencies).
@@ -849,7 +849,7 @@ A: It is extremely unlikely that Shoggoth can be completely blocked since there 
 
 Q: Who created Shoggoth?
 <br />
-A: Shoggoth was created by Netrunner KD6-3.7 (email netrunner@shoggoth.systems) at [Shoggoth Systems](https://shoggoth.systems).
+A: Shoggoth was created by Netrunner KD6-3.7 (email netrunner@shog.ai) at [ShogAI](https://shog.ai).
 
 Q: How is the development of Shoggoth funded?
 <br />
@@ -857,7 +857,7 @@ A: The development of Shoggoth is funded by [donations and sponsorships](#donate
 
 Q: How can I get involved with the Shoggoth community?
 <br />
-A: You can join the [Discord community](https://discord.com/invite/AG3duN5yKP), follow [Shoggoth on Twitter](https://twitter.com/shoggothsystems) and contribute to the open source code on [GitHub](https://github.com/shoggoth-systems).
+A: You can join the [Discord community](https://discord.com/invite/AG3duN5yKP), follow [Shoggoth on Twitter](https://twitter.com/shog_AGI) and contribute to the open source code on [GitHub](https://github.com/shog-ai).
 
 Q: How fast is data transfer on the Shoggoth network?
 <br />
@@ -869,7 +869,7 @@ A: By default, nodes impose soft limits of 50MB per profile, but you can run a p
 
 Q: How can I donate to support Shoggoth's development?
 <br />
-A: You can donate online with a credit card at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html), send Bitcoin or Ethereum to the addresses listed at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html). Corporate sponsorships are also available (email netrunner@shoggoth.systems).
+A: You can donate online with a credit card at [shog.ai/donate.html](https://shog.ai/donate.html), send Bitcoin or Ethereum to the addresses listed at [shog.ai/donate.html](https://shog.ai/donate.html). Corporate sponsorships are also available (email netrunner@shog.ai).
 
 Q: Does Shoggoth use any blockchain technologies?
 <br />
@@ -895,9 +895,9 @@ You can turn off auto-update in the node configuration:
 All external dependencies for the Shoggoth project are housed within the Shoggoth repository itself.
 They can be found in the `./lib` directory in the source code.
 
-Some of the dependencies were developed by Shoggoth Systems specifically for the Shoggoth project, while others are obtained from external open-source projects unaffiliated with Shoggoth Systems or the Shoggoth Project.
+Some of the dependencies were developed by ShogAI specifically for the Shoggoth project, while others are obtained from external open-source projects unaffiliated with ShogAI or the Shoggoth Project.
 
-Some of the dependencies developed by Shoggoth Systems include:
+Some of the dependencies developed by ShogAI include:
 
 #### Sonic
 
@@ -941,12 +941,12 @@ All these commands are usually already pre-installed on macOS and Linux operatin
 
 ### Donate, Sponsor Shoggoth
 
-You can donate with a credit card at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html), send Bitcoin or Ethereum to the addresses listed at [shoggoth.systems/donate.html](https://shoggoth.systems/donate.html).
-Corporate sponsorships are also available (email netrunner@shoggoth.systems).
+You can donate with a credit card at [shog.ai/donate.html](https://shog.ai/donate.html), send Bitcoin or Ethereum to the addresses listed at [shog.ai/donate.html](https://shog.ai/donate.html).
+Corporate sponsorships are also available (email netrunner@shog.ai).
 
 ### Get Help/Support
 
-If you encounter any bugs or need assistance with anything, do not hesitate to join the [Discord community](https://discord.com/invite/AG3duN5yKP). You can also email netrunner@shoggoth.systems.
+If you encounter any bugs or need assistance with anything, do not hesitate to join the [Discord community](https://discord.com/invite/AG3duN5yKP). You can also email netrunner@shog.ai.
 
 ### License
 
@@ -965,8 +965,8 @@ Some popular nodes include:
 
 [https://shoggoth.network](https://shoggoth.network)
 
-[https://node1.shoggoth.systems](https://node1.shoggoth.systems)
+[https://node1.shog.ai](https://node1.shog.ai)
 
-[https://node2.shoggoth.systems](https://node1.shoggoth.systems)
+[https://node2.shog.ai](https://node2.shog.ai)
 
 {{> end}}

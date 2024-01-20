@@ -8,7 +8,7 @@
 int main() {
   // construct a request
   sonic_request_t *req =
-      sonic_new_request(METHOD_GET, "https://shoggoth.systems");
+      sonic_new_request(METHOD_GET, "https://shog.ai");
 
   // add a custom header
   sonic_add_header(req, "MyCustomHeader", "Header Value");

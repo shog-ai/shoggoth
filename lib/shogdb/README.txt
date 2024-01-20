@@ -2,7 +2,7 @@
 SHOGDB - Shoggoth Database
 ===============================================================================
 
-ShogDB is an in-memory, key-value database written in the C programming language, developed by Shoggoth Systems for use in the Shoggoth project (https://shoggoth.network).
+ShogDB is an in-memory, key-value database written in the C programming language, developed by ShogAI for use in the Shoggoth project (https://shoggoth.network).
 ShogDB is the database used by Shoggoth Nodes to store information like DHTs and pins. ShogDB also persists data on disk by periodically saving data to a file.
 
 ShogDB uses string keys, with values of different types like int, uint, float, string, bool and JSON.
@@ -35,7 +35,7 @@ Building
 Clone the repository
 ============================
 
-$ git clone https://github.com/shoggoth-systems/shogdb
+$ git clone https://github.com/shog-ai/shogdb
 
 cd into the cloned directory
 ============================

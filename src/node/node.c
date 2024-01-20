@@ -52,7 +52,7 @@ result_t generate_node_key_pair(char *keys_path, char *public_key_path,
  *
  ****/
 result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
-  chdir(ctx->runtime_path);
+  // chdir(ctx->runtime_path);
 
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
@@ -264,38 +264,14 @@ result_t run_node_server(node_ctx_t *ctx) {
   }
 
   pthread_t dht_thread;
-  pthread_t garbage_collector_thread;
-  pthread_t pins_downloader_thread;
-  pthread_t pins_updater_thread;
 
   dht_thread_args_t dht_thread_args = {.ctx = ctx};
   if (pthread_create(&dht_thread, NULL, dht_updater, &dht_thread_args) != 0) {
     PANIC("could not spawn dht thread");
   }
 
-  pins_downloader_thread_args_t pins_downloader_thread_args = {.ctx = ctx};
-  if (pthread_create(&pins_downloader_thread, NULL, pins_downloader,
-                     &pins_downloader_thread_args) != 0) {
-    PANIC("could not spawn pins downloader thread");
-  }
-
-  pins_updater_thread_args_t pins_updater_thread_args = {.ctx = ctx};
-  if (pthread_create(&pins_updater_thread, NULL, pins_updater,
-                     &pins_updater_thread_args) != 0) {
-    PANIC("could not spawn pins updater thread");
-  }
-
-  garbage_collector_thread_args_t garbage_collector_thread_args = {.ctx = ctx};
-  if (pthread_create(&garbage_collector_thread, NULL, garbage_collector,
-                     &garbage_collector_thread_args) != 0) {
-    PANIC("could not spawn garbage collector thread");
-  }
-
   pthread_join(server_thread, NULL);
   pthread_join(dht_thread, NULL);
-  pthread_join(garbage_collector_thread, NULL);
-  pthread_join(pins_downloader_thread, NULL);
-  pthread_join(pins_updater_thread, NULL);
 
   return OK(NULL);
 }
@@ -769,71 +745,222 @@ result_t node_restore(node_ctx_t *ctx) {
   return OK(NULL);
 }
 
+result_t shoggoth_id_from_hash(char *hash) {
+  char id_string[512];
+
+  strcpy(id_string, "SHOG");
+  strcat(id_string, hash);
+
+  char *id = strdup(id_string);
+  return OK(id);
+}
+
+result_t node_unpin_resource(node_ctx_t *ctx, char *shoggoth_id) {
+  LOG(INFO, "unpinning resource `%s`", shoggoth_id);
+
+  char node_runtime_path[FILE_PATH_SIZE];
+  utils_get_node_runtime_path(ctx, node_runtime_path);
+
+  char *pins_path = string_from(node_runtime_path, "/pins", NULL);
+  char *destination_path = string_from(pins_path, "/", shoggoth_id, NULL);
+
+  bool exists = file_exists(destination_path);
+
+  if (exists) {
+    delete_file(destination_path);
+
+    result_t res_add = db_pins_remove_resource(ctx, shoggoth_id);
+    PROPAGATE(res_add);
+  } else {
+    return ERR("resource not found");
+  }
+
+  LOG(INFO, "resource unpinned successfully");
+
+  return OK(NULL);
+}
+
+result_t node_pin_resource(node_ctx_t *ctx, char *file_path, char *label) {
+  LOG(INFO, "pinning file `%s` with label `%s`", file_path, label);
+
+  // char *resolved_path = NULL;
+
+  // if (realpath(file_path, resolved_path) == NULL) {
+  //   perror("realpath"); // Print an error message if realpath fails
+  //   PANIC("realpath failed");
+  // }
+
+  // LOG(INFO, "RESOLVED: `%s`", resolved_path);
+
+  result_t res_mapping = map_file(file_path);
+  file_mapping_t *mapping = PROPAGATE(res_mapping);
+
+  result_t res_hash = openssl_hash_data(
+      mapping->content, (unsigned long long)mapping->info.st_size);
+  char *hash = PROPAGATE(res_hash);
+
+  unmap_file(mapping);
+
+  result_t res_id = shoggoth_id_from_hash(hash);
+  char *id = PROPAGATE(res_id);
+
+  char node_runtime_path[FILE_PATH_SIZE];
+  utils_get_node_runtime_path(ctx, node_runtime_path);
+
+  char *pins_path = string_from(node_runtime_path, "/pins", NULL);
+  char *destination_path = string_from(pins_path, "/", id, NULL);
+
+  copy_file(file_path, destination_path);
+
+  result_t res_add = db_pins_add_resource(ctx, id);
+  PROPAGATE(res_add);
+
+  LOG(INFO, "resource pinned successfully");
+  LOG(INFO, "Shoggoth ID: %s", id);
+
+  return OK(NULL);
+}
+
+void clone_response_callback(char *data, u64 size, void *user_pointer) {
+  char *tmp_file_path = (char *)user_pointer;
+
+  result_t res = append_to_file(tmp_file_path, data, size);
+  UNWRAP(res);
+}
+
+result_t node_clone_resource(node_ctx_t *ctx, char *url) {
+  LOG(INFO, "cloning resource `%s`", url);
+
+  char tmp_path[FILE_PATH_SIZE];
+  utils_get_node_tmp_path(ctx, tmp_path);
+
+  char tmp_file_path[FILE_PATH_SIZE];
+  sprintf(tmp_file_path, "%s/clone.tmp", tmp_path);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  char *user_ptr = strdup(tmp_file_path);
+
+  sonic_request_set_response_callback(req, clone_response_callback, user_ptr);
+
+  sonic_response_t *resp = sonic_send_request(req);
+
+  free(user_ptr);
+
+  if (resp->failed) {
+    return ERR("CLONE FAILED: %s", sonic_get_error());
+  } else {
+    if (resp->status != STATUS_200) {
+      return ERR("CLONE FAILED: status was not OK");
+    }
+  }
+
+  node_pin_resource(ctx, tmp_file_path, "NONE");
+
+  delete_file(tmp_file_path);
+
+  LOG(INFO, "resource cloned successfully");
+
+  return OK(NULL);
+}
+
 /****
  * handles a node session.
  *
  ****/
 result_t handle_node_session(args_t *args) {
-  if (args->no_command_arg) {
-    return ERR("ARGS: no argument was provided to node command \n");
-  } else {
-    if (strcmp(args->command_arg, "run") == 0) {
+  if (strcmp(args->command, "run") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = run_node_server(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "start") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = start_node_service(ctx, args, true);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "restart") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = restart_node_service(ctx, args);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "stop") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = stop_node_service(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "status") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = check_node_service(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "logs") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = print_node_service_logs(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "id") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = node_print_id(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "pin") == 0) {
+    if (args->has_command_arg) {
+      if (args->has_subcommand_arg) {
+
+        result_t res_ctx = shog_init_node(args, true);
+        node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+        result_t res =
+            node_pin_resource(ctx, args->command_arg, args->subcommand_arg);
+        PROPAGATE(res);
+      } else {
+        EXIT(1, "no label was provided to `pin` command");
+      }
+    } else {
+      EXIT(1, "no file was provided to `pin` command");
+    }
+  } else if (strcmp(args->command, "unpin") == 0) {
+    if (args->has_command_arg) {
       result_t res_ctx = shog_init_node(args, true);
       node_ctx_t *ctx = PROPAGATE(res_ctx);
 
-      result_t res = run_node_server(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "start") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = start_node_service(ctx, args, true);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "restart") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = restart_node_service(ctx, args);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "stop") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = stop_node_service(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "status") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = check_node_service(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "logs") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = print_node_service_logs(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "id") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = node_print_id(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "backup") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = node_backup(ctx);
-      PROPAGATE(res);
-    } else if (strcmp(args->command_arg, "restore") == 0) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
-
-      result_t res = node_restore(ctx);
+      result_t res = node_unpin_resource(ctx, args->command_arg);
       PROPAGATE(res);
     } else {
-      return ERR("ARGS: invalid node subcommand: '%s'", args->command_arg);
+      EXIT(1, "no Shoggoth ID was provided to `unpin` command");
     }
+  } else if (strcmp(args->command, "clone") == 0) {
+    if (args->has_command_arg) {
+      result_t res_ctx = shog_init_node(args, true);
+      node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+      result_t res = node_clone_resource(ctx, args->command_arg);
+      PROPAGATE(res);
+    } else {
+      EXIT(1, "no URL was provided to `clone` command");
+    }
+  } else if (strcmp(args->command, "backup") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = node_backup(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "restore") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = node_restore(ctx);
+    PROPAGATE(res);
+  } else {
+    return ERR("ARGS: invalid command: '%s'", args->command);
   }
 
   return OK(NULL);

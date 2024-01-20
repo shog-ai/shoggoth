@@ -17,7 +17,7 @@ int main() {
   // construct a new request
   // this request illustrates setting a body for a post request
   sonic_request_t *req =
-      sonic_new_request(METHOD_POST, "https://shoggoth.systems");
+      sonic_new_request(METHOD_POST, "https://shog.ai");
 
   char *request_body = "Hello world!";
   sonic_set_body(req, request_body, strlen(request_body));
@@ -38,7 +38,7 @@ int main() {
 
   // construct a new request
   // this request illustrates printing the body of a response
-  req = sonic_new_request(METHOD_GET, "https://shoggoth.systems");
+  req = sonic_new_request(METHOD_GET, "https://shog.ai");
 
   // send the request
   resp = sonic_send_request(req);
@@ -66,7 +66,7 @@ int main() {
   // construct a new request
   // this request illustrates setting a custom callback function to capture the
   // response body
-  req = sonic_new_request(METHOD_GET, "https://shoggoth.systems");
+  req = sonic_new_request(METHOD_GET, "https://shog.ai");
 
   // set a callback function to handle the response body
   // Note that if this function is used on a request, nothing will be written to

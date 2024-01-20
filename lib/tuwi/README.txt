@@ -2,7 +2,7 @@
 TUWI - TERMINAL UI FRAMEWORK
 ===============================================================================
 
-Tuwi is a terminal user interface framework written in the C programming language, developed by Shoggoth Systems for use in the Shoggoth project (https://shoggoth.network).
+Tuwi is a terminal user interface framework written in the C programming language, developed by ShogAI for use in the Shoggoth project (https://shoggoth.network).
 Tuwi is the framework used for implementing the terminal user interface of Shoggoth, Camel, and other Shoggoth projects.
 
 **WARNING**
@@ -47,7 +47,7 @@ Building
 Clone the repository
 ============================
 
-$ git clone https://github.com/shoggoth-systems/tuwi
+$ git clone https://github.com/shog-ai/tuwi
 
 cd into the cloned directory
 ============================

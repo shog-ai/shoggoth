@@ -13,7 +13,7 @@
 
 #include "../utils/utils.h"
 
-typedef enum { COMMAND_NONE, COMMAND_CLIENT, COMMAND_NODE } command_t;
+// typedef enum { COMMAND_NONE, COMMAND_CLIENT, COMMAND_NODE } command_t;
 
 typedef struct {
   bool help;
@@ -27,11 +27,11 @@ typedef struct {
   char *runtime_path;
 
   bool has_command;
-  command_t command;
+  char *command;
   char *invalid_command;
-  bool no_command_arg;
+  bool has_command_arg;
   char *command_arg;
-  bool no_subcommand_arg;
+  bool has_subcommand_arg;
   char *subcommand_arg;
 } args_t;
 

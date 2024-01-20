@@ -39,22 +39,19 @@ check-path-arg:
 		exit 1; \
 	fi
 
+# generate-runtime: check-path-arg shogdb
 generate-runtime: check-path-arg build-explorer shogdb
 	mkdir -p $(RP)
 	
 	mkdir -p $(RP)/bin/
-	mkdir -p $(RP)/client/
 	mkdir -p $(RP)/scripts/
 	mkdir -p $(RP)/node
 	
 	mkdir -p $(RP)/node/keys $(RP)/node/tmp $(RP)/node/update
-	mkdir -p $(RP)/client/keys $(RP)/client/tmp
 	
 	mkdir -p $(RP)/node/explorer $(RP)/node/explorer/docs/ $(RP)/node/explorer/static/ $(RP)/node/explorer/templates/
 	
 	cp ./src/node/default-node-config.toml $(RP)/node/config.toml
-	cp ./src/client/default-client-config.toml $(RP)/client/config.toml
-	cp ./src/client/default-known-nodes.json $(RP)/client/known_nodes.json
 
 	cp $(TARGET_DIR)/shogdb $(RP)/bin/
 	cp ./lib/shogdb/src/dbconfig.toml $(RP)/node/

@@ -8,7 +8,6 @@
  *
  ****/
 
-#include "../client/client.h"
 #include "../include/tomlc.h"
 #include "../node/node.h"
 #include "../utils/utils.h"

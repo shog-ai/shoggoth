@@ -4,7 +4,7 @@
 
 ## What is Sonic?
 
-Sonic is an HTTP library written in the C programming language, developed by [Shoggoth Systems](https://shoggoth.systems) for use in the Shoggoth project.
+Sonic is an HTTP library written in the C programming language, developed by [ShogAI](https://shog.ai) for use in the Shoggoth project.
 
 Sonic currently implements only a subset of HTTP/1.0, but full compliance with HTTP/1.1 standards is the current goal.
 
@@ -28,7 +28,7 @@ Making a GET request ->
 #include <stdlib.h>
 
 int main() {
-  sonic_response_t *resp = sonic_get("https://shoggoth.systems");
+  sonic_response_t *resp = sonic_get("https://shog.ai");
 
   if (resp->failed) {
     printf("request failed: %s \n", resp->error);
@@ -123,7 +123,7 @@ Sonic currently supports only Linux and macOS operating systems.
 #### Clone the repository
 
 ```bash
-$ git clone https://github.com/shoggoth-systems/sonic
+$ git clone https://github.com/shog-ai/sonic
 ```
 
 #### cd into the cloned directory

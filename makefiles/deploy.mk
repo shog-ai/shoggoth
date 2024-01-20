@@ -21,7 +21,7 @@ deploy-nodes: package-dev
 	cp ./deploy/3/dbconfig.toml ./target/shoggoth-deploy/3/node/dbconfig.toml
 	
 deploy:
-	cd $(TARGET_DIR) && mprocs "sleep 1 && ./shog-sanitized node run -r ./shoggoth-deploy/1" "./shog-sanitized node run -r ./shoggoth-deploy/2" "sleep 2 && ./shog-sanitized node run -r ./shoggoth-deploy/3"
+	cd $(TARGET_DIR) && mprocs "sleep 1 && ./shog-sanitized run -r ./shoggoth-deploy/1" "./shog-sanitized run -r ./shoggoth-deploy/2" "sleep 2 && ./shog-sanitized run -r ./shoggoth-deploy/3"
 
 # START_FLAGS = LD_PRELOAD=$$(gcc -print-file-name=libasan.so)
 START_FLAGS = 
@@ -37,10 +37,10 @@ deploy-remote: package-release
 	ssh -t $(U)@$(A) 'unzip -o -q ~/deployment/shoggoth.zip -d ~/shoggoth/ && cd ~/shoggoth/ && ./scripts/install.sh && cd ~ && cp ~/deployment/config.toml ~/shoggoth/node/config.toml && rm -r ~/deployment'
 
 deploy1:
-	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized node run -r ./shoggoth-deploy/1
+	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized run -r ./shoggoth-deploy/1
 
 deploy2:
-	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized node run -r ./shoggoth-deploy/2
+	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized run -r ./shoggoth-deploy/2
 	
 deploy3:
-	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized node run -r ./shoggoth-deploy/3
+	cd $(TARGET_DIR) && $(START_FLAGS) ./shog-sanitized run -r ./shoggoth-deploy/3

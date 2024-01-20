@@ -9,7 +9,6 @@
  ****/
 
 #include "utils.h"
-#include "../client/client.h"
 #include "../include/tuwi.h"
 #include "../node/node.h"
 
@@ -300,37 +299,6 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
 }
 
 /****
- * utility function to verify that all the necessary directories and
- * subdirectories used by the client runtime exist. If they don't exist, it
- * creates them
- *
- ****/
-void utils_verify_client_runtime_dirs(client_ctx_t *ctx) {
-  char runtime_path[FILE_PATH_SIZE];
-  strcpy(runtime_path, ctx->runtime_path);
-
-  char client_runtime_path[FILE_PATH_SIZE];
-  utils_get_client_runtime_path(ctx, client_runtime_path);
-
-  char client_tmp_path[FILE_PATH_SIZE];
-  utils_get_client_tmp_path(ctx, client_tmp_path);
-
-  assert(runtime_path != NULL);
-
-  if (!dir_exists(runtime_path)) {
-    create_dir(runtime_path);
-  }
-
-  if (!dir_exists(client_runtime_path)) {
-    create_dir(client_runtime_path);
-  }
-
-  if (!dir_exists(client_tmp_path)) {
-    create_dir(client_tmp_path);
-  }
-}
-
-/****
  * utility function to get the default runtime path which should be
  * $HOME/shoggoth
  *
@@ -365,22 +333,6 @@ void utils_get_node_runtime_path(node_ctx_t *ctx, char node_runtime_path[]) {
   char *relative_path = "/node";
 
   sprintf(node_runtime_path, "%s%s", runtime_path, relative_path);
-}
-
-/****U
- * utility function to derive the client runtime path from the already set
- * runtime path in the ctx. If the default runtime path was used, the client
- * runtime path should be $HOME/shoggoth/client
- *
- ****/
-void utils_get_client_runtime_path(client_ctx_t *ctx,
-                                   char client_runtime_path[]) {
-  char runtime_path[FILE_PATH_SIZE];
-  strcpy(runtime_path, ctx->runtime_path);
-
-  char *relative_path = "/client";
-
-  sprintf(client_runtime_path, "%s%s", runtime_path, relative_path);
 }
 
 /****U
@@ -420,19 +372,4 @@ void utils_get_node_update_path(node_ctx_t *ctx, char node_update_path[]) {
   char *relative_path = "/update";
 
   sprintf(node_update_path, "%s%s", node_runtime_path, relative_path);
-}
-
-/****U
- * utility function to derive the client tmp runtime path (used for temporary
- * files) from the already set runtime path in the ctx. If the default runtime
- * path was used, the tmp runtime path should be $HOME/shoggoth/client/tmp
- *
- ****/
-void utils_get_client_tmp_path(client_ctx_t *ctx, char client_tmp_path[]) {
-  char client_runtime_path[FILE_PATH_SIZE];
-  utils_get_client_runtime_path(ctx, client_runtime_path);
-
-  char *relative_path = "/tmp";
-
-  sprintf(client_tmp_path, "%s%s", client_runtime_path, relative_path);
 }

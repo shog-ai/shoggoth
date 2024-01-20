@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv) {
   sonic_request_t *req =
-      sonic_new_request(METHOD_GET, "http://shoggoth.systems");
+      sonic_new_request(METHOD_GET, "http://shog.ai");
 
   sonic_redirect_policy_t policy = {0};
   policy.no_redirect = true;

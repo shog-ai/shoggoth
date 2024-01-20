@@ -4,7 +4,7 @@
 
 ## What is Camel?
 
-Camel is a testing framework written in the C programming language, developed by [Shoggoth Systems](https://shoggoth.systems) for use in the Shoggoth project.
+Camel is a testing framework written in the C programming language, developed by [ShogAI](https://shog.ai) for use in the Shoggoth project.
 It can be used for writing unit tests, integration tests, functional tests, and fuzz tests. Camel is the framework used for testing Shoggoth, Sonic, and other Shoggoth projects.
 
 ### ⚠️Disclaimer⚠️
@@ -223,7 +223,7 @@ Camel currently supports only Linux and macOS operating systems.
 #### Clone the repository
 
 ```bash
-$ git clone https://github.com/shoggoth-systems/camel
+$ git clone https://github.com/shog-ai/camel
 ```
 
 #### cd into the cloned directory

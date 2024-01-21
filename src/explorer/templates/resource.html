@@ -1,0 +1,26 @@
+{{> head}}
+
+<div class="resource-base">
+
+  <div class="item-title"><b>Shoggoth ID:</b></div>
+  <div class="item-value">{{shoggoth_id}}</div>
+
+  <div class="item-title"><b>Label:</b></div>
+  <div class="item-value">{{label}}</div>
+
+  <div class="item-title"><b>Size:</b></div>
+  <div class="item-value">{{size}}</div>
+
+  <div class="item-title"><b>SHA256 hash:</b></div>
+  <div class="item-value">{{hash}}</div>
+
+  <a href="{{download_link}}" class="download-btn">
+    Download
+  </a>
+
+  <div class="item-title"><b>Pin on your node:</b></div>
+  <pre class="item-clone"><code class="language-bash">shog clone {{download_link}}</code></pre>
+
+</div>
+
+{{> end}}

@@ -54,7 +54,7 @@ function populate_pins_list(new_pins_list) {
 
     JSON.parse(new_pins_list).forEach(item => {
       const div = document.createElement("div");
-      div.innerHTML = "<a href='/explorer/profile/" + item + "'>" + item + "</a>";
+      div.innerHTML = "<a href='/explorer/resource/" + item + "'>" + item + "</a>";
       div.classList.add("pins-item");
       container.appendChild(div);
     });

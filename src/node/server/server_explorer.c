@@ -7,8 +7,13 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
+#include "../../json/json.h"
+#include "../../templating/templating.h"
+#include "../db/db.h"
 #include "api.h"
 #include "server_profile.h"
+
+#include <stdlib.h>
 
 node_ctx_t *explorer_ctx = NULL;
 
@@ -184,6 +189,165 @@ void home_route(sonic_server_request_t *req) {
   sonic_free_server_response(resp);
 }
 
+void resource_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+
+  if (strlen(shoggoth_id) != 68) {
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_404, MIME_TEXT_HTML);
+
+    char *body = "invalid Shoggoth ID";
+
+    sonic_response_set_body(resp, body, (u64)strlen(body));
+
+    sonic_send_response(req, resp);
+
+    sonic_free_server_response(resp);
+
+    return;
+  }
+
+  char runtime_path[FILE_PATH_SIZE];
+  utils_get_node_runtime_path(explorer_ctx, runtime_path);
+
+  char resource_path[FILE_PATH_SIZE];
+  sprintf(resource_path, "%s/pins/%s", runtime_path, shoggoth_id);
+
+  if (!file_exists(resource_path)) {
+    result_t res_peers_with_pin =
+        db_get_peers_with_pin(explorer_ctx, shoggoth_id);
+    char *peers_with_pin = UNWRAP(res_peers_with_pin);
+
+    result_t res_peers = json_string_to_dht(peers_with_pin);
+    dht_t *peers = UNWRAP(res_peers);
+    free(peers_with_pin);
+
+    if (peers->items_count > 0) {
+      char location[256];
+      sprintf(location, "%s/explorer/resource/%s", peers->items[0]->host,
+              shoggoth_id);
+
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_302, MIME_TEXT_PLAIN);
+      sonic_response_add_header(resp, "Location", location);
+
+      sonic_send_response(req, resp);
+      sonic_free_server_response(resp);
+
+    } else {
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_404, MIME_TEXT_HTML);
+
+      char *body = "resource not found";
+
+      sonic_response_set_body(resp, body, (u64)strlen(body));
+
+      sonic_send_response(req, resp);
+
+      sonic_free_server_response(resp);
+    }
+
+    free_dht(peers);
+    return;
+  }
+
+  char explorer_dir[FILE_PATH_SIZE];
+  utils_get_node_explorer_path(explorer_ctx, explorer_dir);
+
+  char head_template_path[FILE_PATH_SIZE];
+  sprintf(head_template_path, "%s/templates/head.html", explorer_dir);
+
+  char end_template_path[FILE_PATH_SIZE];
+  sprintf(end_template_path, "%s/templates/end.html", explorer_dir);
+
+  char resource_template_path[FILE_PATH_SIZE];
+  sprintf(resource_template_path, "%s/templates/resource.html", explorer_dir);
+
+  result_t res_end_template_string = read_file_to_string(end_template_path);
+  char *end_template_string = UNWRAP(res_end_template_string);
+
+  template_t *end_template = create_template(end_template_string, "{}");
+  free(end_template_string);
+
+  result_t res_head_template_string = read_file_to_string(head_template_path);
+  char *head_template_string = UNWRAP(res_head_template_string);
+
+  char *head_template_data = malloc(1024 * sizeof(char));
+
+  sprintf(head_template_data,
+          "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth "
+          "- Shoggoth is a peer-to-peer, anonymous network for publishing and "
+          "distributing open-source code, Machine Learning models, datasets, "
+          "and research papers.\","
+          "\"og_url\": \"%s/explorer/resource_og/%s\", "
+          "\"url\": \"%s/explorer/resource/%s\", \"is_resource\": true}",
+          shoggoth_id, shoggoth_id, explorer_ctx->config->network.public_host,
+          shoggoth_id, explorer_ctx->config->network.public_host, shoggoth_id);
+
+  template_t *head_template =
+      create_template(head_template_string, head_template_data);
+  free(head_template_string);
+
+  result_t res_file_content = read_file_to_string(resource_template_path);
+  char *file_content = UNWRAP(res_file_content);
+
+  char *label = "NONE";
+  // char *size = "NONE";
+  char *download_link = string_from(explorer_ctx->config->network.public_host,
+                                    "/api/download/", shoggoth_id, NULL);
+
+  u64 resource_size = UNWRAP_U64(get_dir_size(resource_path));
+
+  char resource_size_str[256];
+  if (resource_size < 1024) {
+    sprintf(resource_size_str, U64_FORMAT_SPECIFIER " B", resource_size);
+  } else if (resource_size < 1024 * 1024) {
+    sprintf(resource_size_str, "%.2f KB\n", (float)resource_size / 1024);
+  } else if (resource_size < 1024 * 1024 * 1024) {
+    sprintf(resource_size_str, "%.2f MB\n",
+            (float)resource_size / (1024 * 1024));
+  } else {
+    sprintf(resource_size_str, "%.2f GB\n",
+            (float)resource_size / (1024 * 1024 * 1024));
+  }
+
+  char *template_data = malloc(1024 * sizeof(char));
+  sprintf(template_data,
+          "{ \"shoggoth_id\": \"%s\", \"label\": \"%s\", \"size\": \"%s\", "
+          "\"hash\": \"%s\", \"download_link\": \"%s\" }",
+          shoggoth_id, label, resource_size_str, &shoggoth_id[4],
+          download_link);
+
+  // char *template_data = "{ \"shoggoth_id\": \"\" }";
+  template_t *template_object = create_template(file_content, template_data);
+
+  result_t res_partial =
+      template_add_partial(template_object, "head", head_template);
+  UNWRAP(res_partial);
+
+  res_partial = template_add_partial(template_object, "end", end_template);
+  UNWRAP(res_partial);
+
+  result_t res_cooked = cook_template(template_object);
+  char *cooked = UNWRAP(res_cooked);
+
+  free_template(template_object);
+  free_template(head_template);
+  free_template(end_template);
+
+  free(file_content);
+  free(head_template_data);
+
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_200, MIME_TEXT_HTML);
+  sonic_response_set_body(resp, cooked, (u64)strlen(cooked));
+
+  sonic_send_response(req, resp);
+
+  free(cooked);
+  sonic_free_server_response(resp);
+}
+
 void add_explorer_routes(node_ctx_t *ctx, sonic_server_t *server) {
   explorer_ctx = ctx;
 
@@ -207,5 +371,6 @@ void add_explorer_routes(node_ctx_t *ctx, sonic_server_t *server) {
   sonic_add_route(server, "/explorer/docs/camel", METHOD_GET, docs_camel_route);
   sonic_add_route(server, "/explorer/docs/tuwi", METHOD_GET, docs_tuwi_route);
 
-  add_profile_routes(ctx, server);
+  sonic_add_route(server, "/explorer/resource/{shoggoth_id}", METHOD_GET,
+                  resource_route);
 }

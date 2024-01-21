@@ -75,7 +75,7 @@ result_t args_parse(const int argc, char **argv) {
       args->has_command = true;
       args->command = current_arg;
 
-      if (i + 1 < argc) {
+      if (i + 1 < argc && argv[i + 1][0] != '-') {
         args->has_command_arg = true;
         args->command_arg = argv[i + 1];
 

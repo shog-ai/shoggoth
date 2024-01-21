@@ -59,8 +59,13 @@
   <link rel="stylesheet" href="/explorer/static/profile/profile.css" />
   <script src="/explorer/static/profile/profile.js"></script>
   {{/if}}
+   
+  {{#if is_resource}}
+  <link rel="stylesheet" href="/explorer/static/resource/resource.css" />
+  <script src="/explorer/static/resource/resource.js"></script>
+  {{/if}}
   
-  {{#if is_profile}}
+  {{#if is_resource}}
   {{#if !is_docs}} 
   <link rel="stylesheet" href="/explorer/static/docs/highlightjs/styles/agate.min.css">
   <script src="/explorer/static/docs/highlightjs/highlight.min.js"></script>
@@ -69,7 +74,7 @@
   {{/if}}
 
   {{#if is_docs}}
-  {{#if !is_profile}} 
+  {{#if !is_resource}} 
   <link rel="stylesheet" href="/explorer/static/docs/highlightjs/styles/agate.min.css">
   <script src="/explorer/static/docs/highlightjs/highlight.min.js"></script>
   <script>hljs.highlightAll();</script>

@@ -13,6 +13,8 @@
 
 #include "../dht/dht.h"
 
+result_t db_get_pin_label(node_ctx_t *ctx, char *shoggoth_id);
+
 result_t db_increment_unreachable_count(node_ctx_t *ctx, char *node_id);
 
 result_t db_reset_unreachable_count(node_ctx_t *ctx, char *node_id);

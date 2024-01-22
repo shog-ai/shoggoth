@@ -25,9 +25,9 @@ OPTIONS:\n\
 \n\
 COMMANDS:\n\
   id                       Display your Node ID\n\
-  pin <file>               Pin a file as a Shoggoth resource\n\
+  pin <file> <label>       Pin a file as a Shoggoth resource\n\
   unpin <Shoggoth ID>      Unpin a resource\n\
-  clone <URL>              Pin a remote resource\n\
+  clone <URL> <label>      Pin a remote resource\n\
   run                      Run a Shoggoth Node\n\
   start                    Start a Shoggoth Node as a service\n\
   stop                     Stop the Shoggoth Node service\n\

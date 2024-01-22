@@ -1160,6 +1160,61 @@ void pins_remove_resource_route(sonic_server_request_t *req) {
   }
 }
 
+void get_pin_label_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+
+  result_t res = db_get_value(global_ctx, "pins");
+
+  if (is_ok(res)) {
+    db_value_t *value = VALUE(res);
+    cJSON *pins = value->value_json;
+
+    const cJSON *pin_json = NULL;
+    cJSON_ArrayForEach(pin_json, pins) {
+
+      char *pin_shoggoth_id =
+          cJSON_GetObjectItemCaseSensitive(pin_json, "shoggoth_id")
+              ->valuestring;
+
+      if (strcmp(shoggoth_id, pin_shoggoth_id) == 0) {
+        char *label =
+            cJSON_GetObjectItemCaseSensitive(pin_json, "label")->valuestring;
+
+        sonic_server_response_t *resp =
+            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+
+        char *body = label;
+        sonic_response_set_body(resp, body, strlen(body));
+        sonic_send_response(req, resp);
+
+        sonic_free_server_response(resp);
+
+        return;
+      }
+    }
+
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+    char err[256];
+    sprintf(err, "ERR pin with shoggoth_id not found");
+
+    sonic_response_set_body(resp, err, strlen(err));
+    sonic_send_response(req, resp);
+    sonic_free_server_response(resp);
+  } else {
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+    char err[256];
+    sprintf(err, "ERR %s", res.error_message);
+
+    sonic_response_set_body(resp, err, strlen(err));
+    sonic_send_response(req, resp);
+    sonic_free_server_response(resp);
+  }
+}
+
 void pins_clear_route(sonic_server_request_t *req) {
   result_t res = db_get_value(global_ctx, "pins");
 
@@ -1447,6 +1502,8 @@ sonic_server_t *create_server(db_ctx_t *ctx) {
                   dht_increment_unreachable_count_route);
 
   sonic_add_route(server, "/pins/get_pins", METHOD_GET, get_pins_route);
+  sonic_add_route(server, "/pins/get_pin_label/{shoggoth_id}", METHOD_GET,
+                  get_pin_label_route);
   sonic_add_route(server, "/pins/add_resource/{shoggoth_id}/{label}",
                   METHOD_GET, pins_add_resource_route);
   sonic_add_route(server, "/pins/remove_resource", METHOD_GET,

@@ -827,7 +827,7 @@ void clone_response_callback(char *data, u64 size, void *user_pointer) {
   UNWRAP(res);
 }
 
-result_t node_clone_resource(node_ctx_t *ctx, char *url) {
+result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
   LOG(INFO, "cloning resource `%s`", url);
 
   char tmp_path[FILE_PATH_SIZE];
@@ -854,7 +854,7 @@ result_t node_clone_resource(node_ctx_t *ctx, char *url) {
     }
   }
 
-  UNWRAP(node_pin_resource(ctx, tmp_file_path, "NONE"));
+  UNWRAP(node_pin_resource(ctx, tmp_file_path, label));
 
   delete_file(tmp_file_path);
 
@@ -938,11 +938,18 @@ result_t handle_node_session(args_t *args) {
     }
   } else if (strcmp(args->command, "clone") == 0) {
     if (args->has_command_arg) {
-      result_t res_ctx = shog_init_node(args, true);
-      node_ctx_t *ctx = PROPAGATE(res_ctx);
+      if (args->has_subcommand_arg) {
 
-      result_t res = node_clone_resource(ctx, args->command_arg);
-      PROPAGATE(res);
+        result_t res_ctx = shog_init_node(args, true);
+        node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+        result_t res =
+            node_clone_resource(ctx, args->command_arg, args->subcommand_arg);
+        PROPAGATE(res);
+
+      } else {
+        EXIT(1, "no label was provided to `clone` command");
+      }
     } else {
       EXIT(1, "no URL was provided to `clone` command");
     }

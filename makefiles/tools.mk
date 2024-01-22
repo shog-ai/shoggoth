@@ -1,5 +1,6 @@
 clean:
 	$(MAKE) clean-shoggoth
+	$(MAKE) clean-shogdb
 	$(MAKE) clean-sonic
 	$(MAKE) clean-camel
 	$(MAKE) clean-tuwi
@@ -28,6 +29,9 @@ clean-tomlc:
 
 clean-cjson:
 	cd lib/cjson && $(MAKE) clean
+
+clean-shogdb:
+	cd lib/shogdb && $(MAKE) clean
 
 version:
 	echo $(VERSION)

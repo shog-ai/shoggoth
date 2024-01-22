@@ -299,16 +299,21 @@ result_t db_get_unreachable_count(node_ctx_t *ctx, char *node_id) {
  * adds an item to the database pins
  *
  ****/
-result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id) {
-  result_t res_str = shogdb_get(ctx, "pins/add_profile", shoggoth_id);
+result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id, char *label) {
+  char *path = string_from("pins/add_resource/", shoggoth_id, "/", label, NULL);
+
+  result_t res_str = shogdb_get(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
   free(str);
+  free(path);
 
   return OK(NULL);
 }
 
 result_t db_pins_remove_resource(node_ctx_t *ctx, char *shoggoth_id) {
-  result_t res_str = shogdb_get(ctx, "pins/remove_profile", shoggoth_id);
+  char *path = string_from("pins/remove_resource/", shoggoth_id, NULL);
+
+  result_t res_str = shogdb_get(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
   free(str);
 
@@ -332,11 +337,11 @@ result_t db_clear_peer_pins(node_ctx_t *ctx, char *node_id) {
   return OK(NULL);
 }
 
-result_t db_peer_pins_add_profile(node_ctx_t *ctx, char *node_id,
-                                  char *shoggoth_id) {
+result_t db_peer_pins_add_resource(node_ctx_t *ctx, char *node_id,
+                                   char *shoggoth_id) {
 
   char endpoint[256];
-  sprintf(endpoint, "dht/peer_pins_add_profile/%s", node_id);
+  sprintf(endpoint, "dht/peer_pins_add_resource/%s", node_id);
 
   result_t res_str = shogdb_get(ctx, endpoint, shoggoth_id);
   char *str = PROPAGATE(res_str);
@@ -382,7 +387,7 @@ result_t db_verify_data(node_ctx_t *ctx) {
     // result_t res_pin_str = remove_file_extension(pins_list->files[i]);
     // char *pin_str = PROPAGATE(res_pin_str);
 
-    db_pins_add_resource(ctx, pins_list->files[i]);
+    db_pins_add_resource(ctx, pins_list->files[i], "NONE");
 
     // free(pin_str);
   }

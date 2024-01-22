@@ -801,20 +801,21 @@ void dht_add_item_route(sonic_server_request_t *req) {
   }
 }
 
-void pins_add_profile_route(sonic_server_request_t *req) {
+void pins_add_resource_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+  char *label = sonic_get_path_segment(req, "label");
+
   result_t res = db_get_value(global_ctx, "pins");
 
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
+    cJSON *pin_json = cJSON_CreateObject();
 
-    cJSON *pin_json = cJSON_CreateString(req_body);
+    cJSON_AddStringToObject(pin_json, "shoggoth_id", shoggoth_id);
+    cJSON_AddStringToObject(pin_json, "label", label);
+
     cJSON_AddItemToArray(value->value_json, pin_json);
-
-    free(req_body);
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -1098,23 +1099,24 @@ void dht_reset_unreachable_count_route(sonic_server_request_t *req) {
   }
 }
 
-void pins_remove_profile_route(sonic_server_request_t *req) {
+void pins_remove_resource_route(sonic_server_request_t *req) {
+  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+
   result_t res = db_get_value(global_ctx, "pins");
 
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
     cJSON *pins = value->value_json;
 
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *shoggoth_id = req_body;
     int index = 0;
 
     const cJSON *pin_json = NULL;
     cJSON_ArrayForEach(pin_json, pins) {
-      char *pin_shoggoth_id = pin_json->valuestring;
+      // char *pin_shoggoth_id = pin_json->valuestring;
+
+      char *pin_shoggoth_id =
+          cJSON_GetObjectItemCaseSensitive(pin_json, "shoggoth_id")
+              ->valuestring;
 
       if (strcmp(shoggoth_id, pin_shoggoth_id) == 0) {
         cJSON_DeleteItemFromArray(pins, index);
@@ -1126,7 +1128,6 @@ void pins_remove_profile_route(sonic_server_request_t *req) {
         sonic_response_set_body(resp, body, strlen(body));
         sonic_send_response(req, resp);
 
-        free(req_body);
         sonic_free_server_response(resp);
 
         global_ctx->saved = false;
@@ -1307,7 +1308,7 @@ void dht_get_peers_with_pin_route(sonic_server_request_t *req) {
   }
 }
 
-void dht_peer_pins_add_profile_route(sonic_server_request_t *req) {
+void dht_peer_pins_add_resource_route(sonic_server_request_t *req) {
   char *node_id = sonic_get_path_segment(req, "node_id");
 
   result_t res = db_get_value(global_ctx, "dht");
@@ -1434,8 +1435,8 @@ sonic_server_t *create_server(db_ctx_t *ctx) {
                   dht_remove_item_route);
   sonic_add_route(server, "/dht/peer_clear_pins", METHOD_GET,
                   dht_peer_clear_pins_route);
-  sonic_add_route(server, "/dht/peer_pins_add_profile/{node_id}", METHOD_GET,
-                  dht_peer_pins_add_profile_route);
+  sonic_add_route(server, "/dht/peer_pins_add_resource/{node_id}", METHOD_GET,
+                  dht_peer_pins_add_resource_route);
   sonic_add_route(server, "/dht/get_peers_with_pin", METHOD_GET,
                   dht_get_peers_with_pin_route);
   sonic_add_route(server, "/dht/get_unreachable_count", METHOD_GET,
@@ -1446,10 +1447,10 @@ sonic_server_t *create_server(db_ctx_t *ctx) {
                   dht_increment_unreachable_count_route);
 
   sonic_add_route(server, "/pins/get_pins", METHOD_GET, get_pins_route);
-  sonic_add_route(server, "/pins/add_profile", METHOD_GET,
-                  pins_add_profile_route);
-  sonic_add_route(server, "/pins/remove_profile", METHOD_GET,
-                  pins_remove_profile_route);
+  sonic_add_route(server, "/pins/add_resource/{shoggoth_id}/{label}",
+                  METHOD_GET, pins_add_resource_route);
+  sonic_add_route(server, "/pins/remove_resource", METHOD_GET,
+                  pins_remove_resource_route);
   sonic_add_route(server, "/pins/clear", METHOD_GET, pins_clear_route);
 
   return server;

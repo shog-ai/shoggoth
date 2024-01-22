@@ -228,6 +228,16 @@ result_t db_get_pins_str(node_ctx_t *ctx) {
   return OK(str);
 }
 
+result_t db_get_pin_label(node_ctx_t *ctx, char *shoggoth_id) {
+  char *path = string_from("pins/get_pin_label/", shoggoth_id, NULL);
+
+  result_t res_str = shogdb_get(ctx, path, NULL);
+  char *str = PROPAGATE(res_str);
+  free(path);
+
+  return OK(str);
+}
+
 /****
  * uses the bootstrap peers to populate the dht
  *

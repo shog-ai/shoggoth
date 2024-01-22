@@ -290,8 +290,8 @@ void resource_route(sonic_server_request_t *req) {
   result_t res_file_content = read_file_to_string(resource_template_path);
   char *file_content = UNWRAP(res_file_content);
 
-  char *label = "NONE";
-  // char *size = "NONE";
+  char *label = UNWRAP(db_get_pin_label(explorer_ctx, shoggoth_id));
+
   char *download_link = string_from(explorer_ctx->config->network.public_host,
                                     "/api/download/", shoggoth_id, NULL);
 

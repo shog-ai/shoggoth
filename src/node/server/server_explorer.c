@@ -11,7 +11,6 @@
 #include "../../templating/templating.h"
 #include "../db/db.h"
 #include "api.h"
-#include "server_profile.h"
 
 #include <stdlib.h>
 

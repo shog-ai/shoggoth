@@ -13,7 +13,6 @@
 #include "../openssl/openssl.h"
 #include "../toml/toml.h"
 #include "db/db.h"
-#include "garbage_collector/garbage_collector.h"
 #include "manifest/manifest.h"
 
 #include <errno.h>
@@ -812,7 +811,7 @@ result_t node_pin_resource(node_ctx_t *ctx, char *file_path, char *label) {
 
   copy_file(file_path, destination_path);
 
-  result_t res_add = db_pins_add_resource(ctx, id);
+  result_t res_add = db_pins_add_resource(ctx, id, label);
   PROPAGATE(res_add);
 
   LOG(INFO, "resource pinned successfully");
@@ -855,7 +854,7 @@ result_t node_clone_resource(node_ctx_t *ctx, char *url) {
     }
   }
 
-  node_pin_resource(ctx, tmp_file_path, "NONE");
+  UNWRAP(node_pin_resource(ctx, tmp_file_path, "NONE"));
 
   delete_file(tmp_file_path);
 

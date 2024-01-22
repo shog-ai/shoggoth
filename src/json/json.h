@@ -14,7 +14,6 @@
 #include "../node/dht/dht.h"
 #include "../node/node.h"
 #include "../node/server/server.h"
-#include "../profile/profile.h"
 
 typedef void *json_t;
 

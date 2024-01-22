@@ -11,7 +11,6 @@
 #include "../../json/json.h"
 #include "../db/db.h"
 #include "../manifest/manifest.h"
-#include "pin.h"
 
 #include <assert.h>
 #include <stdlib.h>

@@ -11,7 +11,6 @@
 #include "../include/cjson.h"
 #include "../node/dht/dht.h"
 #include "../node/server/server.h"
-#include "../profile/profile.h"
 #include "../utils/utils.h"
 
 #include "json.h"
@@ -172,47 +171,6 @@ result_t json_string_to_pins(char *pins_str) {
   return OK(pins);
 }
 
-upload_info_t *json_to_upload_info(json_t *json) {
-  cJSON *info_json = (cJSON *)json;
-
-  char *shoggoth_id = strdup(
-      cJSON_GetObjectItemCaseSensitive(info_json, "shoggoth_id")->valuestring);
-
-  char *upload_size_str =
-      cJSON_GetObjectItemCaseSensitive(info_json, "upload_size")->valuestring;
-  u64 upload_size = (u64)atoll(upload_size_str);
-
-  char *chunk_size_limit_str =
-      cJSON_GetObjectItemCaseSensitive(info_json, "chunk_size_limit")
-          ->valuestring;
-  u64 chunk_size_limit = (u64)atoll(chunk_size_limit_str);
-
-  char *chunk_count_str =
-      cJSON_GetObjectItemCaseSensitive(info_json, "chunk_count")->valuestring;
-  u64 chunk_count = (u64)atoll(chunk_count_str);
-
-  upload_info_t *upload_info = calloc(1, sizeof(upload_info_t));
-
-  upload_info->shoggoth_id = shoggoth_id;
-  upload_info->upload_size = upload_size;
-  upload_info->chunk_size_limit = chunk_size_limit,
-  upload_info->chunk_count = chunk_count;
-
-  return upload_info;
-}
-
-result_t json_string_to_upload_info(char *info_str) {
-  cJSON *info_json = cJSON_Parse(info_str);
-  if (info_json == NULL) {
-    return ERR("Could not parse upload info json \n");
-  }
-
-  upload_info_t *upload_info = json_to_upload_info((void *)info_json);
-
-  cJSON_Delete(info_json);
-
-  return OK(upload_info);
-}
 
 node_manifest_t *json_to_node_manifest(json_t *json) {
   cJSON *manifest_json = (cJSON *)json;

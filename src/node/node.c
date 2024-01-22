@@ -13,7 +13,6 @@
 #include "../openssl/openssl.h"
 #include "../toml/toml.h"
 #include "db/db.h"
-#include "garbage_collector/garbage_collector.h"
 #include "manifest/manifest.h"
 
 #include <errno.h>

@@ -349,6 +349,9 @@ sonic_server_t *sonic_new_server(char *host, u16 port);
 sonic_server_response_t *sonic_new_response(sonic_status_t status,
                                             sonic_content_type_t content_type);
 
+sonic_server_response_t *sonic_new_file_response(sonic_status_t status,
+                                                 char *file_path);
+
 sonic_middleware_response_t *
 sonic_new_middleware_response(bool should_respond,
                               sonic_server_response_t *response);

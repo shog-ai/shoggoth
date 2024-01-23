@@ -65,6 +65,9 @@ sonic_server_t *new_server(char *host, u16 port);
 sonic_server_response_t *new_server_response(sonic_status_t status,
                                              sonic_content_type_t content_type);
 
+sonic_server_response_t *new_server_file_response(sonic_status_t status,
+                                                  char *file_path);
+
 void server_response_set_body(sonic_server_response_t *resp,
                               char *response_body, u64 response_body_size);
 

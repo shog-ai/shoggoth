@@ -73,8 +73,9 @@ sonic_client_request_t *sonic_new_request(sonic_method_t method, char *url) {
   return new_client_request(method, url);
 }
 
-void sonic_request_set_response_callback(
-    sonic_request_t *req, response_callback_func_t callback_func, void *user_pointer) {
+void sonic_request_set_response_callback(sonic_request_t *req,
+                                         response_callback_func_t callback_func,
+                                         void *user_pointer) {
   client_set_response_callback(req, callback_func, user_pointer);
 }
 
@@ -174,6 +175,11 @@ sonic_server_t *sonic_new_server(char *host, u16 port) {
 sonic_server_response_t *sonic_new_response(sonic_status_t status,
                                             sonic_content_type_t content_type) {
   return new_server_response(status, content_type);
+}
+
+sonic_server_response_t *sonic_new_file_response(sonic_status_t status,
+                                                 char *file_path) {
+  return new_server_file_response(status, file_path);
 }
 
 void sonic_response_set_body(sonic_server_response_t *resp, char *response_body,

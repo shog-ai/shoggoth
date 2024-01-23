@@ -270,7 +270,11 @@ result_t gen_api_docs() {
 
   template_t *head_template = create_template(
       head_template_string,
-      "{\"title\": \"Shoggoth API Reference\", \"desc\": \"Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/static/img/og/docs_api.png\", \"url\": \"/explorer/docs/api\", \"is_api\": true}");
+      "{\"title\": \"Shoggoth API Reference\", \"desc\": \"Shoggoth is a "
+      "peer-to-peer, anonymous network for publishing and distributing "
+      "open-source code, Machine Learning models, datasets, and research "
+      "papers.\", \"og_url\": \"/explorer/static/img/og/docs_api.png\", "
+      "\"url\": \"/explorer/docs/api\", \"is_api\": true}");
   free(head_template_string);
 
   result_t res_api_template_string =
@@ -292,8 +296,7 @@ result_t gen_api_docs() {
   free_template(head_template);
   free_template(end_template);
 
-  write_to_file("./explorer/out/docs/api.html", cooked_api,
-                      strlen(cooked_api));
+  write_to_file("./explorer/out/docs/api.html", cooked_api, strlen(cooked_api));
 
   // LOG(INFO, "COOKED: %s", cooked_api);
 
@@ -305,98 +308,28 @@ result_t gen_api_docs() {
   return OK(NULL);
 }
 
-void clone_endpoint(api_endpoints_t *endpoints, char *url) {
+void download_endpoint(api_endpoints_t *endpoints, char *url) {
   api_endpoint_t *endpoint =
-      new_api_endpoint(url, "download a shoggoth profile/resource", "NONE");
+      new_api_endpoint(url, "download a shoggoth resource", "NONE");
   // endpoint_add_header(endpoint, "deezkey", "deezvalue");
 
-  endpoint_response_t *response1 = new_endpoint_response(
-      "200 OK", "a response containing the profile/resource",
-      "a binary blob containing the profile/resource in a tarball");
+  endpoint_response_t *response1 =
+      new_endpoint_response("200 OK", "a response containing the resource",
+                            "a binary blob containing the resource");
   api_endpoint_add_response(endpoint, response1);
 
   endpoint_response_t *response2 =
       new_endpoint_response("302 Found",
-                            "The profile is not pinned by the current node, "
+                            "The resource is not pinned by the current node, "
                             "but a peer has pinned it so redirect to the peer.",
                             "NONE");
   endpoint_response_add_header(response2, "Location",
-                               "URL of peer that has pinned the profile");
+                               "URL of peer that has pinned the resource");
   api_endpoint_add_response(endpoint, response2);
 
   endpoint_response_t *response3 = new_endpoint_response(
       "406 Not Acceptable",
-      "a response indicating that the profile was not found", "NONE");
-  api_endpoint_add_response(endpoint, response3);
-
-  api_endpoints_add_endpoint(endpoints, endpoint);
-}
-
-void negotiate_publish_endpoint(api_endpoints_t *endpoints) {
-  api_endpoint_t *endpoint = new_api_endpoint(
-      "GET /api/publish", "Negotiate publishing a profile", "NONE");
-  endpoint_add_header(endpoint, "shoggoth_id", "Shoggoth ID of the profile");
-  endpoint_add_header(endpoint, "chunk_count",
-                      "number of chunks to be published");
-  endpoint_add_header(endpoint, "chunk_size_limit",
-                      "maximum size of chunks in bytes");
-  endpoint_add_header(endpoint, "upload_size",
-                      "total size of profile in bytes");
-  endpoint_add_header(endpoint, "fingerprint", "fingerprint of upload");
-  endpoint_add_header(endpoint, "signature", "RSA signature of fingerprint");
-
-  endpoint_response_t *response1 = new_endpoint_response(
-      "200 OK",
-      "the negotiation was accepted and a session has been established",
-      "a UUID identifier for the new session");
-  api_endpoint_add_response(endpoint, response1);
-
-  endpoint_response_t *response2 = new_endpoint_response(
-      "406 Not Acceptable", "the node rejected the negotiation",
-      "the reason for rejection");
-  api_endpoint_add_response(endpoint, response2);
-
-  api_endpoints_add_endpoint(endpoints, endpoint);
-}
-
-void publish_chunk_endpoint(api_endpoints_t *endpoints) {
-  api_endpoint_t *endpoint = new_api_endpoint(
-      "GET /api/publish_chunk",
-      "upload a chunk during a profile publish session", "NONE");
-  endpoint_add_header(endpoint, "upload_id", "the UUID for the session");
-  endpoint_add_header(endpoint, "chunk_id", "index of the chunk");
-  endpoint_add_header(endpoint, "chunk_size", "size of the chunk in bytes");
-
-  endpoint_response_t *response1 =
-      new_endpoint_response("200 OK", "the upload was succesful", "NONE");
-  api_endpoint_add_response(endpoint, response1);
-
-  endpoint_response_t *response2 = new_endpoint_response(
-      "406 Not Acceptable", "the node rejected the upload",
-      "the reason for rejection");
-  api_endpoint_add_response(endpoint, response2);
-
-  api_endpoints_add_endpoint(endpoints, endpoint);
-}
-
-void publish_finish_endpoint(api_endpoints_t *endpoints) {
-  api_endpoint_t *endpoint =
-      new_api_endpoint("GET /api/publish_finish",
-                       "conclude and end a profile publish session", "NONE");
-  endpoint_add_header(endpoint, "upload_id", "the UUID for the session");
-
-  endpoint_response_t *response1 = new_endpoint_response(
-      "200 OK", "the profile publish was succesful", "NONE");
-  api_endpoint_add_response(endpoint, response1);
-
-  endpoint_response_t *response2 = new_endpoint_response(
-      "202 Accepted",
-      "the profile was already pinned, but it was updated succesfully", "NONE");
-  api_endpoint_add_response(endpoint, response2);
-
-  endpoint_response_t *response3 = new_endpoint_response(
-      "406 Not Acceptable", "the node rejected the profile publish",
-      "the reason for rejection");
+      "a response indicating that the resource was not found", "NONE");
   api_endpoint_add_response(endpoint, response3);
 
   api_endpoints_add_endpoint(endpoints, endpoint);
@@ -449,35 +382,10 @@ void get_pins_endpoint(api_endpoints_t *endpoints) {
   api_endpoints_add_endpoint(endpoints, endpoint);
 }
 
-void get_fingerprint_endpoint(api_endpoints_t *endpoints) {
-  api_endpoint_t *endpoint =
-      new_api_endpoint("GET /api/get_fingerprint/{shoggoth_id}",
-                       "Get the fingerprint of a pinned profile", "NONE");
-
-  endpoint_response_t *response1 =
-      new_endpoint_response("200 OK", "response containing the fingerprint",
-                            "the fingerprint as a JSON string");
-  api_endpoint_add_response(endpoint, response1);
-
-  endpoint_response_t *response3 = new_endpoint_response(
-      "406 Not Acceptable", "an error occured", "the error");
-  api_endpoint_add_response(endpoint, response3);
-
-  api_endpoints_add_endpoint(endpoints, endpoint);
-}
-
 void add_all_api_endpoints(api_endpoints_t *endpoints) {
-  clone_endpoint(endpoints, "GET /api/clone/{shoggoth_id}");
-  clone_endpoint(endpoints, "GET /api/clone/{shoggoth_id}/{group_name}");
-  clone_endpoint(endpoints,
-                 "GET /api/clone/{shoggoth_id}/{group_name}/{resource_name}");
-
-  negotiate_publish_endpoint(endpoints);
-  publish_chunk_endpoint(endpoints);
-  publish_finish_endpoint(endpoints);
+  download_endpoint(endpoints, "GET /api/download/{shoggoth_id}");
 
   get_dht_endpoint(endpoints);
   get_manifest_endpoint(endpoints);
   get_pins_endpoint(endpoints);
-  get_fingerprint_endpoint(endpoints);
 }

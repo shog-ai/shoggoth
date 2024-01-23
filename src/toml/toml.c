@@ -47,21 +47,6 @@ result_t toml_string_to_node_config(char *config_str) {
       toml_bool_in(network_table, "allow_private_network");
   config->network.allow_private_network = network_allow_private_network.u.b;
 
-  // GARBAGE COLLECTOR TABLE
-  toml_table_t *gc_table = toml_table_in(config_toml, "garbage_collector");
-  if (gc_table == NULL) {
-    PANIC("TOML: Could not parse garbage collector table \n");
-  }
-
-  toml_datum_t gc_frequency = toml_int_in(gc_table, "frequency");
-  config->gc.frequency = (u32)gc_frequency.u.i;
-
-  toml_datum_t gc_enable = toml_bool_in(gc_table, "enable");
-  config->gc.enable = gc_enable.u.b;
-
-  toml_datum_t gc_profile_expiry = toml_int_in(gc_table, "profile_expiry");
-  config->gc.profile_expiry = (u64)gc_profile_expiry.u.i;
-
   // API TABLE
   toml_table_t *api_table = toml_table_in(config_toml, "api");
   if (api_table == NULL) {
@@ -114,9 +99,9 @@ result_t toml_string_to_node_config(char *config_str) {
     PANIC("TOML: Could not parse storage table \n");
   }
 
-  toml_datum_t storage_max_profile_size =
-      toml_double_in(storage_table, "max_profile_size");
-  config->storage.max_profile_size = (f64)storage_max_profile_size.u.d;
+  toml_datum_t storage_max_resource_size =
+      toml_double_in(storage_table, "max_resource_size");
+  config->storage.max_resource_size = (f64)storage_max_resource_size.u.d;
 
   toml_datum_t storage_limit = toml_double_in(storage_table, "limit");
   config->storage.limit = (f64)storage_limit.u.d;
@@ -168,30 +153,6 @@ result_t toml_string_to_node_config(char *config_str) {
   toml_datum_t dht_updater_frequency =
       toml_int_in(dht_table, "updater_frequency");
   config->dht.updater_frequency = (u32)dht_updater_frequency.u.i;
-
-  // PINS TABLE
-  toml_table_t *pins_table = toml_table_in(config_toml, "pins");
-  if (pins_table == NULL) {
-    PANIC("TOML: Could not parse pins table \n");
-  }
-
-  toml_datum_t pins_allow_publish = toml_bool_in(pins_table, "allow_publish");
-  config->pins.allow_publish = pins_allow_publish.u.b;
-
-  toml_datum_t pins_enable_downloader =
-      toml_bool_in(pins_table, "enable_downloader");
-  config->pins.enable_downloader = pins_enable_downloader.u.b;
-
-  toml_datum_t pins_enable_updater = toml_bool_in(pins_table, "enable_updater");
-  config->pins.enable_updater = pins_enable_updater.u.b;
-
-  toml_datum_t pins_updater_frequency =
-      toml_int_in(pins_table, "updater_frequency");
-  config->pins.updater_frequency = (u32)pins_updater_frequency.u.i;
-
-  toml_datum_t pins_downloader_frequency =
-      toml_int_in(pins_table, "downloader_frequency");
-  config->pins.downloader_frequency = (u32)pins_downloader_frequency.u.i;
 
   toml_free(config_toml);
 

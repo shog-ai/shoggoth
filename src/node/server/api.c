@@ -73,23 +73,16 @@ void api_download_route(sonic_server_request_t *req) {
       sonic_send_response(req, resp);
       sonic_free_server_response(resp);
     } else {
-       respond_error(req, "resource not found");     
+      respond_error(req, "resource not found");
     }
 
     free_dht(peers);
   } else {
-    result_t res_file_mapping = map_file(pin_dir_path);
-    SERVER_ERR(res_file_mapping);
-    file_mapping_t *file_mapping = VALUE(res_file_mapping);
-
     sonic_server_response_t *resp =
-        sonic_new_response(STATUS_200, MIME_APPLICATION_OCTET_STREAM);
-    sonic_response_set_body(resp, file_mapping->content,
-                            (u64)file_mapping->info.st_size);
+        sonic_new_file_response(STATUS_200, pin_dir_path);
 
     sonic_send_response(req, resp);
 
-    unmap_file(file_mapping);
     sonic_free_server_response(resp);
   }
 }

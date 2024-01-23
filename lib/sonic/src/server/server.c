@@ -54,7 +54,12 @@ void server_send_response(sonic_server_request_t *req,
   char *status_code = utils_status_code_to_string(resp->status);
 
   char content_length[20];
-  sprintf(content_length, U64_FORMAT_SPECIFIER, resp->response_body_size);
+  if (resp->is_file) {
+    u64 file_size = UNWRAP_U64(get_file_size(resp->file_path));
+    sprintf(content_length, U64_FORMAT_SPECIFIER, file_size);
+  } else {
+    sprintf(content_length, U64_FORMAT_SPECIFIER, resp->response_body_size);
+  }
 
   server_response_add_header(resp, "Server", "Sonic");
   server_response_add_header(resp, "Content-Type", content_type);
@@ -91,30 +96,80 @@ void server_send_response(sonic_server_request_t *req,
   send(req->client_sock, head_str, strlen(head_str), 0);
   free(head_str);
 
-  u64 sent = 0;
+  if (!resp->is_file) {
+    u64 sent = 0;
 
-  u64 chunk_size = 1000000;
+    u64 chunk_size = 1000000;
 
-  while (sent < resp->response_body_size) {
-    u64 sending = 0;
+    while (sent < resp->response_body_size) {
+      u64 sending = 0;
 
-    if (resp->response_body_size <= chunk_size) {
-      sending = resp->response_body_size;
-    } else {
-      if (sent + chunk_size < resp->response_body_size) {
-        sending = chunk_size;
+      if (resp->response_body_size <= chunk_size) {
+        sending = resp->response_body_size;
       } else {
-        sending = resp->response_body_size - sent;
+        if (sent + chunk_size < resp->response_body_size) {
+          sending = chunk_size;
+        } else {
+          sending = resp->response_body_size - sent;
+        }
       }
+
+      if (sent == 0) {
+        send(req->client_sock, resp->response_body, sending, 0);
+      } else {
+        send(req->client_sock, &resp->response_body[(sent - 1)], sending, 0);
+      }
+
+      sent += sending;
+    }
+  } else {
+    u64 sent = 0;
+
+    u64 chunk_size = 1000000;
+
+    FILE *file;
+    char *buffer = malloc(chunk_size * sizeof(char));
+
+    file = fopen(resp->file_path, "rb");
+    if (file == NULL) {
+      perror("Error opening file");
+      PANIC("Error opening file");
     }
 
-    if (sent == 0) {
-      send(req->client_sock, resp->response_body, sending, 0);
-    } else {
-      send(req->client_sock, &resp->response_body[(sent - 1)], sending, 0);
+    u64 file_size = UNWRAP_U64(get_file_size(resp->file_path));
+
+    while (sent < file_size) {
+      u64 sending = 0;
+
+      if (file_size <= chunk_size) {
+        sending = file_size;
+      } else {
+        if (sent + chunk_size < file_size) {
+          sending = chunk_size;
+        } else {
+          sending = file_size - sent;
+        }
+      }
+
+      // Move the file pointer to the desired index
+      if (fseek(file, sent, SEEK_SET) != 0) {
+        perror("Error seeking in file");
+        PANIC("Error seeking in file");
+      }
+
+      // Read the specified number of bytes into the buffer
+      size_t bytes_read = fread(buffer, 1, sending, file);
+      if (bytes_read != sending) {
+        perror("Error reading from file");
+        PANIC("Error reading from file");
+      }
+
+      send(req->client_sock, buffer, sending, 0);
+
+      sent += sending;
     }
 
-    sent += sending;
+    free(buffer);
   }
 }
 
@@ -1224,6 +1279,28 @@ new_server_response(sonic_status_t status, sonic_content_type_t content_type) {
 
   resp->response_body = NULL;
   resp->response_body_size = 0;
+
+  resp->is_file = false;
+  resp->file_path = NULL;
+
+  return resp;
+}
+
+sonic_server_response_t *new_server_file_response(sonic_status_t status,
+                                                  char *file_path) {
+  sonic_server_response_t *resp = malloc(sizeof(sonic_server_response_t));
+
+  resp->headers = NULL;
+  resp->headers_count = 0;
+
+  resp->status = status;
+  resp->content_type = MIME_APPLICATION_OCTET_STREAM;
+
+  resp->response_body = NULL;
+  resp->response_body_size = 0;
+
+  resp->is_file = true;
+  resp->file_path = file_path;
 
   return resp;
 }

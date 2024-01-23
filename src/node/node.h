@@ -40,12 +40,6 @@ typedef struct {
 
 typedef struct {
   bool enable;
-  u32 frequency;
-  u64 profile_expiry;
-} node_config_gc_t;
-
-typedef struct {
-  bool enable;
   u64 rate_limiter_requests;
   u64 rate_limiter_duration;
 } node_config_api_t;
@@ -56,7 +50,7 @@ typedef struct {
 } node_config_peers_t;
 
 typedef struct {
-  f64 max_profile_size;
+  f64 max_resource_size;
   f64 limit;
 } node_config_storage_t;
 
@@ -75,15 +69,6 @@ typedef struct {
 } node_config_db_t;
 
 typedef struct {
-  bool allow_publish;
-  bool enable_downloader;
-  bool enable_updater;
-
-  u32 downloader_frequency;
-  u32 updater_frequency;
-} node_config_pins_t;
-
-typedef struct {
   bool enable_updater;
   u32 updater_frequency;
 } node_config_dht_t;
@@ -91,12 +76,10 @@ typedef struct {
 typedef struct {
   node_config_network_t network;
   node_config_db_t db;
-  node_config_gc_t gc;
   node_config_api_t api;
   node_config_peers_t peers;
   node_config_storage_t storage;
   node_config_explorer_t explorer;
-  node_config_pins_t pins;
   node_config_dht_t dht;
   node_config_update_t update;
 } node_config_t;

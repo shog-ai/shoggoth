@@ -782,15 +782,6 @@ result_t node_unpin_resource(node_ctx_t *ctx, char *shoggoth_id) {
 result_t node_pin_resource(node_ctx_t *ctx, char *file_path, char *label) {
   LOG(INFO, "pinning file `%s` with label `%s`", file_path, label);
 
-  // char *resolved_path = NULL;
-
-  // if (realpath(file_path, resolved_path) == NULL) {
-  //   perror("realpath"); // Print an error message if realpath fails
-  //   PANIC("realpath failed");
-  // }
-
-  // LOG(INFO, "RESOLVED: `%s`", resolved_path);
-
   result_t res_mapping = map_file(file_path);
   file_mapping_t *mapping = PROPAGATE(res_mapping);
 

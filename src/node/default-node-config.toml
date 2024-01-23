@@ -20,24 +20,12 @@ rate_limiter_requests = 1000
 rate_limiter_duration = 10000 # milliseconds
 
 [storage]
-max_profile_size = 50 # Megabytes
-limit = 5 # Gigabytes
-
-[garbage_collector]
-frequency = 3600 # seconds
-enable = true
-profile_expiry = 10 # days
+max_resource_size = 50 # Gigabytes
+limit = 100 # Gigabytes
 
 [dht]
 enable_updater = true
 updater_frequency = 5 # seconds
-
-[pins]
-allow_publish = false
-enable_downloader = false
-enable_updater = true
-updater_frequency = 60 # seconds
-downloader_frequency = 60 # seconds
 
 [update]
 enable = true

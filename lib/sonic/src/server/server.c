@@ -177,6 +177,8 @@ result_t server_send_response(sonic_server_request_t *req,
       }
 
       if (send(req->client_sock, buffer, sending, MSG_NOSIGNAL) == -1) {
+        free(buffer);
+        fclose(file);
         return ERR("send failed");
       }
 
@@ -184,6 +186,7 @@ result_t server_send_response(sonic_server_request_t *req,
     }
 
     free(buffer);
+    fclose(file);
   }
 
   return OK(NULL);

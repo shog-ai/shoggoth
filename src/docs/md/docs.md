@@ -108,7 +108,7 @@ wget https://shog.ai/download/v0.2.1/shoggoth-source-v0.2.1.zip
 ```
 
 ```bash
-  unzip -o -q ./shoggoth-source-v0.2.1.zip -d ./shoggoth-source
+unzip -o -q ./shoggoth-source-v0.2.1.zip -d ./shoggoth-source
 ```
 
 <div id="build-with-make"></div>
@@ -171,7 +171,7 @@ Shoggoth Nodes are capable of publishing new resources, and serving existing res
 
 Nodes also provide an HTTP API that allows anyone to download resources. Hence, anyone can download resources from a Shoggoth node using a web browser.
 
-Every node has a unique identifier called a Node ID that can be used to distinguish one node from another.
+Every node has a unique identifier called a `Node ID` that can be used to distinguish one node from another.
 
 A Node ID is a 37 characters long string that looks like this:
 
@@ -190,10 +190,10 @@ shog run
 
 ### Resource Pinning
 
-When a Shoggoth node stores a Shoggoth resource on its local storage, we say that the node has pinned the resource.
-On the Shoggoth network, not all nodes locally store (pin) all resources.
+When a Shoggoth node stores a resource on its local storage, we say that the node has pinned the resource.
 
-Generally speaking, a particular resource will be stored on one or more nodes, but not all nodes.
+
+On the Shoggoth network, not all nodes locally store (pin) all resources. Generally speaking, a particular resource will be stored on one or more nodes, but not all nodes.
 Only nodes that have a local copy of a resource are said to have pinned the resource.
 
 However, nodes that do not pin a specific resource can still be used to access it. Nodes simply forward requests that try to access unpinned resources to their peers that have pinned them.
@@ -217,19 +217,32 @@ The Node ID of a node is derived from a cryptographic hash of its public key.
 
 ### Download a resource
 
-screenshot
+Visit Shoggoth Explorer ([https://shoggoth.network](https://shoggoth.network)), paste in the Shoggoth ID of the resource, click search, and click the download button.
+
 
 ### Create a new resource
+
+Only Shoggoth nodes can create and publish new resources. Once a node joins the Shoggoth network, it exposes all its Shoggoth Resources to its peers, which can voluntarily pin them.
+
+
+To create a Shoggoth resource, you simply use your node to pin the desired file. Your node will take the file, calculate the hash, pin it locally, and expose it to the rest of the network:
+
 
 ```bash
 shog pin <file> <label>
 ```
+The `file` argument specifies the path of the file you want to pin, and the `label` argument specifies a name to be used for the resource.
+Whenever the resource is downloaded, the label will be the filename of the downloaded file. The label also helps to easily identify what the resource actually is.
 
-### Clone a resource
+
+Example:
 
 ```bash
-shog clone <url>
+shog pin ./models/mistral/mistral-7b-v0.1.Q5_K_S.gguf mistral-7b-v0.1.Q5_K_S.gguf
 ```
+
+after running the pin command, you can safely delete or move the file because a copy of it is already stored in `$HOME/shoggoth/node/pins`.
+
 
 ### Command Line Flags
 
@@ -255,14 +268,14 @@ and the Shoggoth IDs of all resources it has pinned.
 
 This DHT will be updated frequently as the node discovers new peers, and the list of pinned resources for all peers will also be updated periodically.
 
-Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of a node that is part of the network and merging it with its local DHT.
+Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of a node that is part of the network.
 
 This is the backbone of the Shoggoth Network. By its design, every node is able to communicate with every other node directly, without relays, by simply querying its local DHT for the IP address or domain name of the desired node, and sending HTTP requests to it.
 
 Shoggoth Nodes communicate by sending and receiving HTTP requests according to the [Shoggoth Node API](#api). With this API, nodes can obtain the DHTs of their peers and also download Shoggoth Resources from their peers to pin them locally.
 
 When a new node joins the network, it shares a manifest containing its public key, Node ID, and IP address or domain name to a set of known nodes.
-Simply put, a new node needs to know at least one already existing node when joining the network. This already existing node will add the new node to its DHT, thereby introducing it to the rest of the network,
+A new node needs to know at least one already existing node when joining the network. This already existing node will add the new node to its DHT, thereby introducing it to the rest of the network,
 and also give the new node a copy of its DHT, thereby allowing the new node to independently access the rest of the network.
 
 This already existing node that a new node uses to join the network is also called a `bootstrap node`. Any node can be used as a bootstrap node.
@@ -280,7 +293,7 @@ The API is documented [here](/explorer/docs/api).
 
 ### Persistence
 
-The pinning of resources is voluntary. Therefore a node can decide to pin any resource on the network or unpin (delete) a resource from its storage. There is no guarantee that at least one node will pin a resource. Therefore the best way to guarantee that a resource will remain pinned is to set up your own node.
+The pinning of resources is voluntary. Therefore a node can decide to pin any resource on the network or unpin (delete) a resource from its storage. There is no guarantee that at least one node will pin a resource. Therefore the best way to guarantee that a resource will remain pinned is to set up your own node and pin it.
 
 <div id="configuration"></div>
 
@@ -408,7 +421,7 @@ You can join the [Discord community](https://discord.com/invite/AG3duN5yKP) to a
 
 Q: Is Shoggoth free to use?
 <br />
-A: Yes, Shoggoth is 100% free and open source software. There are no fees or licenses required to access the network as a user or run a node.
+A: Yes, Shoggoth is 100% free and open source software. There are no fees or licenses required to access the network or run a node.
 
 Q: How does Shoggoth prevent censorship?
 <br />
@@ -498,8 +511,6 @@ The below dependencies are used in the Shoggoth project, sourced from external o
 The below commands are required to be installed on a computer in order to run a Shoggoth Node.
 All these commands are usually already pre-installed on macOS and Linux operating systems, so they don't have to be installed again.
 
-- git
-- GNU tar (not the default tar on macOS. install it on macOS using homebrew "brew install gnu-tar")
 - cat
 - sha256sum
 - addr2line

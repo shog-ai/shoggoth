@@ -311,7 +311,32 @@ result_t gen_api_docs() {
 void download_endpoint(api_endpoints_t *endpoints, char *url) {
   api_endpoint_t *endpoint =
       new_api_endpoint(url, "download a shoggoth resource", "NONE");
-  // endpoint_add_header(endpoint, "deezkey", "deezvalue");
+
+  endpoint_response_t *response1 =
+      new_endpoint_response("200 OK", "a response containing the resource",
+                            "a binary blob containing the resource");
+  api_endpoint_add_response(endpoint, response1);
+
+  endpoint_response_t *response2 =
+      new_endpoint_response("302 Found",
+                            "The resource is not pinned by the current node, "
+                            "but a peer has pinned it so redirect to the peer.",
+                            "NONE");
+  endpoint_response_add_header(response2, "Location",
+                               "URL of peer that has pinned the resource");
+  api_endpoint_add_response(endpoint, response2);
+
+  endpoint_response_t *response3 = new_endpoint_response(
+      "406 Not Acceptable",
+      "a response indicating that the resource was not found", "NONE");
+  api_endpoint_add_response(endpoint, response3);
+
+  api_endpoints_add_endpoint(endpoints, endpoint);
+}
+
+void download_label_endpoint(api_endpoints_t *endpoints, char *url) {
+  api_endpoint_t *endpoint = new_api_endpoint(
+      url, "download a shoggoth resource with a specified label", "NONE");
 
   endpoint_response_t *response1 =
       new_endpoint_response("200 OK", "a response containing the resource",
@@ -384,6 +409,8 @@ void get_pins_endpoint(api_endpoints_t *endpoints) {
 
 void add_all_api_endpoints(api_endpoints_t *endpoints) {
   download_endpoint(endpoints, "GET /api/download/{shoggoth_id}");
+
+  download_label_endpoint(endpoints, "GET /api/download/{shoggoth_id}/{label}");
 
   get_dht_endpoint(endpoints);
   get_manifest_endpoint(endpoints);

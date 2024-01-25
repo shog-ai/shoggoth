@@ -81,7 +81,8 @@ void api_download_route(sonic_server_request_t *req) {
     sonic_server_response_t *resp =
         sonic_new_file_response(STATUS_200, pin_dir_path);
 
-    sonic_send_response(req, resp);
+    result_t res = sonic_send_response(req, resp);
+    free_result(res);
 
     sonic_free_server_response(resp);
   }

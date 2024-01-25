@@ -20,8 +20,8 @@ void server_free_path_wildcard_segments(sonic_wildcard_segments_t segments);
 
 char *server_get_path_segment(sonic_server_request_t *req, char *segment_name);
 
-void server_send_response(sonic_server_request_t *req,
-                          sonic_server_response_t *resp);
+result_t server_send_response(sonic_server_request_t *req,
+                              sonic_server_response_t *resp);
 
 void free_server_response(sonic_server_response_t *resp);
 

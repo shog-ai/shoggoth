@@ -48,8 +48,8 @@ void free_server_response(sonic_server_response_t *resp) {
  * sends a response to the client
  *
  ****/
-void server_send_response(sonic_server_request_t *req,
-                          sonic_server_response_t *resp) {
+result_t server_send_response(sonic_server_request_t *req,
+                              sonic_server_response_t *resp) {
   char *content_type = content_type_to_string(resp->content_type);
   char *status_code = utils_status_code_to_string(resp->status);
 
@@ -93,7 +93,10 @@ void server_send_response(sonic_server_request_t *req,
                      (strlen(head_str) + strlen(head_end) + 1) * sizeof(char));
   strcat(head_str, head_end);
 
-  send(req->client_sock, head_str, strlen(head_str), 0);
+  if (send(req->client_sock, head_str, strlen(head_str), MSG_NOSIGNAL) == -1) {
+    return ERR("send failed");
+  }
+
   free(head_str);
 
   if (!resp->is_file) {
@@ -115,9 +118,18 @@ void server_send_response(sonic_server_request_t *req,
       }
 
       if (sent == 0) {
-        send(req->client_sock, resp->response_body, sending, 0);
+
+        if (send(req->client_sock, resp->response_body, sending,
+                 MSG_NOSIGNAL) == -1) {
+          return ERR("send failed");
+        }
+
       } else {
-        send(req->client_sock, &resp->response_body[(sent - 1)], sending, 0);
+
+        if (send(req->client_sock, &resp->response_body[(sent - 1)], sending,
+                 MSG_NOSIGNAL) == -1) {
+          return ERR("send failed");
+        }
       }
 
       sent += sending;
@@ -164,13 +176,17 @@ void server_send_response(sonic_server_request_t *req,
         PANIC("Error reading from file");
       }
 
-      send(req->client_sock, buffer, sending, 0);
+      if (send(req->client_sock, buffer, sending, MSG_NOSIGNAL) == -1) {
+        return ERR("send failed");
+      }
 
       sent += sending;
     }
 
     free(buffer);
   }
+
+  return OK(NULL);
 }
 
 void not_found_route(sonic_server_request_t *req) {

@@ -5,7 +5,7 @@ function explorer_search() {
 
   search_id = input_field.value;
 
-  window.location.href = '/explorer/profile/' + search_id;
+  window.location.href = '/explorer/resource/' + search_id;
 }
 
 function handle_search_key_press(event) {

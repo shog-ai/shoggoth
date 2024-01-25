@@ -1,15 +1,15 @@
 SHOGGOTH
 ===============================================================================
 
-Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.
+Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source Artificial Intelligence (AI).
 
 To join the Shoggoth network, there is no registration or approval process. Nodes and clients operate anonymously with identifiers decoupled from real-world identities.
 
 Anyone can freely join the network and immediately begin publishing or accessing resources.
 
-The purpose of Shoggoth is to combat software censorship and empower software developers to create and distribute software, without a centralized hosting service or platform.
+The purpose of Shoggoth is to combat AI censorship and empower software developers to create and distribute open-source AI, without a centralized service or platform.
 
-Shoggoth is developed and maintained by ShogAI (https://shog.ai), and its development is funded by donations and sponsorships.
+Shoggoth is developed and maintained by ShogAI (https://shog.ai).
 
 
 To learn more about Shoggoth, read the documentation at https://shoggoth.network/explorer/docs

@@ -54,3 +54,5 @@ target-dir:
 clean:
 	rm -rf ./target/
 
+sync:
+	cp ../sonic/sonic.h ./include/sonic.h

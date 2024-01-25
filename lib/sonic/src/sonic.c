@@ -109,7 +109,7 @@ void sonic_free_server_response(sonic_server_response_t *resp) {
   return free_server_response(resp);
 }
 
-void sonic_send_response(sonic_server_request_t *req,
+result_t sonic_send_response(sonic_server_request_t *req,
                          sonic_server_response_t *resp) {
   return server_send_response(req, resp);
 }

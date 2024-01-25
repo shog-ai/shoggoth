@@ -292,8 +292,9 @@ void resource_route(sonic_server_request_t *req) {
 
   char *label = UNWRAP(db_get_pin_label(explorer_ctx, shoggoth_id));
 
-  char *download_link = string_from(explorer_ctx->config->network.public_host,
-                                    "/api/download/", shoggoth_id, NULL);
+  char *download_link =
+      string_from(explorer_ctx->config->network.public_host, "/api/download/",
+                  shoggoth_id, "/", label, NULL);
 
   u64 resource_size = UNWRAP_U64(get_dir_size(resource_path));
 

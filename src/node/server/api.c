@@ -205,6 +205,8 @@ void add_api_routes(node_ctx_t *ctx, sonic_server_t *server) {
 
   sonic_add_route(server, "/api/download/{shoggoth_id}", METHOD_GET,
                   api_download_route);
+  sonic_add_route(server, "/api/download/{shoggoth_id}/{label}", METHOD_GET,
+                  api_download_route);
 
   sonic_add_route(server, "/api/get_dht", METHOD_GET, api_get_dht_route);
   sonic_add_route(server, "/api/get_pins", METHOD_GET, api_get_pins_route);

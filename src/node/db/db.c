@@ -383,26 +383,21 @@ result_t db_verify_data(node_ctx_t *ctx) {
 
   free(local_dht);
 
-  result_t res_clear = db_clear_local_pins(ctx);
-  PROPAGATE(res_clear);
+  // result_t res_clear = db_clear_local_pins(ctx);
+  // PROPAGATE(res_clear);
 
-  char pins_path[256];
-  utils_get_node_runtime_path(ctx, pins_path);
-  strcat(pins_path, "/pins/");
+  // char pins_path[256];
+  // utils_get_node_runtime_path(ctx, pins_path);
+  // strcat(pins_path, "/pins/");
 
-  result_t res_pins_list = get_files_and_dirs_list(pins_path);
-  files_list_t *pins_list = PROPAGATE(res_pins_list);
+  // result_t res_pins_list = get_files_and_dirs_list(pins_path);
+  // files_list_t *pins_list = PROPAGATE(res_pins_list);
 
-  for (u64 i = 0; i < pins_list->files_count; i++) {
-    // result_t res_pin_str = remove_file_extension(pins_list->files[i]);
-    // char *pin_str = PROPAGATE(res_pin_str);
+  // for (u64 i = 0; i < pins_list->files_count; i++) {
+  //   db_pins_add_resource(ctx, pins_list->files[i], "NONE");
+  // }
 
-    db_pins_add_resource(ctx, pins_list->files[i], "NONE");
-
-    // free(pin_str);
-  }
-
-  free_files_list(pins_list);
+  // free_files_list(pins_list);
 
   return OK(NULL);
 }

@@ -490,7 +490,7 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
 
     char *node_runtime_arg = strdup(ctx->runtime_path);
 
-    execlp("nohup", "nohup", node_executable, "node", "run", "-c", config_arg,
+    execlp("nohup", "nohup", node_executable, "run", "-c", config_arg,
            "-r", node_runtime_arg, NULL);
 
     free(config_arg);

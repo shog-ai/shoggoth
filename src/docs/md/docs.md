@@ -534,7 +534,7 @@ If you encounter any bugs or need assistance with anything, do not hesitate to j
 
 Shoggoth is licensed under the MIT license. Read the LICENSE file in the source code for more information
 
-Shoggoth uses a few dependencies which have their own licences. The dependencies in the ./lib/ directory of the Shoggoth source code are independent of the MIT license used for Shoggoth.
+Shoggoth uses a few dependencies which have their own licenses. The dependencies in the ./lib/ directory of the Shoggoth source code are independent of the MIT license used for Shoggoth.
 The source code for each dependecy includes a LICENSE file indicating the license that covers it.
 
 ### Community

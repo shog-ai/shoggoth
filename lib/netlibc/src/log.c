@@ -3,7 +3,7 @@
  *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of netlibc, under the MIT License.
- * See LICENCE file for license information.
+ * See LICENSE file for license information.
  * SPDX-License-Identifier: MIT
  *
  ****/

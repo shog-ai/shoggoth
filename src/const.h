@@ -36,6 +36,7 @@ COMMANDS:\n\
   logs                     Print the logs of the Shoggoth Node service\n\
   backup                   Backup the node pins and configuration\n\
   restore                  Restore node pins and configuration from backup file\n\
+  studio                   Run Shog Studio\n\
 \n\
 EXAMPLES:\n\
   shog run\n\

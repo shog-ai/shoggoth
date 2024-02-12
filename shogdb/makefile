@@ -15,7 +15,7 @@ CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan
 endif
 
-STATIC_LIBS = ../../target/cjson.a ../../target/tomlc.a ../../target/sonic.a ../../target/libnetlibc.a
+STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a
 
 all: build
 

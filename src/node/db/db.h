@@ -1,6 +1,6 @@
 /**** db.h ****
  *
- *  Copyright (c) 2023 Shoggoth Systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Shoggoth project, under the MIT License.
  * See LICENSE file for license information.

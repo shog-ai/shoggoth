@@ -13,7 +13,7 @@ endif
 LD = $(CC)
 
 # flags
-CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ./lib/netlibc/include
+CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ./netlibc/include
 CFLAGS_FLAT = -DNDEBUG
 
 ifeq ($(CC), gcc)
@@ -39,7 +39,7 @@ MAIN_OBJ = $(TARGET_DIR)/main.o
 
 # object files for node
 # OBJS += $(TARGET_DIR)/args.o
-OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
+OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/studio.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
 OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/og.o
 OBJS += $(TARGET_DIR)/server_explorer.o $(TARGET_DIR)/templating.o
 
@@ -70,34 +70,34 @@ configure-ubuntu:
 
 # DEPENDENCIES
 $(TARGET_DIR)/tuwi.a:
-	cd ./lib/tuwi/ && make
-	cp ./lib/tuwi/target/libtuwi.a $(TARGET_DIR)/tuwi.a
+	cd ./tuwi/ && make
+	cp ./tuwi/target/libtuwi.a $(TARGET_DIR)/tuwi.a
 
 $(TARGET_DIR)/libnetlibc.a:
-	cd ./lib/netlibc/ && make
-	cp ./lib/netlibc/target/libnetlibc.a $(TARGET_DIR)/libnetlibc.a
+	cd ./netlibc/ && make
+	cp ./netlibc/target/libnetlibc.a $(TARGET_DIR)/libnetlibc.a
 
 camel: $(TARGET_DIR)/camel.a
 
 $(TARGET_DIR)/camel.a: $(TARGET_DIR)/tuwi.a
-	cd ./lib/camel/ && make
-	cp ./lib/camel/target/libcamel.a $(TARGET_DIR)/camel.a
+	cd ./camel/ && make
+	cp ./camel/target/libcamel.a $(TARGET_DIR)/camel.a
 
 $(TARGET_DIR)/sonic.a:
-	cd ./lib/sonic/ && make
-	cp ./lib/sonic/target/libsonic.a $(TARGET_DIR)/sonic.a
+	cd ./sonic/ && make
+	cp ./sonic/target/libsonic.a $(TARGET_DIR)/sonic.a
 
 $(TARGET_DIR)/libshogdb.a:
-	cd ./lib/shogdb/ && make lib
-	cp ./lib/shogdb/target/libshogdb.a $(TARGET_DIR)/libshogdb.a
+	cd ./shogdb/ && make lib
+	cp ./shogdb/target/libshogdb.a $(TARGET_DIR)/libshogdb.a
 
 $(TARGET_DIR)/libshogdb-sanitized.a:
-	cd ./lib/shogdb/ && make lib-sanitized
-	cp ./lib/shogdb/target/libshogdb-sanitized.a $(TARGET_DIR)/libshogdb-sanitized.a
+	cd ./shogdb/ && make lib-sanitized
+	cp ./shogdb/target/libshogdb-sanitized.a $(TARGET_DIR)/libshogdb-sanitized.a
 
 $(TARGET_DIR)/sonic-sanitized.a:
-	cd ./lib/sonic/ && make build-sanitized
-	cp ./lib/sonic/target/libsonic-sanitized.a $(TARGET_DIR)/sonic-sanitized.a
+	cd ./sonic/ && make build-sanitized
+	cp ./sonic/target/libsonic-sanitized.a $(TARGET_DIR)/sonic-sanitized.a
 
 $(TARGET_DIR)/cjson.a:
 	cd ./lib/cjson/ && make
@@ -109,8 +109,8 @@ $(TARGET_DIR)/tomlc.a:
 
 
 $(TARGET_DIR)/shogdb:
-	cd ./lib/shogdb/ && make
-	cp ./lib/shogdb/target/shogdb $(TARGET_DIR)/
+	cd ./shogdb/ && make
+	cp ./shogdb/target/shogdb $(TARGET_DIR)/
 
 
 dev: package-dev
@@ -148,6 +148,8 @@ build-objects-debug:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/dht/dht.c
 		
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/studio/studio.c
+	
 	mv ./*.o $(TARGET_DIR)
 
 link-objects-debug: $(STATIC_LIBS)
@@ -177,6 +179,8 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/api.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/dht/dht.c
+	
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/studio/studio.c
 	
 	mv ./*.o $(TARGET_DIR)
 
@@ -208,6 +212,8 @@ build-objects-flat:
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/dht/dht.c
 
+	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/studio/studio.c
+	
 	mv ./*.o $(TARGET_DIR)
 
 link-objects-flat: $(STATIC_LIBS)

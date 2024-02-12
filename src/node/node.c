@@ -1,6 +1,6 @@
 /**** node.c ****
  *
- *  Copyright (c) 2023 Shoggoth Systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Shoggoth project, under the MIT License.
  * See LICENSE file for license information.
@@ -490,8 +490,8 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
 
     char *node_runtime_arg = strdup(ctx->runtime_path);
 
-    execlp("nohup", "nohup", node_executable, "run", "-c", config_arg,
-           "-r", node_runtime_arg, NULL);
+    execlp("nohup", "nohup", node_executable, "run", "-c", config_arg, "-r",
+           node_runtime_arg, NULL);
 
     free(config_arg);
     free(node_runtime_arg);

@@ -54,7 +54,7 @@ generate-runtime: check-path-arg build-explorer shogdb
 	cp ./src/node/default-node-config.toml $(RP)/node/config.toml
 
 	cp $(TARGET_DIR)/shogdb $(RP)/bin/
-	cp ./lib/shogdb/src/dbconfig.toml $(RP)/node/
+	cp ./shogdb/src/dbconfig.toml $(RP)/node/
 
 	cp -r $(TARGET_DIR)/explorer/out/* $(RP)/node/explorer/
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/

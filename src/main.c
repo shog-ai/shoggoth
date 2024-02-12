@@ -1,6 +1,6 @@
 /**** main.c ****
  *
- *  Copyright (c) 2023 Shoggoth Systems
+ *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
  * Part of the Shoggoth project, under the MIT License.
  * See LICENSE file for license information.
@@ -16,12 +16,29 @@
 #include "./args/args.h"
 #include "const.h"
 #include "node/node.h"
+#include "studio/studio.h"
 
 #include <stdlib.h>
 
 #ifndef VERSION
 #define VERSION "0.0.0"
 #endif
+
+/****
+ * handles a node session.
+ *
+ ****/
+result_t handle_session(args_t *args) {
+  if (strcmp(args->command, "studio") == 0) {
+    result_t res = start_studio(args);
+    PROPAGATE(res);
+  } else {
+    result_t res = handle_node_session(args);
+    PROPAGATE(res);
+  }
+
+  return OK(NULL);
+}
 
 int main(int argc, char **argv) {
   result_t res_args = args_parse(argc, argv);
@@ -47,7 +64,7 @@ int main(int argc, char **argv) {
     EXIT(1, "invalid command: %s", args->invalid_command);
   }
 
-  result_t res = handle_node_session(args);
+  result_t res = handle_session(args);
   UNWRAP(res);
 
   return 0;

@@ -193,6 +193,39 @@ ol, ul {
   margin-left: 60px;
 }
 
+.chat-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  height: 100%;
+  width: 100%;
+}
+
+.chat-item {
+  width: 90%;
+  height: 30px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-top: 5px;
+
+  background: #171717;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+}
+
+.chat-item:hover {
+  background: #3e3e3e;
+}
+
 /* MOBILE */
 @media (max-width: 840px) {
 }

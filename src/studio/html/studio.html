@@ -1,11 +1,62 @@
-{{> head}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Shog Studio</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<h1 class="title">Shoggoth Explorer</h1>
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/icon/favicon-16x16.png">
+  <link rel="manifest" href="/static/img/icon/site.webmanifest">
 
-<div class="search-bar">
-  <input class="search-input" id="search-input" onkeyup="handle_search_key_press(event)" placeholder="Enter Shoggoth ID" />
+  <link rel="stylesheet" href="/static/studio.css" />
+  <link rel="stylesheet" href="/static/nav.css" />
+  
+  <script src="/static/main.js"></script>
+</head>
+
+
+<body>
+
+
+<div class="content">
+  <div class="side">
+    <div class="side-nav">
+      <div class="navbar-brand">
+        <img class="navbar-icon" src="/static/img/icon.png"\>
+        <div class="navbar-title"><b>SHOG STUDIO</b></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-nav">
+      Mistral 7B
+    </div>
+
+    <div class="main-content">
+      <h1 class="title">Shog Studio</h1>
+
+
+     </div>
+    
+    <div class="input-section">
+      <div class="search-bar">
+        <input class="search-input" id="search-input" onkeyup="handle_search_key_press(event)" placeholder="message" />
+      </div>
+      
+      <div class="search-btn" onclick="explorer_search()">Send</div>
+    </div>
+    <div class="footer-nav">
+      Built and maintained by ShogAI
+    </div>
+
+  </div>
+  
 </div>
 
-<div class="search-btn" onclick="explorer_search()">Search</div>
-     
-{{> end}}
+
+</body>
+</html>

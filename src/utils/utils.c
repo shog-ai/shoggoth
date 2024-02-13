@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "../include/tuwi.h"
 #include "../node/node.h"
+#include "../studio/studio.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -296,6 +297,11 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
   if (!dir_exists(node_update_path)) {
     create_dir(node_update_path);
   }
+}
+
+void utils_verify_studio_runtime_dirs(studio_ctx_t *ctx) {
+  char runtime_path[FILE_PATH_SIZE];
+  strcpy(runtime_path, ctx->runtime_path);
 }
 
 /****

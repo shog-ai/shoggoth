@@ -294,8 +294,6 @@ result_t shog_init_node(args_t *args, bool print_info) {
   char default_runtime_path[FILE_PATH_SIZE];
   utils_get_default_runtime_path(default_runtime_path);
 
-  // NOTE: custom runtime path must be an absolute path else certain dynamic
-  // libraries will not load
   if (args->set_runtime_path) {
     ctx->runtime_path = malloc((strlen(args->runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, args->runtime_path);

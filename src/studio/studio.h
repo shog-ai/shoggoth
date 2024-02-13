@@ -11,6 +11,12 @@
 #ifndef SHOG_STUDIO_H
 #define SHOG_STUDIO_H
 
+#include "../args/args.h"
+
+typedef struct STUDIO_CTX {
+  char *runtime_path;
+} studio_ctx_t;
+
 result_t start_studio(args_t *args);
 
 #endif

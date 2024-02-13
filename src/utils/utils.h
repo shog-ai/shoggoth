@@ -26,6 +26,7 @@
 
 struct NODE_CTX;
 struct CLIENT_CTX;
+struct STUDIO_CTX;
 
 #define SERVER_ERR(res)                                                        \
   do {                                                                         \
@@ -74,6 +75,8 @@ int utils_get_default_runtime_path(char runtime_path[]);
 char *utils_get_logs_path(char *home_path);
 
 void utils_verify_node_runtime_dirs(struct NODE_CTX *ctx);
+
+void utils_verify_studio_runtime_dirs(struct STUDIO_CTX *ctx);
 
 void utils_verify_client_runtime_dirs(struct CLIENT_CTX *ctx);
 

@@ -10,11 +10,12 @@ run-node: dev
 	echo "\n\n"	
 	cd $(TARGET_DIR)/dev-$(VERSION)/ && ./bin/shog run -r $$(pwd) -c ../../deploy/2/2.toml
 
+# ============================================================================================================
 
-run-node-valgrind: build-debug
-	cd $(TARGET_DIR) && valgrind --leak-check=full ./shog-dev
+# STUDIO =======================================================================================================
+run-studio: dev
+	echo "\n\n"	
+	cd $(TARGET_DIR)/dev-$(VERSION)/ && ./bin/shog studio -r $$(pwd) -c ../../deploy/2/2.toml
 
-run-node-gdb: build-debug
-	cd $(TARGET_DIR) && gdb ./shog-dev
 # ============================================================================================================
 

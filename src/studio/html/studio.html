@@ -28,7 +28,7 @@
       </div>
 
       <div class="side-nav">
-        <div class="add-chat-btn">
+        <div class="add-chat-btn" onclick="add_chat_pressed()">
           <img src="/static/img/add.png" class="add-icon" />
           New Chat
         </div>
@@ -51,7 +51,7 @@
           <option value="cat">Mistral 7B</option>
         </select>
         
-        <div class="mount-btn">Mount</div>
+        <div class="mount-btn" onclick="mount_model_pressed()">Mount</div>
       </div>
 
       <div class="main-content">
@@ -83,7 +83,7 @@
           <input class="search-input" id="search-input" onkeyup="handle_search_key_press(event)" placeholder="message" />
         </div>
       
-        <div class="search-btn" onclick="explorer_search()">Send</div>
+        <div class="search-btn" onclick="send_message_pressed()">Send</div>
       </div>
       <div class="footer-nav">
         Shog Studio ⋅ built and maintained by <a class="footer-link" href="https://shog.ai" target="blank">ShogAI</a>

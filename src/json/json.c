@@ -11,6 +11,7 @@
 #include "../include/cjson.h"
 #include "../node/dht/dht.h"
 #include "../node/server/server.h"
+#include "../studio/studio.h"
 #include "../utils/utils.h"
 
 #include "json.h"
@@ -27,6 +28,65 @@ char *json_to_string(json_t *json) {
   cJSON *cjson = (cJSON *)json;
 
   return cJSON_Print(cjson);
+}
+
+result_t json_to_studio_model(json_t *json) {
+  cJSON *model_json = (cJSON *)json;
+
+  studio_model_t *model = new_studio_model();
+
+  model->name =
+      strdup(cJSON_GetObjectItemCaseSensitive(model_json, "name")->valuestring);
+
+  return OK(model);
+}
+
+result_t json_to_studio_models(json_t *json) {
+  cJSON *models_json = (cJSON *)json;
+
+  studio_models_t *models = new_studio_models();
+
+  const cJSON *model_json = NULL;
+  cJSON_ArrayForEach(models_json, model_json) {
+    result_t res_new_item = json_to_studio_model((void *)model_json);
+    studio_model_t *new_item = PROPAGATE(res_new_item);
+
+    studio_models_add_model(models, new_item);
+  }
+
+  return OK(models);
+}
+
+result_t json_studio_model_to_json(studio_model_t model) {
+  cJSON *model_json = cJSON_CreateObject();
+
+  cJSON_AddStringToObject(model_json, "name", model.name);
+
+  return OK(model_json);
+}
+
+result_t json_studio_models_to_json(studio_models_t models) {
+  cJSON *models_json = cJSON_CreateArray();
+
+  for (u64 i = 0; i < models.items_count; i++) {
+    result_t res_item_json = json_studio_model_to_json(*models.items[i]);
+    cJSON *item_json = (cJSON *)PROPAGATE(res_item_json);
+
+    cJSON_AddItemToArray(models_json, item_json);
+  }
+
+  return OK(models_json);
+}
+
+result_t json_studio_state_to_json(studio_state_t state) {
+  cJSON *state_json = cJSON_CreateObject();
+
+  result_t res_models_json = json_studio_models_to_json(*state.models);
+  cJSON *models_json = PROPAGATE(res_models_json);
+
+  cJSON_AddItemToObject(state_json, "models", models_json);
+
+  return OK(state_json);
 }
 
 result_t json_dht_item_to_json(dht_item_t item) {
@@ -171,7 +231,6 @@ result_t json_string_to_pins(char *pins_str) {
   return OK(pins);
 }
 
-
 node_manifest_t *json_to_node_manifest(json_t *json) {
   cJSON *manifest_json = (cJSON *)json;
 
@@ -215,4 +274,3 @@ result_t json_string_to_node_manifest(char *manifest_str) {
 
   return OK(manifest);
 }
-

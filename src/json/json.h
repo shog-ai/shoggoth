@@ -14,8 +14,11 @@
 #include "../node/dht/dht.h"
 #include "../node/node.h"
 #include "../node/server/server.h"
+#include "../studio/studio.h"
 
 typedef void *json_t;
+
+result_t json_studio_state_to_json(studio_state_t state);
 
 result_t json_string_to_upload_info(char *info_str);
 

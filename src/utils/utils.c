@@ -302,6 +302,24 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
 void utils_verify_studio_runtime_dirs(studio_ctx_t *ctx) {
   char runtime_path[FILE_PATH_SIZE];
   strcpy(runtime_path, ctx->runtime_path);
+
+  char studio_runtime_path[FILE_PATH_SIZE];
+  sprintf(studio_runtime_path, "%s/studio", runtime_path);
+
+  char models_path[FILE_PATH_SIZE];
+  sprintf(models_path, "%s/models", studio_runtime_path);
+
+  if (!dir_exists(runtime_path)) {
+    create_dir(runtime_path);
+  }
+
+  if (!dir_exists(studio_runtime_path)) {
+    create_dir(studio_runtime_path);
+  }
+
+  if (!dir_exists(models_path)) {
+    create_dir(models_path);
+  }
 }
 
 /****

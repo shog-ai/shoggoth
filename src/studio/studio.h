@@ -13,6 +13,13 @@
 
 #include "../args/args.h"
 
+#include <sys/wait.h>
+
+typedef struct {
+  char *name;
+  char *status;
+} studio_active_model_t;
+
 typedef struct {
   char *name;
 } studio_model_t;
@@ -24,15 +31,18 @@ typedef struct {
 
 typedef struct {
   studio_models_t *models;
-  
-  studio_model_t *active_model;
-  bool model_mounted;
+
+  studio_active_model_t *active_model;
 } studio_state_t;
 
 typedef struct STUDIO_CTX {
   char *runtime_path;
   studio_state_t *state;
+
+  pid_t model_server_pid;
 } studio_ctx_t;
+
+studio_active_model_t *new_studio_active_model();
 
 studio_model_t *new_studio_model();
 

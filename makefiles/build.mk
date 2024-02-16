@@ -47,7 +47,7 @@ OBJS += $(TARGET_DIR)/server_explorer.o $(TARGET_DIR)/templating.o
 STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb.a
 STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb-sanitized.a
 
-.PHONY: target-dir shogdb $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
+.PHONY: target-dir shogdb model-server $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
 .PHONY: build-objects-debug
 
@@ -112,10 +112,16 @@ $(TARGET_DIR)/shogdb:
 	cd ./shogdb/ && make
 	cp ./shogdb/target/shogdb $(TARGET_DIR)/
 
+$(TARGET_DIR)/model_server:
+	echo "Building model server..."
+	cd ./lib/llamacpp/ && make server > /dev/null
+	cp ./lib/llamacpp/server $(TARGET_DIR)/model_server
+
 
 dev: package-dev
 
 shogdb: $(TARGET_DIR)/shogdb
+model-server: $(TARGET_DIR)/model_server
 
 build-sanitized: target-dir build-objects-sanitized link-objects-sanitized 
 build-debug: target-dir build-objects-debug link-objects-debug

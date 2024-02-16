@@ -1,46 +1,18 @@
-console.log("hello world")
-
-
+console.log("hello anon!")
 
 const api_url = '/api/';
 const sync_rate = 1000;
 
 let studio_state;
 let state_models;
-
+let state_active_model_status;
 
 let first_run = true;
-
-// function populate_peers_list(new_peers_list) {
-//   if (first_run) {
-//     // console.log("FIRST RUN!!");
-
-//     peers_list = new_peers_list;
-//   }
-
-//   if (new_peers_list != peers_list || first_run) {
-//     // console.log("PEERS CHANGE!!");
-
-//     const container = document.getElementById("peers-items");
-
-//     while (container.firstChild) {
-//       container.removeChild(container.firstChild);
-//     }
-
-//     JSON.parse(new_peers_list).forEach(item => {
-//       const div = document.createElement("div");
-//       div.innerHTML = "<a href='" + item.host + "'>" + item.node_id + "</a>";
-//       div.classList.add("peers-item");
-//       container.appendChild(div);
-//     });
-
-//     // peers_list = new_peers_list;
-//   }
-// }
 
 async function set_models() {
   if(first_run) {
     state_models = studio_state.models;
+    state_active_model_status = studio_state.active_model.status;
   }
 
   if(!arraysAreEqual(state_models, studio_state.models) || first_run) {
@@ -61,7 +33,30 @@ async function set_models() {
     });
   }
 
+  if(state_active_model_status != studio_state.active_model.status || first_run) {
+    if(studio_state.active_model.status == "unmounted") {
+      document.getElementById('mount-btn').style.display = 'flex';
+      document.getElementById('unmount-btn').style.display = 'none';
+      document.getElementById('mounting-btn').style.display = 'none';
+      
+      document.getElementById('model-select').disabled = false;
+    } else if(studio_state.active_model.status == "mounting") {
+      document.getElementById('mount-btn').style.display = 'none';
+      document.getElementById('unmount-btn').style.display = 'none';
+      document.getElementById('mounting-btn').style.display = 'flex';
+
+      document.getElementById('model-select').disabled = true;
+    } else {
+      document.getElementById('mount-btn').style.display = 'none';
+      document.getElementById('unmount-btn').style.display = 'flex';
+      document.getElementById('mounting-btn').style.display = 'none';
+    
+      document.getElementById('model-select').disabled = true;
+    }
+  }
+
   state_models = studio_state.models;
+  state_active_model_status = studio_state.active_model.status;
 }
 
 async function update_ui() {
@@ -73,7 +68,6 @@ async function update_ui() {
 async function sync_state() {
   // console.log("Syncing state!");
 
-  // Make a GET request using the fetch API
   await fetch(api_url + "get_state")
   .then(response => {
     // Check if the response status is OK (200)
@@ -106,16 +100,43 @@ window.onload = async function() {
   setInterval(sync_state, sync_rate);
 }
 
-function send_message_pressed() {
+async function send_message_pressed() {
   console.log("send pressed");
 }
 
-function mount_model_pressed() {
+async function mount_model_pressed() {
   console.log("mount pressed");
+
+  let select_element = document.getElementById('model-select');
+
+  let model_name = select_element.value;
+  
+  await fetch(api_url + "mount_model/" + model_name)
+  .then(response => {
+    // Check if the response status is OK (200)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    // Parse the response body as JSON
+    return response.text();
+  })
+  .then(data => {
+    // Handle the JSON data
+    console.log(data);
+    
+  })
+  .catch(error => {
+    // Handle any errors that occurred during the fetch
+    console.error('Fetch error:', error);
+  });
 }
 
-function add_chat_pressed() {
-  console.log("mount pressed");
+async function unmount_model_pressed() {
+  console.log("unmount pressed");
+}
+
+async function add_chat_pressed() {
+  console.log("add chat pressed");
 }
 
 

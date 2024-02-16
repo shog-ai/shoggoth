@@ -41,6 +41,19 @@ result_t json_to_studio_model(json_t *json) {
   return OK(model);
 }
 
+result_t json_to_studio_active_model(json_t *json) {
+  cJSON *model_json = (cJSON *)json;
+
+  studio_active_model_t *model = new_studio_active_model();
+
+  model->name =
+      strdup(cJSON_GetObjectItemCaseSensitive(model_json, "name")->valuestring);
+
+  model->status = "unmounted";
+
+  return OK(model);
+}
+
 result_t json_to_studio_models(json_t *json) {
   cJSON *models_json = (cJSON *)json;
 
@@ -65,6 +78,15 @@ result_t json_studio_model_to_json(studio_model_t model) {
   return OK(model_json);
 }
 
+result_t json_studio_active_model_to_json(studio_active_model_t model) {
+  cJSON *model_json = cJSON_CreateObject();
+
+  cJSON_AddStringToObject(model_json, "name", model.name);
+  cJSON_AddStringToObject(model_json, "status", model.status);
+
+  return OK(model_json);
+}
+
 result_t json_studio_models_to_json(studio_models_t models) {
   cJSON *models_json = cJSON_CreateArray();
 
@@ -83,8 +105,12 @@ result_t json_studio_state_to_json(studio_state_t state) {
 
   result_t res_models_json = json_studio_models_to_json(*state.models);
   cJSON *models_json = PROPAGATE(res_models_json);
-
   cJSON_AddItemToObject(state_json, "models", models_json);
+
+  result_t res_active_model_json =
+      json_studio_active_model_to_json(*state.active_model);
+  cJSON *active_model_json = PROPAGATE(res_active_model_json);
+  cJSON_AddItemToObject(state_json, "active_model", active_model_json);
 
   return OK(state_json);
 }

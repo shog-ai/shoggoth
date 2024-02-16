@@ -214,6 +214,20 @@ result_t json_to_dht_item(json_t *json) {
   return OK(dht_item);
 }
 
+result_t json_to_completion_request(json_t *json) {
+  cJSON *req_json = (cJSON *)json;
+
+  completion_request_t *req = new_completion_request();
+
+  cJSON *prompt = cJSON_GetObjectItemCaseSensitive(req_json, "prompt");
+  if (prompt == NULL) {
+    return ERR("prompt object not found");
+  }
+  req->prompt = strdup(prompt->valuestring);
+
+  return OK(req);
+}
+
 result_t json_to_dht(json_t *json) {
   cJSON *dht_json = (cJSON *)json;
 
@@ -299,4 +313,18 @@ result_t json_string_to_node_manifest(char *manifest_str) {
   cJSON_Delete(manifest_json);
 
   return OK(manifest);
+}
+
+result_t json_string_to_completion_request(char *str) {
+  cJSON *req_json = cJSON_Parse(str);
+  if (req_json == NULL) {
+    return ERR("Could not parse completion request json: %s\n", str);
+  }
+
+  result_t res_req = json_to_completion_request((void *)req_json);
+  completion_request_t *req = PROPAGATE(res_req);
+
+  cJSON_Delete(req_json);
+
+  return OK(req);
 }

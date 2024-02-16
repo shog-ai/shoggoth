@@ -77,6 +77,19 @@ char *escape_character(char *input, char character) {
   return result;
 }
 
+void print_string_as_ascii(char *input) {
+  if (input == NULL) {
+    return; // Handle null input.
+  }
+
+  // Loop through each character of the string until the null terminator.
+  for (int i = 0; input[i] != '\0'; i++) {
+    printf("%d ",
+           (unsigned char)input[i]); // Print ASCII value of each character.
+  }
+  printf("\n"); // Print a new line at the end.
+}
+
 char *replace_escape_character(char *input, char ch, char replacement) {
   if (input == NULL) {
     return NULL; // Return NULL if the input string is not valid.

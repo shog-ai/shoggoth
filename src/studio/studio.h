@@ -16,6 +16,10 @@
 #include <sys/wait.h>
 
 typedef struct {
+  char *prompt;
+} completion_request_t;
+
+typedef struct {
   char *name;
   char *status;
 } studio_active_model_t;
@@ -41,6 +45,8 @@ typedef struct STUDIO_CTX {
 
   pid_t model_server_pid;
 } studio_ctx_t;
+
+completion_request_t *new_completion_request();
 
 studio_active_model_t *new_studio_active_model();
 

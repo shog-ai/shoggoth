@@ -46,4 +46,6 @@ result_t json_dht_item_to_json(dht_item_t item);
 
 result_t json_dht_to_json(dht_t dht);
 
+result_t json_string_to_completion_request(char *str);
+
 #endif

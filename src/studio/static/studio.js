@@ -133,6 +133,26 @@ async function mount_model_pressed() {
 
 async function unmount_model_pressed() {
   console.log("unmount pressed");
+
+  
+  await fetch(api_url + "unmount_model")
+  .then(response => {
+    // Check if the response status is OK (200)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    // Parse the response body as JSON
+    return response.text();
+  })
+  .then(data => {
+    // Handle the JSON data
+    console.log(data);
+    
+  })
+  .catch(error => {
+    // Handle any errors that occurred during the fetch
+    console.error('Fetch error:', error);
+  });
 }
 
 async function add_chat_pressed() {

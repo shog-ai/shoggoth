@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <signal.h>
 
 studio_ctx_t *studio_ctx = NULL;
 
@@ -159,8 +161,10 @@ void launch_model_server(char *model_name) {
     PANIC("could not fork model server process \n");
   } else if (pid == 0) {
     // CHILD PROCESS
-
-    chdir(studio_ctx->runtime_path);
+    char server_active_dir[FILE_PATH_SIZE];
+    sprintf(server_active_dir, "%s/studio/model_server",
+            studio_ctx->runtime_path);
+    chdir(server_active_dir);
 
     int logs_fd =
         open(model_server_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -246,6 +250,71 @@ void api_mount_model_route(sonic_server_request_t *req) {
   studio_ctx->state->active_model->status = "mounted";
 }
 
+result_t kill_model_server() {
+  // char node_runtime_path[FILE_PATH_SIZE];
+  // utils_get_node_runtime_path(ctx, node_runtime_path);
+
+  char server_pid_path[FILE_PATH_SIZE];
+  sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
+          studio_ctx->runtime_path);
+
+  if (file_exists(server_pid_path)) {
+    result_t res_server_pid_str = read_file_to_string(server_pid_path);
+    char *server_pid_str = PROPAGATE(res_server_pid_str);
+
+    int pid = atoi(server_pid_str);
+    free(server_pid_str);
+
+    kill(pid, SIGTERM);
+
+    u64 kill_count = 0;
+
+    for (;;) {
+      int result = kill(pid, 0);
+
+      if (result == -1 && errno == ESRCH) {
+        if (kill_count > 0) {
+          LOG(INFO, "model server process stopped");
+        }
+
+        break;
+      }
+
+      LOG(INFO, "Waiting for model server process to exit ...");
+
+      sleep(1);
+
+      kill_count++;
+    }
+
+    delete_file(server_pid_path);
+  }
+
+  return OK(NULL);
+}
+
+void api_unmount_model_route(sonic_server_request_t *req) {
+  studio_ctx->state->active_model->status = "unmounted";
+  free(studio_ctx->state->active_model->name);
+  studio_ctx->state->active_model->name = "NONE";
+
+  UNWRAP(kill_model_server());
+
+  char *body = string_from("unmounted model", NULL);
+
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+  sonic_response_set_body(resp, body, strlen(body));
+
+  sonic_send_response(req, resp);
+
+  sonic_free_server_response(resp);
+
+  free(body);
+
+  studio_ctx->state->active_model->status = "mounted";
+}
+
 void add_studio_api_routes(sonic_server_t *server) {
   sonic_add_route(server, "/api/", METHOD_GET, api_index_route);
 
@@ -254,6 +323,9 @@ void add_studio_api_routes(sonic_server_t *server) {
 
   sonic_add_route(server, "/api/mount_model/{model_name}", METHOD_GET,
                   api_mount_model_route);
+
+  sonic_add_route(server, "/api/unmount_model", METHOD_GET,
+                  api_unmount_model_route);
 }
 
 void index_route(sonic_server_request_t *req) {

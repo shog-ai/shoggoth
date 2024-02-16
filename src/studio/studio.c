@@ -14,6 +14,8 @@
 #include "../json/json.h"
 #include "../utils/utils.h"
 
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 studio_ctx_t *studio_ctx = NULL;
@@ -35,6 +37,15 @@ studio_models_t *new_studio_models() {
   models->items_count = 0;
 
   return models;
+}
+
+studio_active_model_t *new_studio_active_model() {
+  studio_active_model_t *model = malloc(sizeof(studio_active_model_t));
+
+  model->name = NULL;
+  model->status = "unmounted";
+
+  return model;
 }
 
 void studio_models_add_model(studio_models_t *models, studio_model_t *item) {
@@ -129,10 +140,120 @@ void api_index_route(sonic_server_request_t *req) {
   sonic_free_server_response(resp);
 }
 
+void launch_model_server(char *model_name) {
+  char model_server_logs_path[FILE_PATH_SIZE];
+  sprintf(model_server_logs_path, "%s/studio/model_server_logs.txt",
+          studio_ctx->runtime_path);
+
+  pid_t pid = fork();
+
+  studio_ctx->model_server_pid = pid;
+
+  // Create a pipe to send mesages to the db process STDIN
+  int studio_to_server_pipe[2];
+  if (pipe(studio_to_server_pipe) == -1) {
+    PANIC("could not create studio_to_server pipe");
+  }
+
+  if (pid == -1) {
+    PANIC("could not fork model server process \n");
+  } else if (pid == 0) {
+    // CHILD PROCESS
+
+    chdir(studio_ctx->runtime_path);
+
+    int logs_fd =
+        open(model_server_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (logs_fd == -1) {
+      PANIC("could not open model server log file");
+    }
+
+    // Redirect stdin to the read end of the pipe
+    dup2(studio_to_server_pipe[0], STDIN_FILENO);
+
+    // Redirect stdout and stderr to the logs file
+    dup2(logs_fd, STDOUT_FILENO);
+    dup2(logs_fd, STDERR_FILENO);
+
+    char server_pid_path[FILE_PATH_SIZE];
+    sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
+            studio_ctx->runtime_path);
+
+    pid_t server_pid = getpid();
+    char server_pid_str[120];
+    sprintf(server_pid_str, "%d", server_pid);
+    write_to_file(server_pid_path, server_pid_str, strlen(server_pid_str));
+
+    // Execute the executable
+
+    char model_server_executable[FILE_PATH_SIZE];
+    sprintf(model_server_executable, "%s/bin/shog_model_server",
+            studio_ctx->runtime_path);
+
+    char model_path[FILE_PATH_SIZE];
+    sprintf(model_path, "%s/studio/models/%s", studio_ctx->runtime_path,
+            model_name);
+
+    execlp(model_server_executable, model_server_executable, "--port", "6967",
+           "-m", model_path, "-c", "2048", NULL);
+
+    close(logs_fd);
+
+    char *logs = UNWRAP(read_file_to_string(model_server_logs_path));
+    PANIC("error occured while launching model server executable. LOGS:\n%s",
+          logs);
+  } else {
+    // PARENT PROCESS
+
+    sleep(1);
+
+    int status;
+    int child_status = waitpid(studio_ctx->model_server_pid, &status, WNOHANG);
+
+    if (child_status == -1) {
+      PANIC("waitpid failed");
+    } else if (child_status == 0) {
+    } else {
+      char *logs = UNWRAP(read_file_to_string(model_server_logs_path));
+      PANIC("error occured while launching model server executable.\nMODEL "
+            "SERVER LOGS:\n%s",
+            logs);
+    }
+  }
+}
+
+void api_mount_model_route(sonic_server_request_t *req) {
+  char *model_name = sonic_get_path_segment(req, "model_name");
+
+  studio_ctx->state->active_model->status = "mounting";
+  studio_ctx->state->active_model->name = strdup(model_name);
+
+  // sleep(5);
+  launch_model_server(model_name);
+
+  char *body = string_from("mounted ", model_name, NULL);
+
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+  sonic_response_set_body(resp, body, strlen(body));
+
+  sonic_send_response(req, resp);
+
+  sonic_free_server_response(resp);
+
+  free(body);
+
+  studio_ctx->state->active_model->status = "mounted";
+}
+
 void add_studio_api_routes(sonic_server_t *server) {
   sonic_add_route(server, "/api/", METHOD_GET, api_index_route);
+
   sonic_add_route(server, "/api/get_state", METHOD_GET,
                   api_get_studio_state_route);
+
+  sonic_add_route(server, "/api/mount_model/{model_name}", METHOD_GET,
+                  api_mount_model_route);
 }
 
 void index_route(sonic_server_request_t *req) {
@@ -185,11 +306,13 @@ void *start_studio_server() {
 }
 
 studio_state_t *new_studio_state() {
-  studio_state_t *ctx = malloc(sizeof(studio_state_t));
+  studio_state_t *state = malloc(sizeof(studio_state_t));
 
-  ctx->models = new_studio_models();
+  state->models = new_studio_models();
 
-  return ctx;
+  state->active_model = new_studio_active_model();
+
+  return state;
 }
 
 studio_ctx_t *new_studio_ctx() {

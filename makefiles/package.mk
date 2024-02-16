@@ -40,7 +40,7 @@ check-path-arg:
 	fi
 
 # generate-runtime: check-path-arg shogdb
-generate-runtime: check-path-arg build-explorer shogdb
+generate-runtime: check-path-arg build-explorer shogdb model-server
 	mkdir -p $(RP)
 	
 	mkdir -p $(RP)/bin/
@@ -58,6 +58,8 @@ generate-runtime: check-path-arg build-explorer shogdb
 
 	cp $(TARGET_DIR)/shogdb $(RP)/bin/
 	cp ./shogdb/src/dbconfig.toml $(RP)/node/
+
+	cp $(TARGET_DIR)/model_server $(RP)/bin/shog_model_server
 
 	cp -r $(TARGET_DIR)/explorer/out/* $(RP)/node/explorer/
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/

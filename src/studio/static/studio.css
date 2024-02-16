@@ -99,6 +99,24 @@ ol, ul {
   color: white;
 }
 
+
+.navbar-brand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.navbar-icon {
+  width: 30px;
+  height: 30px;
+
+  margin-left: 20px;
+}
+
+.navbar-title {
+  margin-left: 10px;
+}
+
 .main-content {
   height: 100%;
   width: 100%;
@@ -247,8 +265,8 @@ ol, ul {
 
 .mount-btn {
   background: white;
-  width: 62px;
-  height: 25px;
+  width: 76px;
+  height: 28px;
   
   display: flex;
   flex-direction: column;
@@ -262,6 +280,16 @@ ol, ul {
   cursor: pointer;
 
   margin-left: 10px;
+}
+
+.unmount-btn {
+  background: #c10000;
+  color: white;
+}
+
+.mounting-btn {
+  background: #a8a8a8;
+  cursor: not-allowed;
 }
 
 .model-label {

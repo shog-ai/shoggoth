@@ -24,6 +24,9 @@ typedef struct {
 
 typedef struct {
   studio_models_t *models;
+  
+  studio_model_t *active_model;
+  bool model_mounted;
 } studio_state_t;
 
 typedef struct STUDIO_CTX {

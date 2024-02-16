@@ -52,7 +52,7 @@ generate-runtime: check-path-arg build-explorer shogdb model-server
 	
 	mkdir -p $(RP)/node/explorer $(RP)/node/explorer/docs/ $(RP)/node/explorer/static/ $(RP)/node/explorer/templates/
 	
-	mkdir -p $(RP)/studio/static $(RP)/studio/templates/ $(RP)/studio/html/
+	mkdir -p $(RP)/studio/static $(RP)/studio/templates/ $(RP)/studio/html/ $(RP)/studio/model_server
 	
 	cp ./src/node/default-node-config.toml $(RP)/node/config.toml
 
@@ -60,6 +60,7 @@ generate-runtime: check-path-arg build-explorer shogdb model-server
 	cp ./shogdb/src/dbconfig.toml $(RP)/node/
 
 	cp $(TARGET_DIR)/model_server $(RP)/bin/shog_model_server
+	cp ./lib/llamacpp/ggml-metal.metal $(RP)/studio/model_server/
 
 	cp -r $(TARGET_DIR)/explorer/out/* $(RP)/node/explorer/
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/

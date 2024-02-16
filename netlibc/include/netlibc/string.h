@@ -16,7 +16,9 @@ void free_string(char *str);
 
 char *remove_newlines_except_quotes(char *input);
 
-char *escape_newlines(char *input);
+void print_string_as_ascii(char *input);
+
+char *replace_escape_character(char *input, char ch, char replacement);
 
 char *escape_json_string(char *i);
 
@@ -27,5 +29,7 @@ result_t remove_file_extension(char *str);
 char *extract_filename_from_path(char *path);
 
 char *get_file_extension(char *file_path);
+
+char *escape_character(char *input, char character);
 
 #endif

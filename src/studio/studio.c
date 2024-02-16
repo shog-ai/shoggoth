@@ -14,11 +14,13 @@
 #include "../json/json.h"
 #include "../utils/utils.h"
 
+#include <netlibc/string.h>
+
+#include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <signal.h>
 
 studio_ctx_t *studio_ctx = NULL;
 
@@ -315,6 +317,86 @@ void api_unmount_model_route(sonic_server_request_t *req) {
   studio_ctx->state->active_model->status = "mounted";
 }
 
+completion_request_t *new_completion_request() {
+  completion_request_t *req = malloc(sizeof(completion_request_t));
+
+  req->prompt = NULL;
+
+  return req;
+}
+
+void free_completion_request(completion_request_t *req) {
+  free(req->prompt);
+
+  free(req);
+}
+
+void api_completion_route(sonic_server_request_t *req) {
+  if (strcmp(studio_ctx->state->active_model->status, "mounted") == 0) {
+    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
+    strncpy(req_body, req->request_body, req->request_body_size);
+    req_body[req->request_body_size] = '\0';
+
+    result_t res_comp_req = json_string_to_completion_request(req_body);
+    SERVER_ERR(res_comp_req);
+    completion_request_t *comp_req = VALUE(res_comp_req);
+
+    sonic_request_t *reverse_req =
+        sonic_new_request(METHOD_POST, "http://127.0.0.1:6967/completion");
+
+    char *reverse_req_body =
+        malloc((strlen(comp_req->prompt) + 20) * sizeof(char));
+    sprintf(reverse_req_body, "{\"prompt\": \"%s\"}", comp_req->prompt);
+
+    char *escaped = replace_escape_character(reverse_req_body, '\n', 'n');
+    free(reverse_req_body);
+
+    // LOG(INFO, "REVERSE BODY: %s", escaped);
+
+    // print_string_as_ascii(escaped);
+
+    sonic_set_body(reverse_req, escaped, strlen(escaped));
+
+    sonic_response_t *reverse_resp = sonic_send_request(reverse_req);
+    free(escaped);
+
+    if (reverse_resp->failed) {
+      respond_error(req, "reverse request failed");
+      return;
+    } else {
+      sonic_server_response_t *resp =
+          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+      sonic_response_set_body(resp, reverse_resp->response_body,
+                              reverse_resp->response_body_size);
+
+      sonic_send_response(req, resp);
+
+      sonic_free_server_response(resp);
+
+      if (reverse_resp->response_body_size > 0) {
+        free(reverse_resp->response_body);
+      }
+      sonic_free_request(reverse_req);
+      sonic_free_response(reverse_resp);
+    }
+
+    free_completion_request(comp_req);
+
+  } else {
+    char *body = string_from("model not mounted", NULL);
+
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+    sonic_response_set_body(resp, body, strlen(body));
+
+    sonic_send_response(req, resp);
+
+    sonic_free_server_response(resp);
+
+    free(body);
+  }
+}
+
 void add_studio_api_routes(sonic_server_t *server) {
   sonic_add_route(server, "/api/", METHOD_GET, api_index_route);
 
@@ -326,6 +408,8 @@ void add_studio_api_routes(sonic_server_t *server) {
 
   sonic_add_route(server, "/api/unmount_model", METHOD_GET,
                   api_unmount_model_route);
+
+  sonic_add_route(server, "/api/completion", METHOD_POST, api_completion_route);
 }
 
 void index_route(sonic_server_request_t *req) {

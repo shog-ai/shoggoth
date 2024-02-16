@@ -1,7 +1,7 @@
 console.log("hello anon!")
 
 const api_url = '/api/';
-const sync_rate = 1000;
+const sync_rate = 500;
 
 let studio_state;
 let state_models;
@@ -100,8 +100,58 @@ window.onload = async function() {
   setInterval(sync_state, sync_rate);
 }
 
+function add_view_msg(from, msg_str) {  
+  let new_div = document.createElement("div");
+  new_div.classList.add("chat-view-item");
+  
+  new_div.innerHTML =
+  ` 
+  <img src=\"/static/img/icon.png\" class=\"chat-view-item-img\" />
+  
+  <div class=\"chat-view-item-right\">
+    <div class=\"chat-view-item-right-name\"><b>` + from + `</b></div>
+    <div class=\"chat-view-item-right-msg\">` + msg_str + `</div>
+  </div>
+  `
+  let chat_view = document.getElementById('chat-view');
+  chat_view.appendChild(new_div);
+}
+
 async function send_message_pressed() {
   console.log("send pressed");
+
+  let msg_str = document.getElementById('search-input').value;
+  add_view_msg("You", msg_str);
+
+  add_view_msg("AI", "...");
+
+  
+  await fetch(api_url + "completion", {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: msg_str,
+  }),
+  })
+  .then(response => {
+    // Check if the response status is OK (200)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.text();
+  })
+  .then(data => {
+    // Handle the JSON data
+    let resp = JSON.parse(data);
+
+    add_view_msg("AI", resp.content);
+  })
+  .catch(error => {
+    // Handle any errors that occurred during the fetch
+    console.error('Fetch error:', error);
+  });
 }
 
 async function mount_model_pressed() {

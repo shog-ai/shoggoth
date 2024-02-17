@@ -275,7 +275,7 @@ void resource_route(sonic_server_request_t *req) {
 
   sprintf(head_template_data,
           "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth "
-          "- Shoggoth is a peer-to-peer, anonymous network for publishing and "
+          "- Shoggoth is a peer-to-peer network for publishing and "
           "distributing open-source code, Machine Learning models, datasets, "
           "and research papers.\","
           "\"og_url\": \"%s/explorer/resource_og/%s\", "

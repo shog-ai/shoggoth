@@ -1,7 +1,7 @@
 SHOGGOTH
 ===============================================================================
 
-Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source Artificial Intelligence (AI).
+Shoggoth is a peer-to-peer network for publishing and distributing open-source Artificial Intelligence (AI).
 
 To join the Shoggoth network, there is no registration or approval process. Nodes and clients operate anonymously with identifiers decoupled from real-world identities.
 

@@ -314,8 +314,8 @@ void *dht_updater(void *thread_arg) {
 
       sonic_response_t *resp = sonic_send_request(req);
       if (resp->failed) {
-        LOG(WARN, "could not get remote dht of %s from %s: %s",
-            dht->items[i]->node_id, dht->items[i]->host, resp->error);
+        // LOG(WARN, "could not get remote dht of %s from %s: %s",
+        // dht->items[i]->node_id, dht->items[i]->host, resp->error);
 
         db_increment_unreachable_count(arg->ctx, dht->items[i]->node_id);
 
@@ -336,7 +336,8 @@ void *dht_updater(void *thread_arg) {
           u64 count_limit = 5;
 
           if (count >= count_limit) {
-            LOG(INFO, "REMOVING PEER %s", dht->items[i]->node_id);
+            LOG(INFO, "REMOVING OFFLINE PEER %s %s", dht->items[i]->node_id,
+                dht->items[i]->host);
             db_dht_remove_item(arg->ctx, dht->items[i]->node_id);
           }
         } else {

@@ -9,7 +9,7 @@ host = "127.0.0.1"
 port = 6961
 
 [peers]
-bootstrap_peers = ["http://shoggoth.network:6969"]
+bootstrap_peers = ["https://shoggoth.network"]
 
 [explorer]
 enable = true
@@ -27,6 +27,6 @@ limit = 100 # Gigabytes
 enable_updater = true
 updater_frequency = 5 # seconds
 
-[update]
+[tunnel]
+server = "bore.pub"
 enable = true
-id = "SHOG590ea3b939a7fe15b342ff74fb192a7e"

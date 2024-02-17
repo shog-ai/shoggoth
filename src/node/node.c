@@ -14,6 +14,7 @@
 #include "../toml/toml.h"
 #include "db/db.h"
 #include "manifest/manifest.h"
+#include "tunnel/tunnel.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -184,7 +185,7 @@ void shoggoth_node_exit(int exit_code) {
 
   free(node_global_ctx->config->network.host);
   free(node_global_ctx->config->network.public_host);
-  free(node_global_ctx->config->update.id);
+  free(node_global_ctx->config->tunnel.server);
   free(node_global_ctx->config->db.host);
 
   for (u64 i = 0; i < node_global_ctx->config->peers.bootstrap_peers_count;
@@ -244,6 +245,30 @@ void set_node_signal_handlers() {
 
 result_t run_node_server(node_ctx_t *ctx) {
   LOG(INFO, "Starting node server");
+
+  if (ctx->config->tunnel.enable) {
+    LOG(INFO, "TUNNEL ENABLED");
+
+    launch_tunnel_client(ctx);
+
+    char node_runtime_path[FILE_PATH_SIZE];
+    utils_get_node_runtime_path(ctx, node_runtime_path);
+
+    char tunnel_logs_path[FILE_PATH_SIZE];
+    sprintf(tunnel_logs_path, "%s/tunnel_logs.txt", node_runtime_path);
+
+    char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
+    char *last_colon = strrchr(tunnel_logs, ':');
+    char *tunnel_port = last_colon + 1;
+    tunnel_port[strlen(tunnel_port) - 1] = '\0';
+
+    char *new_public_host = string_from("http://", ctx->config->tunnel.server,
+                                        ":", tunnel_port, NULL);
+
+    ctx->config->network.public_host = new_public_host;
+
+    LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
+  }
 
   LOG(INFO, "Explorer: http://%s:%d/", ctx->config->network.host,
       ctx->config->network.port);
@@ -336,6 +361,26 @@ result_t shog_init_node(args_t *args, bool print_info) {
 
 result_t node_print_id(node_ctx_t *ctx) {
   printf("Your Node ID is: %s\n", ctx->manifest->node_id);
+
+  return OK(NULL);
+}
+
+result_t node_start_tunnel_server(node_ctx_t *ctx) {
+  printf("Starting tunnel server...\n");
+
+  launch_tunnel_server(ctx);
+
+  printf("tunnel server running...\n");
+
+  return OK(NULL);
+}
+
+result_t node_stop_tunnel_server(node_ctx_t *ctx) {
+  printf("Stopping tunnel server...\n");
+
+  kill_tunnel_server(ctx);
+
+  printf("tunnel server stopped\n");
 
   return OK(NULL);
 }
@@ -898,6 +943,18 @@ result_t handle_node_session(args_t *args) {
     node_ctx_t *ctx = PROPAGATE(res_ctx);
 
     result_t res = node_print_id(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "start-tunnel") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = node_start_tunnel_server(ctx);
+    PROPAGATE(res);
+  } else if (strcmp(args->command, "stop-tunnel") == 0) {
+    result_t res_ctx = shog_init_node(args, true);
+    node_ctx_t *ctx = PROPAGATE(res_ctx);
+
+    result_t res = node_stop_tunnel_server(ctx);
     PROPAGATE(res);
   } else if (strcmp(args->command, "pin") == 0) {
     if (args->has_command_arg) {

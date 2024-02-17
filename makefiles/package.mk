@@ -40,7 +40,7 @@ check-path-arg:
 	fi
 
 # generate-runtime: check-path-arg shogdb
-generate-runtime: check-path-arg build-explorer shogdb model-server
+generate-runtime: check-path-arg build-explorer shogdb model-server tunnel
 	mkdir -p $(RP)
 	
 	mkdir -p $(RP)/bin/
@@ -62,6 +62,8 @@ generate-runtime: check-path-arg build-explorer shogdb model-server
 	cp $(TARGET_DIR)/model_server $(RP)/bin/shog_model_server
 	cp ./lib/llamacpp/ggml-metal.metal $(RP)/studio/model_server/
 
+	cp $(TARGET_DIR)/tunnel $(RP)/bin/shog_tunnel
+	
 	cp -r $(TARGET_DIR)/explorer/out/* $(RP)/node/explorer/
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/
 	cp -r ./src/explorer/templates/* $(RP)/node/explorer/templates/

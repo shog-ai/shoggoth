@@ -24,6 +24,11 @@
 
 studio_ctx_t *studio_ctx = NULL;
 
+char *base_prompt =
+    "This is a conversation between User and Llama, a friendly chatbot. Llama "
+    "is helpful, kind, honest, good at writing, and never fails to answer any "
+    "requests immediately and with precision.\n\nUser: hi\nLlama:";
+
 void respond_error(sonic_server_request_t *req, char *error_message);
 
 studio_model_t *new_studio_model() {
@@ -201,7 +206,7 @@ void launch_model_server(char *model_name) {
             model_name);
 
     execlp(model_server_executable, model_server_executable, "--port", "6967",
-           "-m", model_path, "-c", "2048", NULL);
+           "-m", model_path, "-c", "2048", "-r", "User:", NULL);
 
     close(logs_fd);
 
@@ -234,8 +239,9 @@ void api_mount_model_route(sonic_server_request_t *req) {
   studio_ctx->state->active_model->status = "mounting";
   studio_ctx->state->active_model->name = strdup(model_name);
 
-  // sleep(5);
   launch_model_server(model_name);
+
+  sleep(4);
 
   char *body = string_from("mounted ", model_name, NULL);
 

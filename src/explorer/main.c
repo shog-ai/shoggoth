@@ -26,10 +26,18 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   if (gen_type == EXPLORER) {
     head_template_data =
-        "{\"title\": \"Shoggoth Explorer\", \"desc\": \"Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/static/img/og/explorer.png\", \"url\": \"/explorer\", \"is_explorer\": true}";
+        "{\"title\": \"Shoggoth Explorer\", \"desc\": \"Shoggoth is a "
+        "peer-to-peer network for publishing and distributing open-source "
+        "code, Machine Learning models, datasets, and research papers.\", "
+        "\"og_url\": \"/explorer/static/img/og/explorer.png\", \"url\": "
+        "\"/explorer\", \"is_explorer\": true}";
   } else if (gen_type == STATS) {
     head_template_data =
-        "{\"title\": \"Shoggoth Explorer — Stats\", \"desc\": \"Shoggoth is a peer-to-peer, anonymous network for publishing and distributing open-source code, Machine Learning models, datasets, and research papers.\", \"og_url\": \"/explorer/static/img/og/stats.png\", \"url\": \"/explorer/stats\", \"is_stats\": true}";
+        "{\"title\": \"Shoggoth Explorer — Stats\", \"desc\": \"Shoggoth is a "
+        "peer-to-peer network for publishing and distributing open-source "
+        "code, Machine Learning models, datasets, and research papers.\", "
+        "\"og_url\": \"/explorer/static/img/og/stats.png\", \"url\": "
+        "\"/explorer/stats\", \"is_stats\": true}";
   } else {
     PANIC("unhandled gen type");
   }

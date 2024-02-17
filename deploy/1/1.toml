@@ -2,14 +2,14 @@
 host = "127.0.0.1"
 port = 4969
 public_host = "http://127.0.0.1:4969"
-allow_private_network = false
+allow_private_network = true
 
 [db]
 host = "127.0.0.1"
 port = 4961
 
 [peers]
-bootstrap_peers = []
+bootstrap_peers = ["http://127.0.0.1:6969"]
 
 [explorer]
 enable = true
@@ -33,4 +33,4 @@ id = "SHOG590ea3b939a7fe15b342ff74fb192a7e"
 
 [tunnel]
 server = "bore.pub"
-enable = true
+enable = false

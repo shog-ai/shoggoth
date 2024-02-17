@@ -9,7 +9,7 @@ host = "127.0.0.1"
 port = 6961
 
 [peers]
-bootstrap_peers = ["https://shoggoth.network"]
+bootstrap_peers = ["https://node.shog.ai"]
 
 [explorer]
 enable = true
@@ -28,5 +28,5 @@ enable_updater = true
 updater_frequency = 5 # seconds
 
 [tunnel]
-server = "bore.pub"
+server = "tunnel.shog.ai"
 enable = true

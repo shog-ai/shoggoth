@@ -39,7 +39,7 @@ MAIN_OBJ = $(TARGET_DIR)/main.o
 
 # object files for node
 # OBJS += $(TARGET_DIR)/args.o
-OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/studio.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
+OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/studio.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/tunnel.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
 OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/og.o
 OBJS += $(TARGET_DIR)/server_explorer.o $(TARGET_DIR)/templating.o
 
@@ -117,11 +117,17 @@ $(TARGET_DIR)/model_server:
 	cd ./lib/llamacpp/ && make server > /dev/null
 	cp ./lib/llamacpp/server $(TARGET_DIR)/model_server
 
+$(TARGET_DIR)/tunnel:
+	echo "Building tunnel..."
+	cd ./lib/bore/ && cargo build --release > /dev/null
+	cp ./lib/bore/target/release/bore $(TARGET_DIR)/tunnel
+
 
 dev: package-dev
 
 shogdb: $(TARGET_DIR)/shogdb
 model-server: $(TARGET_DIR)/model_server
+tunnel: $(TARGET_DIR)/tunnel
 
 build-sanitized: target-dir build-objects-sanitized link-objects-sanitized 
 build-debug: target-dir build-objects-debug link-objects-debug
@@ -146,6 +152,7 @@ build-objects-debug:
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -DVERSION="\"$(VERSION)\"" -c $(NODE_SRC_DIR)/node.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/db/db.c
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/tunnel/tunnel.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/pins/pins.c
@@ -178,6 +185,7 @@ build-objects-sanitized:
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -DVERSION="\"$(VERSION)\"" -c $(NODE_SRC_DIR)/node.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/db/db.c
+	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/tunnel/tunnel.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/server.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/pins/pins.c
@@ -210,6 +218,7 @@ build-objects-flat:
 
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -DVERSION="\"$(VERSION)\"" -c $(NODE_SRC_DIR)/node.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/db/db.c
+	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/tunnel/tunnel.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/manifest/manifest.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/pins/pins.c

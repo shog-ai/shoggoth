@@ -106,18 +106,18 @@ result_t toml_string_to_node_config(char *config_str) {
   toml_datum_t storage_limit = toml_double_in(storage_table, "limit");
   config->storage.limit = (f64)storage_limit.u.d;
 
-  // UPDATE TABLE
-  toml_table_t *update_table = toml_table_in(config_toml, "update");
-  if (update_table == NULL) {
-    PANIC("TOML: Could not parse update table \n");
+  // TUNNEL TABLE
+  toml_table_t *tunnel_table = toml_table_in(config_toml, "tunnel");
+  if (tunnel_table == NULL) {
+    PANIC("TOML: Could not parse tunnel table \n");
   }
 
-  toml_datum_t update_enable = toml_bool_in(update_table, "enable");
-  config->update.enable = update_enable.u.b;
+  toml_datum_t tunnel_enable = toml_bool_in(tunnel_table, "enable");
+  config->tunnel.enable = tunnel_enable.u.b;
 
-  toml_datum_t update_id = toml_string_in(update_table, "id");
-  config->update.id = strdup(update_id.u.s);
-  free(update_id.u.s);
+  toml_datum_t tunnel_server = toml_string_in(tunnel_table, "server");
+  config->tunnel.server = strdup(tunnel_server.u.s);
+  free(tunnel_server.u.s);
 
   // EXPLORER TABLE
   toml_table_t *explorer_table = toml_table_in(config_toml, "explorer");

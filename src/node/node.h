@@ -60,8 +60,8 @@ typedef struct {
 
 typedef struct {
   bool enable;
-  char *id;
-} node_config_update_t;
+  char *server;
+} node_config_tunnel_t;
 
 typedef struct {
   char *host;
@@ -81,7 +81,7 @@ typedef struct {
   node_config_storage_t storage;
   node_config_explorer_t explorer;
   node_config_dht_t dht;
-  node_config_update_t update;
+  node_config_tunnel_t tunnel;
 } node_config_t;
 
 typedef struct NODE_CTX {
@@ -89,6 +89,8 @@ typedef struct NODE_CTX {
   node_config_t *config;
   pid_t db_pid;
   pid_t node_pid;
+  pid_t tunnel_client_pid;
+  pid_t tunnel_server_pid;
 
   char *runtime_path;
 

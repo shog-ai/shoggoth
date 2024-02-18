@@ -242,6 +242,10 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
     if (strcmp(manifest->node_id, dht->items[i]->node_id) == 0) {
       exists = true;
     }
+
+    if (strcmp(manifest->public_host, dht->items[i]->host) == 0) {
+      exists = true;
+    }
   }
 
   free_dht(dht);

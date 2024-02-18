@@ -7,7 +7,7 @@ To join the Shoggoth network, there is no registration or approval process. Node
 
 Anyone can freely join the network and immediately begin publishing or accessing resources.
 
-The purpose of Shoggoth is to combat AI censorship and empower software developers to create and distribute open-source AI, without a centralized service or platform.
+The purpose of Shoggoth is to combat AI censorship and empower everyone to create and distribute open-source AI, without a centralized service or platform.
 
 Shoggoth is developed and maintained by ShogAI (https://shog.ai).
 

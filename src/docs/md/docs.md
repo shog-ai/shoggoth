@@ -15,7 +15,7 @@ To join the Shoggoth network, there is no registration or approval process.
 Nodes operate anonymously with identifiers decoupled from real-world identities.
 Anyone can freely join the network and immediately begin publishing or accessing resources.
 
-The purpose of Shoggoth is to combat AI censorship and empower software developers to create and distribute open-source AI, without a centralized service or platform.
+The purpose of Shoggoth is to combat AI censorship and empower everyone to create and distribute open-source AI, without a centralized service or platform.
 Shoggoth is developed and maintained by [ShogAI](https://shog.ai).
 
 ### ⚠️Disclaimer⚠️
@@ -27,28 +27,30 @@ Shoggoth comes with absolutely NO WARRANTY of any kind. Please email reports of 
 
 This documentation is a work in progress. It is not complete and may contain outdated information as Shoggoth is rapidly evolving.
 
-Please be aware that Shoggoth is a public network! This means anything uploaded will be accessible by anybody on the network.
+Please be aware that Shoggoth is a public network! This means anything added to the network will be accessible by anybody on the network.
 
 <div id="installation"></div>
 
 ## Installation
 
+<div id="supported-platforms"></div>
+
 ### Supported Platforms
 
-Shoggoth currently supports only Linux and macOS operating systems. Windows support is still in development.
+Shoggoth currently supports Linux, macOS, and Windows (only with WSL).
 
 <div id="download-precompiled-binaries"></div>
 
 ### Download Precompiled Binaries
 
 You can download Shoggoth from [https://shog.ai/download.html](https://shog.ai/download.html).
-Once the download is complete, verify the checksum with the following command to ensure it was not tampered with in transit:
+Once the download is complete, verify the file hash with the following command to ensure it was not tampered with in transit:
 
 ```bash
 sha256sum shoggoth-v0.2.1-Linux-x86_64.zip
 ```
 
-Ensure that the printed checksum is the same as the one displayed on the download page.
+Ensure that the hash is the same as the one displayed on the download page.
 
 Extract the zip archive into your home directory:
 
@@ -78,12 +80,11 @@ You can run the below command to verify that it was installed correctly:
 shog --version
 ```
 
+The above command should display your installed version.
+
 <div id="build-from-source"></div>
 
 ### Build from Source
-
-Shoggoth is written in the C programming language. All you need to build it from source is a C compiler, GNU make and a few dependencies.
-Follow the below instructions to obtain the source code and build Shoggoth:
 
 NOTE: if you encounter any problems while building Shoggoth from source, you can [create an issue](https://github.com/shog-ai/shoggoth/issues) on GitHub, or join the [Discord community](https://discord.com/invite/AG3duN5yKP) and we will be glad to assist you.
 
@@ -101,7 +102,7 @@ Using git:
 git clone -b 0.2.1 https://github.com/shog-ai/shoggoth --depth 1 shoggoth-source
 ```
 
-Or download the source code:
+Or download from ShogAI:
 
 ```bash
 wget https://shog.ai/download/v0.2.1/shoggoth-source-v0.2.1.zip
@@ -113,7 +114,7 @@ unzip -o -q ./shoggoth-source-v0.2.1.zip -d ./shoggoth-source
 
 <div id="build-with-make"></div>
 
-#### Build with Make
+#### Run the configure script
 
 After downloading the source code, change into the directory that was downloaded:
 
@@ -121,13 +122,20 @@ After downloading the source code, change into the directory that was downloaded
 cd shoggoth-source
 ```
 
-Run `make` to build the code:
+Run the configure script to download the necessary dependencies:
+
+```bash
+./configure
+```
+
+#### Build with Make
+
+Run `make` to build:
 
 ```bash
 make
 ```
-
-The `make` command may take a few seconds to finish. When it is done, you can then install Shoggoth with the below command:
+When the `make` command is done, you can then install Shoggoth with the below:
 
 ```bash
 make install
@@ -139,6 +147,7 @@ You can run the below command to verify that it was installed correctly:
 ```bash
 shog --version
 ```
+The above command should display your installed version.
 
 <div id="concepts"></div>
 
@@ -148,7 +157,7 @@ shog --version
 
 ### Shoggoth Resources
 
-The purpose of Shoggoth is to distribute Shoggoth Resources. A Shoggoth Resource is a single file that can be an ML model, code repository, research paper, dataset, or any other kind of file.
+The purpose of Shoggoth is to distribute Shoggoth Resources. A Shoggoth Resource is a single file that can be an ML model, code repository, research paper, dataset, zip archive containing multiple files, or any other kind of file.
 
 Shoggoth Resources are stored on Shoggoth nodes, and can only be published by Shoggoth nodes.
 
@@ -169,7 +178,7 @@ The other nodes that a node communicates with are called its `peers`.
 
 Shoggoth Nodes are capable of publishing new resources, and serving existing resources to their peers.
 
-Nodes also provide an HTTP API that allows anyone to download resources. Hence, anyone can download resources from a Shoggoth node using a web browser.
+Nodes also provide an HTTP API that allows anyone to download resources. Hence, anyone can download Shoggoth Resources from a Shoggoth node using a web browser.
 
 Every node has a unique identifier called a `Node ID` that can be used to distinguish one node from another.
 
@@ -217,12 +226,12 @@ The Node ID of a node is derived from a cryptographic hash of its public key.
 
 ### Download a resource
 
-Visit Shoggoth Explorer ([https://shoggoth.network](https://shoggoth.network)), paste in the Shoggoth ID of the resource, click search, and click the download button.
+Visit Shoggoth Explorer ([https://node.shog.ai](https://node.shog.ai)), paste in the Shoggoth ID of the resource, click search, and click the download button.
 
 
 ### Create a new resource
 
-Only Shoggoth nodes can create and publish new resources. Once a node joins the Shoggoth network, it exposes all its Shoggoth Resources to its peers, which can voluntarily pin them.
+Only Shoggoth nodes can create new resources. Once a node joins the Shoggoth network, it exposes all its pinned Shoggoth Resources to its peers, which can voluntarily pin them also.
 
 
 To create a Shoggoth resource, you simply use your node to pin the desired file. Your node will take the file, calculate the hash, pin it locally, and expose it to the rest of the network:
@@ -263,18 +272,18 @@ shog -h
 ### Nodes
 
 Every Shoggoth node stores and maintains a local data structure called a Distributed Hash Table (DHT). This DHT is stored in an in-memory database.
-The DHT of a node is a table that contains information about all its peers, with each item in the table representing information about a peer, including its Node ID, Public Key, IP address or domain name,
+The DHT of a node is a table that contains information about all its peers, with each item in the table representing information about a peer, including its Node ID, Public Key, Public Host,
 and the Shoggoth IDs of all resources it has pinned.
 
-This DHT will be updated frequently as the node discovers new peers, and the list of pinned resources for all peers will also be updated periodically.
+This DHT will be updated frequently as the node discovers new peers, and the list of pinned resources for all peers will also be updated frequently.
 
-Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of a node that is part of the network.
+Nodes frequently exchange DHTs in such a way that a new node can instantly become aware of all other nodes and their pins by simply collecting the DHT of an existing node.
 
-This is the backbone of the Shoggoth Network. By its design, every node is able to communicate with every other node directly, without relays, by simply querying its local DHT for the IP address or domain name of the desired node, and sending HTTP requests to it.
+This is the backbone of the Shoggoth Network. By its design, every node is able to communicate with every other node directly, without relays, by simply querying its local DHT for the public host of the desired node, and sending HTTP requests to it.
 
 Shoggoth Nodes communicate by sending and receiving HTTP requests according to the [Shoggoth Node API](#api). With this API, nodes can obtain the DHTs of their peers and also download Shoggoth Resources from their peers to pin them locally.
 
-When a new node joins the network, it shares a manifest containing its public key, Node ID, and IP address or domain name to a set of known nodes.
+When a new node joins the network, it shares a manifest containing its public key, Node ID, and public host to a set of existing nodes.
 A new node needs to know at least one already existing node when joining the network. This already existing node will add the new node to its DHT, thereby introducing it to the rest of the network,
 and also give the new node a copy of its DHT, thereby allowing the new node to independently access the rest of the network.
 
@@ -282,9 +291,9 @@ This already existing node that a new node uses to join the network is also call
 
 Once the new node obtains the DHT of the bootstrap node, it will add all the peers of the bootstrap node to its local DHT and also request for the DHTs of its new peers to increase its network reach.
 
-There are many public nodes available that can be used as bootstrap nodes. One of them is [https://shoggoth.network](https://shoggoth.network) which is run and maintained by ShogAI.
-This is the default bootstrap node which can easily be changed in a [configuration file](#configuration). If you know someone who already runs a node, you can use theirs as a bootstrap node. All you need is the public address of the node.
-This public address can be its domain name like `http://shoggoth.network`, only an IP address (assuming port 80) like `http://8.8.8.8`, or an IP address with a specified port like `http://8.8.8.8:6969`
+There are multiple existing nodes that can be used as bootstrap nodes. One of them is [https://node.shog.ai](https://node.shog.ai) which is run and maintained by ShogAI.
+This is the default bootstrap node which can easily be changed in a [configuration file](#configuration). If you know someone who already runs a node, you can use theirs as a bootstrap node. All you need is the public host of the node.
+This public host can be its domain name like `https://node.shog.ai`, only an IP address (assuming port 80) like `http://8.8.8.8`, or an IP address with a specified port like `http://8.8.8.8:6969`
 
 Every Shoggoth node exposes an HTTP API which it uses to receive requests from other nodes and clients. It is this API that underpins the protocol that nodes use to exchange DHTs, fetch resources, and perform other network activities.
 The API is documented [here](/explorer/docs/api).
@@ -293,7 +302,7 @@ The API is documented [here](/explorer/docs/api).
 
 ### Persistence
 
-The pinning of resources is voluntary. Therefore a node can decide to pin any resource on the network or unpin (delete) a resource from its storage. There is no guarantee that at least one node will pin a resource. Therefore the best way to guarantee that a resource will remain pinned is to set up your own node and pin it.
+The pinning of Shoggoth Resources by Shoggoth Nodes is voluntary. Therefore a node can decide to pin any resource on the network or unpin (delete) a resource from its storage. There is no guarantee that at least one node will pin a resource. Therefore the best way to guarantee that a resource will remain pinned is to set up your own node and pin it.
 
 <div id="configuration"></div>
 
@@ -315,7 +324,7 @@ The API is documented [here](/explorer/docs/api).
 Shoggoth Explorer is a web interface exposed by all Shoggoth Nodes, which can be used to lookup and inspect Shoggoth Nodes and Resources.
 Shoggoth Explorer also contains documentation for Shoggoth and a reference for the Shoggoth Node API.
 
-The documentation you are reading is part of the Shoggoth Explorer. If you have installed Shoggoth, you also have a copy of the Shoggoth Explorer on your computer.
+The documentation you are reading is part of the Shoggoth Explorer. If you have installed Shoggoth, you also have a copy of the Shoggoth Explorer, and therefore a copy of this documentation on your computer.
 You can access it by running a Shoggoth node:
 
 ```bash
@@ -341,11 +350,30 @@ We recommend using a dedicated machine whose purpose is only to serve as a Shogg
 
 For this reason, the default configuration that comes with a fresh Shoggoth installation does not expose the node to the internet.
 
-Below are the necessary changes you need to make to expose your node to the internet.
+Below are two different approaches you can take to expose your node to the internet. Choose the one that best suits your node setup.
 
-### Configuration
+### Exposing a node to the internet with a tunnel
 
-To take your node public, you need to make a couple of modifications to your node config in `$HOME/shoggoth/node/config.toml`
+This approach is best for nodes running on a laptop, Desktop PC, or any other device behind a home router, firewall, or any devices without a static IP address.
+When in doubt, choose this approach.
+
+To take your node public, you need to modify your node config in `$HOME/shoggoth/node/config.toml`
+
+#### 1. Enable the tunnel
+
+1.1 Change the `enable` field in the `tunnel` table from `false` to `true`.
+
+```toml
+  [tunnel]
+  server = "tunnel.shog.ai"
+  enable = true
+```
+
+That's it! your node is now configured to communicate with other nodes on the Shoggoth network. Now restart your node for the changes to reflect.
+
+### Exposing a node to the internet with a static IP address or domain name
+
+If your node is running on a device with a static IP address or domain name, make the following modifications to your node config in `$HOME/shoggoth/node/config.toml`
 
 #### 1. Change the Host and Port
 
@@ -391,7 +419,7 @@ The below example configuration illustrates using a domain name `shoggoth.networ
 ### System Requirements
 
 A Shoggoth node is very light on system resources and barely uses any compute while idle.
-A machine with at least 1GB of RAM and 25GB of storage can be considered the bare minimum required to reliably run a node.
+A machine with at least 2GB of RAM and 25GB of storage can be considered the bare minimum required to reliably run a node.
 
 <div id="contributing"></div>
 
@@ -433,7 +461,7 @@ A: It is extremely unlikely that Shoggoth can be completely blocked since there 
 
 Q: Who created Shoggoth?
 <br />
-A: Shoggoth was created by Netrunner KD6-3.7 (email netrunner@shog.ai) at [ShogAI](https://shog.ai).
+A: Shoggoth was created by Netrunner KD6-3.7 at [ShogAI](https://shog.ai).
 
 Q: How is the development of Shoggoth funded?
 <br />
@@ -459,18 +487,9 @@ Q: Does Shoggoth use any blockchain technologies?
 <br />
 A: No. Shoggoth is not a blockchain and currently does not use any blockchain technologies or cryptocurrencies.
 
+<div id="technical-details"></div>
+
 ## Technical Details
-
-### Node Auto-Update
-
-By default, Shoggoth Nodes will check for updates on the Shoggoth network and download them if found.
-This means your node can receive the latest features, security updates, and bug fixes without your intervention.
-You can turn off auto-update in the node configuration:
-
-```toml
-  [update]
-  enable = false
-```
 
 <div id="dependencies"></div>
 
@@ -502,6 +521,8 @@ You can read the [Tuwi documentation](/explorer/docs/tuwi) for more information.
 
 The below dependencies are used in the Shoggoth project, sourced from external open-source projects:
 
+- [bore](https://github.com/ekzhang/bore)
+- [llama.cpp](https://github.com/ggerganov/llama.cpp)
 - [cjson](https://github.com/DaveGamble/cJSON)
 - [tomlc](https://github.com/cktan/tomlc99)
 - [md4c](https://github.com/mity/md4c/)
@@ -516,6 +537,8 @@ All these commands are usually already pre-installed on macOS and Linux operatin
 - addr2line
 - find
 - sort
+
+<div id="more-information"></div>
 
 ## More Information
 
@@ -543,12 +566,9 @@ Join the [Discord community](https://discord.com/invite/AG3duN5yKP).
 
 ### Popular nodes
 
-Some popular nodes include:
-
-[https://shoggoth.network](https://shoggoth.network)
-
-[https://node1.shog.ai](https://node1.shog.ai)
+[https://node.shog.ai](https://node.shog.ai)
 
 [https://node2.shog.ai](https://node2.shog.ai)
+
 
 {{> end}}

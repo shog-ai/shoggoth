@@ -246,6 +246,15 @@ void set_node_signal_handlers() {
 result_t run_node_server(node_ctx_t *ctx) {
   LOG(INFO, "Starting node server");
 
+  LOG(INFO, "Explorer: http://%s:%d/", ctx->config->network.host,
+      ctx->config->network.port);
+
+  set_node_signal_handlers();
+
+  launch_db(ctx);
+
+  db_verify_data(ctx);
+
   if (ctx->config->tunnel.enable) {
     LOG(INFO, "TUNNEL ENABLED");
 
@@ -269,15 +278,6 @@ result_t run_node_server(node_ctx_t *ctx) {
 
     LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
   }
-
-  LOG(INFO, "Explorer: http://%s:%d/", ctx->config->network.host,
-      ctx->config->network.port);
-
-  set_node_signal_handlers();
-
-  launch_db(ctx);
-
-  db_verify_data(ctx);
 
   pthread_t server_thread;
 

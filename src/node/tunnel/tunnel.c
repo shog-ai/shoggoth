@@ -21,7 +21,7 @@
 #include "../../utils/utils.h"
 #include "../manifest/manifest.h"
 #include "../node.h"
-#include "db.h"
+#include "../db/db.h"
 
 #include <assert.h>
 #include <errno.h>

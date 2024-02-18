@@ -205,6 +205,10 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
   result_t res_manifest = json_string_to_node_manifest(manifest_str);
   node_manifest_t *manifest = PROPAGATE(res_manifest);
 
+  if (manifest->node_id == ctx->manifest->node_id) {
+    return ERR("peer node_id is same as local node_id");
+  }
+
   if (!valid_node_id(manifest)) {
     free_node_manifest(manifest);
     return ERR("peer manifest node_id invalid due to public key mismatch");

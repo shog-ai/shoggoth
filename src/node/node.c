@@ -275,6 +275,7 @@ result_t run_node_server(node_ctx_t *ctx) {
                                         ":", tunnel_port, NULL);
 
     ctx->config->network.public_host = new_public_host;
+    ctx->manifest->public_host = strdup(new_public_host);
 
     LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
   }

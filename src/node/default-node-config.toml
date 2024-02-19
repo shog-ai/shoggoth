@@ -29,4 +29,4 @@ updater_frequency = 5 # seconds
 
 [tunnel]
 server = "tunnel.shog.ai"
-enable = true
+enable = false

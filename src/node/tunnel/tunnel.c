@@ -19,9 +19,10 @@
 #include "../../include/sonic.h"
 #include "../../json/json.h"
 #include "../../utils/utils.h"
+#include "../db/db.h"
 #include "../manifest/manifest.h"
 #include "../node.h"
-#include "../db/db.h"
+#include "tunnel.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -30,6 +31,57 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+void *tunnel_monitor(void *thread_arg) {
+  tunnel_monitor_thread_args_t *arg =
+      (tunnel_monitor_thread_args_t *)thread_arg;
+
+  for (;;) {
+    if (arg->ctx->should_exit) {
+
+      return NULL;
+    }
+
+    sleep(30);
+
+    if (arg->ctx->should_exit) {
+      return NULL;
+    }
+
+    // LOG(INFO, "tunnel monitor!!");
+
+    char url[256];
+    sprintf(url, "%s/api/get_manifest", arg->ctx->config->network.public_host);
+
+    sonic_response_t *resp = sonic_get(url);
+    if (resp->failed) {
+      LOG(INFO, "request failed: %s", resp->error);
+
+      LOG(ERROR, "tunnel host unreachable, restarting tunnel client");
+
+      result_t res = launch_tunnel_client(arg->ctx);
+      if (is_err(res)) {
+        LOG(ERROR, "could not restart tunnel client: %s", res.error_message);
+      }
+
+      free_result(res);
+
+    } else {
+      char *response_body =
+          malloc((resp->response_body_size + 1) * sizeof(char));
+      strncpy(response_body, resp->response_body, resp->response_body_size);
+      response_body[resp->response_body_size] = '\0';
+
+      // LOG(INFO, "tunnel api manifest: %s", response_body);
+
+      free(resp->response_body);
+      sonic_free_response(resp);
+      free(response_body);
+    }
+  }
+
+  return NULL;
+}
 
 result_t kill_tunnel_client(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];
@@ -73,9 +125,9 @@ result_t kill_tunnel_client(node_ctx_t *ctx) {
   return OK(NULL);
 }
 
-void launch_tunnel_client(node_ctx_t *ctx) {
-  result_t res_kill = kill_tunnel_client(ctx);
-  UNWRAP(res_kill);
+result_t launch_tunnel_client(node_ctx_t *ctx) {
+  // result_t res_kill = kill_tunnel_client(ctx);
+  // UNWRAP(res_kill);
 
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
@@ -134,8 +186,8 @@ void launch_tunnel_client(node_ctx_t *ctx) {
     close(logs_fd);
 
     char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
-    PANIC("error occured while launching tunnel executable. LOGS:\n%s",
-          tunnel_logs);
+    return ERR("error occured while launching tunnel executable. LOGS:\n%s",
+               tunnel_logs);
   } else {
     // PARENT PROCESS
 
@@ -149,11 +201,32 @@ void launch_tunnel_client(node_ctx_t *ctx) {
     } else if (child_status == 0) {
     } else {
       char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
-      PANIC(
-          "error occured while launching tunnel executable.\nTUNNEL LOGS:\n%s",
-          tunnel_logs);
+      return ERR("error occured while launching tunnel executable.\nTUNNEL "
+                 "LOGS:\n%s",
+                 tunnel_logs);
     }
+
+    char node_runtime_path[FILE_PATH_SIZE];
+    utils_get_node_runtime_path(ctx, node_runtime_path);
+
+    char tunnel_logs_path[FILE_PATH_SIZE];
+    sprintf(tunnel_logs_path, "%s/tunnel_logs.txt", node_runtime_path);
+
+    char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
+    char *last_colon = strrchr(tunnel_logs, ':');
+    char *tunnel_port = last_colon + 1;
+    tunnel_port[strlen(tunnel_port) - 1] = '\0';
+
+    char *new_public_host = string_from("http://", ctx->config->tunnel.server,
+                                        ":", tunnel_port, NULL);
+
+    ctx->config->network.public_host = new_public_host;
+    ctx->manifest->public_host = strdup(new_public_host);
+
+    LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
   }
+
+  return OK(NULL);
 }
 
 result_t kill_tunnel_server(node_ctx_t *ctx) {
@@ -270,9 +343,9 @@ void launch_tunnel_server(node_ctx_t *ctx) {
     } else if (child_status == 0) {
     } else {
       char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
-      PANIC(
-          "error occured while launching tunnel executable.\nTUNNEL LOGS:\n%s",
-          tunnel_logs);
+      PANIC("error occured while launching tunnel executable.\nTUNNEL "
+            "LOGS:\n%s",
+            tunnel_logs);
     }
   }
 }

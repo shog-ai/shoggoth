@@ -32,5 +32,5 @@ enable = true
 id = "SHOG590ea3b939a7fe15b342ff74fb192a7e"
 
 [tunnel]
-server = "bore.pub"
+server = "tunnel.shog.ai"
 enable = false

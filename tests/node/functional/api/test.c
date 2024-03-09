@@ -21,25 +21,26 @@ void test_api_get_dht(test_t *test) {
   sonic_free_response(resp);
 }
 
-VALUE_T setup_start_node() {
-  INIT_SETUP(process_t);
-  free(SETUP_VALUE);
-
-  char working_dir[1024];
-  getcwd(working_dir, sizeof(working_dir));
-
-  char runtime_path[1054];
-  sprintf(runtime_path, "%s/runtime", working_dir);
-
-  process_t *node_process = RUN_EXECUTABLE(
-      "./node-output.txt", "./shog", "node", "run", "-r", runtime_path, NULL);
-
-  SETUP_VALUE = node_process;
-
-  sleep(5);
-
-  SETUP_RETURN();
-}
+// VALUE_T setup_start_node() {
+//   INIT_SETUP(process_t);
+//   free(SETUP_VALUE);
+//
+//   char working_dir[1024];
+//   getcwd(working_dir, sizeof(working_dir));
+//
+//   char runtime_path[1054];
+//   sprintf(runtime_path, "%s/runtime", working_dir);
+//
+//   process_t *node_process = RUN_EXECUTABLE(
+//       "./node-output.txt", "./shog", "node", "run", "-r", runtime_path,
+//       NULL);
+//
+//   SETUP_VALUE = node_process;
+//
+//   sleep(5);
+//
+//   SETUP_RETURN();
+// }
 
 void teardown_stop_node(test_t *test) {
   if (test->test_failed) {

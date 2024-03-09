@@ -13,7 +13,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #ifdef __linux__
+#ifndef __android__
 #include <execinfo.h>
+#endif
 #endif
 
 #define RED_COLOR 227, 61, 45
@@ -37,6 +39,7 @@ void modify_symbol_string(char *input) {
 void print_backtrace() {
 #ifndef _WIN32
 #ifndef __APPLE__
+#ifndef __android__
   void *call_stack[10];
   int num_frames = backtrace(call_stack, 10);
   char **symbols = backtrace_symbols(call_stack, num_frames);
@@ -71,6 +74,7 @@ void print_backtrace() {
 
   free(symbols);
   return;
+#endif
 #endif
 #endif
   printf("No backtrace for this platform \n");

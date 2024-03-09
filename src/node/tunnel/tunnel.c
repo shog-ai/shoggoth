@@ -42,7 +42,7 @@ void *tunnel_monitor(void *thread_arg) {
       return NULL;
     }
 
-    sleep(30);
+    sleep(5);
 
     if (arg->ctx->should_exit) {
       return NULL;
@@ -59,7 +59,13 @@ void *tunnel_monitor(void *thread_arg) {
 
       LOG(ERROR, "tunnel host unreachable, restarting tunnel client");
 
-      result_t res = launch_tunnel_client(arg->ctx);
+      result_t res_kill = kill_tunnel_client(arg->ctx);
+      UNWRAP(res_kill);
+
+      LOG(INFO, "using tunnel port: " U64_FORMAT_SPECIFIER,
+          arg->ctx->tunnel_port);
+
+      result_t res = launch_tunnel_client(arg->ctx, arg->ctx->tunnel_port);
       if (is_err(res)) {
         LOG(ERROR, "could not restart tunnel client: %s", res.error_message);
       }
@@ -83,6 +89,7 @@ void *tunnel_monitor(void *thread_arg) {
   return NULL;
 }
 
+// FIXME: the process is not terminating
 result_t kill_tunnel_client(node_ctx_t *ctx) {
   char node_runtime_path[FILE_PATH_SIZE];
   utils_get_node_runtime_path(ctx, node_runtime_path);
@@ -97,27 +104,27 @@ result_t kill_tunnel_client(node_ctx_t *ctx) {
     int pid = atoi(tunnel_pid_str);
     free(tunnel_pid_str);
 
-    kill(pid, SIGINT);
+    kill(pid, SIGKILL);
 
-    u64 kill_count = 0;
+    // u64 kill_count = 0;
 
-    for (;;) {
-      int result = kill(pid, 0);
+    // for (;;) {
+    //   int result = kill(pid, 0);
 
-      if (result == -1 && errno == ESRCH) {
-        if (kill_count > 0) {
-          LOG(INFO, "tunnel process stopped");
-        }
+    //   if (result == -1 && errno == ESRCH) {
+    //     if (kill_count > 0) {
+    //       LOG(INFO, "tunnel process stopped");
+    //     }
 
-        break;
-      }
+    //     break;
+    //   }
 
-      LOG(INFO, "Waiting for tunnel process to exit ...");
+    //   LOG(INFO, "Waiting for tunnel process to exit ...");
 
-      sleep(1);
+    //   sleep(1);
 
-      kill_count++;
-    }
+    //   kill_count++;
+    // }
 
     delete_file(tunnel_pid_path);
   }
@@ -125,7 +132,7 @@ result_t kill_tunnel_client(node_ctx_t *ctx) {
   return OK(NULL);
 }
 
-result_t launch_tunnel_client(node_ctx_t *ctx) {
+result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
   // result_t res_kill = kill_tunnel_client(ctx);
   // UNWRAP(res_kill);
 
@@ -180,8 +187,16 @@ result_t launch_tunnel_client(node_ctx_t *ctx) {
     char local_port[100];
     sprintf(local_port, "%d", ctx->config->network.port);
 
-    execlp(tunnel_executable, tunnel_executable, "local", local_port, "--to",
-           ctx->config->tunnel.server, NULL);
+    if (custom_port == 0) {
+      execlp(tunnel_executable, tunnel_executable, "local", local_port, "--to",
+             ctx->config->tunnel.server, NULL);
+    } else {
+      char custom_port_str[100];
+      sprintf(custom_port_str, U64_FORMAT_SPECIFIER, custom_port);
+
+      execlp(tunnel_executable, tunnel_executable, "local", local_port, "--to",
+             ctx->config->tunnel.server, "--port", custom_port_str, NULL);
+    }
 
     close(logs_fd);
 
@@ -217,8 +232,12 @@ result_t launch_tunnel_client(node_ctx_t *ctx) {
     char *tunnel_port = last_colon + 1;
     tunnel_port[strlen(tunnel_port) - 1] = '\0';
 
+    ctx->tunnel_port = strtoull(tunnel_port, NULL, 10);
+
     char *new_public_host = string_from("http://", ctx->config->tunnel.server,
                                         ":", tunnel_port, NULL);
+
+    free(tunnel_logs);
 
     ctx->config->network.public_host = new_public_host;
     ctx->manifest->public_host = strdup(new_public_host);

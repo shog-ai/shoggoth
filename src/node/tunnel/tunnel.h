@@ -21,7 +21,9 @@ void *tunnel_monitor(void *thread_arg);
 
 result_t kill_tunnel_server(node_ctx_t *ctx);
 
-result_t launch_tunnel_client(node_ctx_t *ctx);
+result_t kill_tunnel_client(node_ctx_t *ctx);
+
+result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port);
 
 void launch_tunnel_server(node_ctx_t *ctx);
 

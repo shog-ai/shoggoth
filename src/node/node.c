@@ -258,7 +258,7 @@ result_t run_node_server(node_ctx_t *ctx) {
   if (ctx->config->tunnel.enable) {
     LOG(INFO, "TUNNEL ENABLED");
 
-    UNWRAP(launch_tunnel_client(ctx));
+    UNWRAP(launch_tunnel_client(ctx, 0));
   }
 
   pthread_t server_thread;

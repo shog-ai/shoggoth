@@ -8,6 +8,10 @@ endif
 
 CFLAGS = -g
 
+ifdef ANDROID
+CFLAGS += -D__android__
+endif
+
 .PHONY: ./target/libnetlibc.a
 
 all: ./target/libnetlibc.a

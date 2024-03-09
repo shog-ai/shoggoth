@@ -91,6 +91,7 @@ typedef struct NODE_CTX {
   pid_t node_pid;
   pid_t tunnel_client_pid;
   pid_t tunnel_server_pid;
+  u64 tunnel_port;
 
   char *runtime_path;
 

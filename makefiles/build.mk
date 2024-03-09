@@ -16,6 +16,10 @@ LD = $(CC)
 CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ./netlibc/include
 CFLAGS_FLAT = -DNDEBUG
 
+ifdef ANDROID
+CFLAGS += -D__android__
+endif
+
 ifeq ($(CC), gcc)
 CFLAGS += -Wno-format-overflow -Wno-format-truncation
 else ifeq (gcc, $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]; then echo "gcc" ; elif [ "$$(cc --help 2>&1 | grep -o -m 1 'clang')" = "clang" ]; then echo "clang"; else echo "NONE"; fi))

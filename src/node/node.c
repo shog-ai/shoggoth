@@ -258,26 +258,7 @@ result_t run_node_server(node_ctx_t *ctx) {
   if (ctx->config->tunnel.enable) {
     LOG(INFO, "TUNNEL ENABLED");
 
-    launch_tunnel_client(ctx);
-
-    char node_runtime_path[FILE_PATH_SIZE];
-    utils_get_node_runtime_path(ctx, node_runtime_path);
-
-    char tunnel_logs_path[FILE_PATH_SIZE];
-    sprintf(tunnel_logs_path, "%s/tunnel_logs.txt", node_runtime_path);
-
-    char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
-    char *last_colon = strrchr(tunnel_logs, ':');
-    char *tunnel_port = last_colon + 1;
-    tunnel_port[strlen(tunnel_port) - 1] = '\0';
-
-    char *new_public_host = string_from("http://", ctx->config->tunnel.server,
-                                        ":", tunnel_port, NULL);
-
-    ctx->config->network.public_host = new_public_host;
-    ctx->manifest->public_host = strdup(new_public_host);
-
-    LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
+    UNWRAP(launch_tunnel_client(ctx, 0));
   }
 
   pthread_t server_thread;
@@ -293,6 +274,20 @@ result_t run_node_server(node_ctx_t *ctx) {
   dht_thread_args_t dht_thread_args = {.ctx = ctx};
   if (pthread_create(&dht_thread, NULL, dht_updater, &dht_thread_args) != 0) {
     PANIC("could not spawn dht thread");
+  }
+
+  if (ctx->config->tunnel.enable) {
+    LOG(INFO, "Starting tunnel monitor");
+
+    pthread_t tunnel_monitor_thread;
+
+    tunnel_monitor_thread_args_t tunnel_monitor_thread_args = {.ctx = ctx};
+    if (pthread_create(&tunnel_monitor_thread, NULL, tunnel_monitor,
+                       &tunnel_monitor_thread_args) != 0) {
+      PANIC("could not spawn tunnel monitor thread");
+    }
+
+    pthread_join(tunnel_monitor_thread, NULL);
   }
 
   pthread_join(server_thread, NULL);

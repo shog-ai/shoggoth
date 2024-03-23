@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "../json/json.h"
-#include "../templating/templating.h"
+#include "../../handlebazz/handlebazz.h"
 
 typedef enum {
   EXPLORER,

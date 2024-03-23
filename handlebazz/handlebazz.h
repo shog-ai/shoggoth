@@ -11,7 +11,8 @@
 #ifndef SHOG_TEMPLATES
 #define SHOG_TEMPLATES
 
-#include "../include/cjson.h"
+#include <netlibc.h>
+#include <netlibc/error.h>
 
 typedef struct {
   char *template_string;
@@ -27,7 +28,7 @@ typedef struct PARTIAL_TEMPLATE {
 } template_partial_t;
 
 result_t template_add_partial(template_t *parent, char *partial_name,
-                          template_t *partial_template);
+                              template_t *partial_template);
 
 template_t *create_template(char *template_string, char *template_data);
 
@@ -35,7 +36,7 @@ void free_template(template_t *template_object);
 
 result_t cook_template(template_t *template_object);
 
-result_t cook_block_template(template_t* template_object, char* template_string, cJSON *parent_data,
-                          cJSON *block_data, u64 depth);
+result_t cook_block_template(template_t *template_object, char *template_string,
+                             void *parent_data, void *block_data, u64 depth);
 
 #endif

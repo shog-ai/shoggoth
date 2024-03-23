@@ -45,11 +45,11 @@ MAIN_OBJ = $(TARGET_DIR)/main.o
 # OBJS += $(TARGET_DIR)/args.o
 OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/studio.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/tunnel.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
 OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/og.o
-OBJS += $(TARGET_DIR)/server_explorer.o $(TARGET_DIR)/templating.o
+OBJS += $(TARGET_DIR)/server_explorer.o
 
 # static libraries
-STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb.a
-STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb-sanitized.a
+STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb.a
+STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb-sanitized.a
 
 .PHONY: target-dir shogdb model-server $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
@@ -76,6 +76,10 @@ configure-ubuntu:
 $(TARGET_DIR)/tuwi.a:
 	cd ./tuwi/ && make
 	cp ./tuwi/target/libtuwi.a $(TARGET_DIR)/tuwi.a
+	
+$(TARGET_DIR)/libhandlebazz.a:
+	cd ./handlebazz/ && make
+	cp ./handlebazz/target/libhandlebazz.a $(TARGET_DIR)/libhandlebazz.a
 
 $(TARGET_DIR)/libnetlibc.a:
 	cd ./netlibc/ && make
@@ -150,7 +154,6 @@ build-objects-debug:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/args/args.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/json/json.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/toml/toml.c
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/templating/templating.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/utils/utils.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
 
@@ -182,7 +185,6 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -DVERSION="\"$(VERSION)\"" -c $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/json/json.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/toml/toml.c
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/templating/templating.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/args/args.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/utils/utils.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations $(CFLAGS_SANITIZE) -c $(SRC_DIR)/openssl/openssl.c 
@@ -216,7 +218,6 @@ build-objects-flat:
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/args/args.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/json/json.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/toml/toml.c
-	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/templating/templating.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/utils/utils.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -U _WIN32 -Wno-deprecated-declarations -c $(SRC_DIR)/openssl/openssl.c 
 

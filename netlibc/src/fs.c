@@ -182,7 +182,7 @@ char *get_file_extension(char *file_path) {
 }
 
 /****
- * returns the content of a file as an allocated string
+ * returns the content of a file as an allocated null-terminated string
  *
  ****/
 result_t read_file_to_string(const char *file_path) {

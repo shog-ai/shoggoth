@@ -8,9 +8,10 @@
  *
  ****/
 
-#include "../utils/utils.h"
+// #include "../utils/utils.h"
 
-#include "templating.h"
+#include "../handlebazz.h"
+#include "../../src/include/cjson.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -301,7 +302,7 @@ result_t cook_template(template_t *template_object) {
 }
 
 result_t cook_block_template(template_t *template_object, char *template_string,
-                             cJSON *parent_data, cJSON *block_data, u64 depth) {
+                             void *parent_data, void *block_data, u64 depth) {
 
   char *buffer = NULL;
   u64 buffer_size = 0;

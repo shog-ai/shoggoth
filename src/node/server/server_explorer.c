@@ -8,7 +8,7 @@
  *
  ****/
 #include "../../json/json.h"
-#include "../../templating/templating.h"
+#include "../../../handlebazz/handlebazz.h"
 #include "../db/db.h"
 #include "api.h"
 

@@ -5,7 +5,7 @@
 #include "../include/cjson.h"
 #include "../json/json.h"
 #include "../md_to_html/md_to_html.h"
-#include "../templating/templating.h"
+#include "../../handlebazz/handlebazz.h"
 #include "../utils/utils.h"
 
 #include "docs_api.h"

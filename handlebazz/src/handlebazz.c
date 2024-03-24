@@ -13,6 +13,8 @@
 #include "../handlebazz.h"
 #include "../../src/include/cjson.h"
 
+#include <netlibc/log.h>
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -431,20 +433,37 @@ result_t cook_block_template(template_t *template_object, char *template_string,
             i++;
           }
 
-          com = (template_command_t){.command_type = IF_CONDITION,
-                                     .raw_command = command_buffer,
-                                     .data = parent_data,
-                                     .key = command_key,
+          if (depth == 0) {
+            com = (template_command_t){.command_type = IF_CONDITION,
+                                       .raw_command = command_buffer,
+                                       .data = parent_data,
+                                       .key = command_key,
 
-                                     //
-                                     .condition_variable = condition_variable,
-                                     .condition_body = condition_body};
+                                       //
+                                       .condition_variable = condition_variable,
+                                       .condition_body = condition_body};
 
-          result_t res =
-              process_command(template_object, &buffer, &buffer_size, com);
+            result_t res =
+                process_command(template_object, &buffer, &buffer_size, com);
 
-          free(condition_body);
-          PROPAGATE(res);
+            free(condition_body);
+            PROPAGATE(res);
+          } else {
+            com = (template_command_t){.command_type = IF_CONDITION,
+                                       .raw_command = command_buffer,
+                                       .data = block_data,
+                                       .key = command_key,
+
+                                       //
+                                       .condition_variable = condition_variable,
+                                       .condition_body = condition_body};
+
+            result_t res =
+                process_command(template_object, &buffer, &buffer_size, com);
+
+            free(condition_body);
+            PROPAGATE(res);
+          }
         }
       } else if (command_key[0] == '>' ||
                  (strlen(command_key) > 5 &&

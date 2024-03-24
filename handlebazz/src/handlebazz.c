@@ -415,7 +415,7 @@ result_t cook_block_template(template_t *template_object, char *template_string,
                 template_string[i - 4] == '/') {
 
               if (nested_child_conditions == 0) {
-                condition_body[condition_body_size - 8] = '\0';
+                condition_body[condition_body_size - 7] = '\0';
 
                 break;
               } else {

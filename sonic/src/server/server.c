@@ -758,7 +758,6 @@ void extract_request_method(const char *head_buffer, char request_method[]) {
   } else {
     // No space found in the header; invalid HTTP request
     printf("EROR: Invalid HTTP request header.\n");
-    exit(1);
   }
 }
 
@@ -772,7 +771,6 @@ void extract_request_path(const char *head_buffer, char request_path[]) {
   if (start == NULL) {
     // If no space is found, return an empty string
     printf("ERROR: when parsing request path, no space was found in head \n");
-    exit(1);
   }
 
   start++; // Move to the character after the first space
@@ -782,7 +780,6 @@ void extract_request_path(const char *head_buffer, char request_path[]) {
     // If no second space is found, return an empty string
     printf("ERROR: when parsing request path, no second space was found in "
            "head \n");
-    exit(1);
   }
 
   // Calculate the length of the request path

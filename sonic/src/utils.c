@@ -706,7 +706,7 @@ char *content_type_to_string(sonic_content_type_t content_type) {
   } else if (content_type == MIME_IMAGE_JPEG) {
     return "image/jpeg";
   } else if (content_type == MIME_IMAGE_SVG) {
-    return "image/svg";
+    return "image/svg+xml";
   } else {
     printf("ERROR: unhandled content type \n");
     exit(1);

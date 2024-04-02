@@ -1,6 +1,6 @@
 MAKEFLAGS += --silent
 
-VERSION = v0.3.2
+VERSION = v0.4.5
 
 RUNTIME_PATH = $$HOME/shoggoth
 

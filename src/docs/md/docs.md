@@ -47,7 +47,7 @@ You can download Shoggoth from [https://shog.ai/download.html](https://shog.ai/d
 Once the download is complete, verify the file hash with the following command to ensure it was not tampered with in transit:
 
 ```bash
-sha256sum shoggoth-v0.3.2-Linux-x86_64.zip
+sha256sum shoggoth-v0.4.5-Linux-x86_64.zip
 ```
 
 Ensure that the hash is the same as the one displayed on the download page.
@@ -55,7 +55,7 @@ Ensure that the hash is the same as the one displayed on the download page.
 Extract the zip archive into your home directory:
 
 ```bash
-unzip -o -q shoggoth-v0.3.2-Linux-x86_64.zip -d $HOME/shoggoth/
+unzip -o -q shoggoth-v0.4.5-Linux-x86_64.zip -d $HOME/shoggoth/
 ```
 
 Your home directory should now contain a `shoggoth` directory. Shoggoth uses this directory as the runtime where essential data is stored.
@@ -99,17 +99,17 @@ Choose one of the following options to download the source code:
 Using git:
 
 ```bash
-git clone -b 0.3.2 https://github.com/shog-ai/shoggoth --depth 1 shoggoth-source
+git clone -b 0.4.5 https://github.com/shog-ai/shoggoth --depth 1 shoggoth-source
 ```
 
 Or download from ShogAI:
 
 ```bash
-wget https://shog.ai/download/v0.3.2/shoggoth-source-v0.3.2.zip
+wget https://shog.ai/download/v0.4.5/shoggoth-source-v0.4.5.zip
 ```
 
 ```bash
-unzip -o -q ./shoggoth-source-v0.3.2.zip -d ./shoggoth-source
+unzip -o -q ./shoggoth-source-v0.4.5.zip -d ./shoggoth-source
 ```
 
 <div id="build-with-make"></div>

@@ -37,6 +37,7 @@ void respond_error(sonic_server_request_t *req, char *error_message) {
 
 void api_download_route(sonic_server_request_t *req) {
   char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
+  char *label = sonic_get_path_segment(req, "label");
 
   if (strlen(shoggoth_id) != 68) {
     respond_error(req, "invalid Shoggoth ID");
@@ -81,8 +82,18 @@ void api_download_route(sonic_server_request_t *req) {
     sonic_server_response_t *resp =
         sonic_new_file_response(STATUS_200, pin_dir_path);
 
+    char *disposition;
+    if (label != NULL) {
+      disposition = string_from("attachment;filename=\"", label, "\"", NULL);
+      sonic_response_add_header(resp, "Content-Disposition", disposition);
+    }
+
     result_t res = sonic_send_response(req, resp);
     free_result(res);
+
+    if (label != NULL) {
+      free(disposition);
+    }
 
     sonic_free_server_response(resp);
   }

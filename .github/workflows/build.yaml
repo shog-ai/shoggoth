@@ -1,11 +1,11 @@
-name: build
+name: release
 
 on:
   release:
     types: [published]
 
 jobs:
-  build-ubuntu:
+  release-ubuntu:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -23,5 +23,27 @@ jobs:
       with:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./target/shoggoth-release-v0.4.5-Linux-x86_64.zip
-        asset_name: release.zip
+        asset_name: release-linux.zip
+        asset_content_type: application/zip
+
+
+  release-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: configure
+      run: ./configure
+    
+    - name: build with make
+      run: make
+  
+    - name: create release assets
+      id: create_release_asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./target/shoggoth-release-v0.4.5-Darwin-x86_64.zip
+        asset_name: release-macos.zip
         asset_content_type: application/zip

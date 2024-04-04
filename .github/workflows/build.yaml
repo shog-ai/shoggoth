@@ -1,9 +1,8 @@
 name: build
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [created]
 
 jobs:
   build-ubuntu:
@@ -12,16 +11,17 @@ jobs:
     - uses: actions/checkout@v3
     - name: configure
       run: ./configure
+    
     - name: build with make
       run: make
   
-  build-windows:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure-windows
-    - name: build with make
-      run: make windows
-
-
+    - name: create release assets
+      id: create_release_asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./target/shoggoth-release-v0.4.5-Linux-x86_64.zip
+        asset_name: release.zip
+            asset_content_type: application/zip

@@ -6,7 +6,7 @@ if command -v brew &> /dev/null; then
 elif command -v apt &> /dev/null; then
     # ubuntu / debian
     sudo apt install gcc make build-essential libssl-dev uuid-dev pkgconf curl
-    curl https://sh.rustup.rs -sSf | sh
+    curl https://sh.rustup.rs -sSf -y | sh
 elif command -v xbps-install &> /dev/null; then
     # void linux
     xbps-install pkg-config gcc make which openssl openssl-devel libuuid libuuid-devel libsanitizer-devel findutils zip curl

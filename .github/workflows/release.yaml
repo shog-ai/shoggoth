@@ -14,6 +14,10 @@ jobs:
     
     - name: build with make
       run: make
+
+    - name: Read Version from version.txt
+      id: read_version
+      run: echo "::set-output name=version::$(cat version.txt)"
   
     - name: create release assets
       id: create_release_asset
@@ -22,7 +26,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./target/shoggoth-release-v0.4.5-Linux-x86_64.zip
+        asset_path: ./target/shoggoth-release-v${{ steps.read_version.outputs.version }}-Linux-x86_64.zip
         asset_name: release-linux.zip
         asset_content_type: application/zip
 
@@ -44,6 +48,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./target/shoggoth-release-v0.4.5-Darwin-x86_64.zip
+        asset_path: ./target/shoggoth-release-v${{ steps.read_version.outputs.version }}-Darwin-x86_64.zip
         asset_name: release-macos.zip
         asset_content_type: application/zip

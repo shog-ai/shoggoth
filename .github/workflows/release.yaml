@@ -41,6 +41,10 @@ jobs:
     - name: build with make
       run: make
   
+    - name: Read Version from version.txt
+      id: read_version
+      run: echo "::set-output name=version::$(cat version.txt)"
+     
     - name: create release assets
       id: create_release_asset
       uses: actions/upload-release-asset@v1

@@ -14,7 +14,9 @@ jobs:
     - name: configure
       run: ./configure
     - name: build with make
-      run: make
+      run: make dev
+    - name: run tests
+      run: make test
   
   build-macos:
     runs-on: macos-latest
@@ -23,15 +25,8 @@ jobs:
     - name: configure
       run: ./configure
     - name: build with make
-      run: make
+      run: make dev
+    - name: run tests
+      run: make test
   
-  # build-windows:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: configure
-  #     run: ./configure-windows
-  #   - name: build with make
-  #     run: make windows
-
 

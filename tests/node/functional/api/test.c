@@ -32,7 +32,7 @@ VALUE_T setup_start_node() {
   sprintf(runtime_path, "%s/runtime", working_dir);
 
   process_t *node_process = RUN_EXECUTABLE(
-      "./node-output.txt", "./shog", "node", "run", "-r", runtime_path, NULL);
+      "./node-output.txt", "./shog", "run", "-r", runtime_path, NULL);
 
   SETUP_VALUE = node_process;
 

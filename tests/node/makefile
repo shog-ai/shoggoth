@@ -11,7 +11,7 @@ CFLAGS += -fsanitize=address,undefined,leak,undefined
 LDFLAGS += -lasan -lubsan 
 endif
 
-CFLAGS += -I ../../lib/netlibc/include
+CFLAGS += -I ../../netlibc/include
 LDFLAGS += $$(pkg-config --cflags --libs uuid) $$(pkg-config --libs openssl)
 
 TARGET_DIR = ../../target

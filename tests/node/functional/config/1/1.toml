@@ -16,29 +16,21 @@ enable = true
 
 [api]
 enable = true
-rate_limiter_requests = 100000
+rate_limiter_requests = 1000
 rate_limiter_duration = 10000 # milliseconds
 
 [storage]
-max_profile_size = 30 # Megabytes
-limit = 2 # Gigabytes
-
-[garbage_collector]
-frequency = 240 # seconds
-enable = true
-profile_expiry = 30 # days
+max_resource_size = 50 # Gigabytes
+limit = 100 # Gigabytes
 
 [dht]
 enable_updater = true
 updater_frequency = 5 # seconds
 
-[pins]
-allow_publish = true
-enable_downloader = true
-enable_updater = true
-updater_frequency = 5 # seconds
-downloader_frequency = 5 # seconds
-
 [update]
 enable = true
-id = "SHOGbf74d28baf7a281a81e412420090b91c"
+id = "SHOG590ea3b939a7fe15b342ff74fb192a7e"
+
+[tunnel]
+server = "tunnel.shog.ai"
+enable = false

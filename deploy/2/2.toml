@@ -33,4 +33,4 @@ id = "SHOG590ea3b939a7fe15b342ff74fb192a7e"
 
 [tunnel]
 server = "tunnel.shog.ai"
-enable = true
+enable = false

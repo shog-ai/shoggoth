@@ -10,15 +10,15 @@
 void test_discovery(test_t *test) {
   sonic_response_t *resp = sonic_get("http://127.0.0.1:6969/api/get_dht");
   ASSERT(!resp->failed, "request 1 failed");
-  ASSERT_EQ((int)resp->response_body_size, 935, NULL);
+  ASSERT_EQ((int)resp->response_body_size, 1156, NULL);
   if (resp->response_body_size > 0) {
     free(resp->response_body);
   }
   sonic_free_response(resp);
 
-  resp = sonic_get("http://127.0.0.1:3969/api/get_dht");
+  resp = sonic_get("http://127.0.0.1:4969/api/get_dht");
   ASSERT(!resp->failed, "request 2 failed");
-  ASSERT_EQ((int)resp->response_body_size, 935, NULL);
+  ASSERT_EQ((int)resp->response_body_size, 1156, NULL);
   if (resp->response_body_size > 0) {
     free(resp->response_body);
   }
@@ -26,7 +26,7 @@ void test_discovery(test_t *test) {
 
   resp = sonic_get("http://127.0.0.1:5969/api/get_dht");
   ASSERT(!resp->failed, "request 3 failed");
-  ASSERT_EQ((int)resp->response_body_size, 935, NULL);
+  ASSERT_EQ((int)resp->response_body_size, 1156, NULL);
   if (resp->response_body_size > 0) {
     free(resp->response_body);
   }
@@ -48,17 +48,17 @@ VALUE_T setup_start_triple_nodes() {
 
   sprintf(node_path, "%s/node2", working_dir);
   process_t *node_process2 = RUN_EXECUTABLE(
-      "./node-output2.txt", "./shog", "node", "run", "-r", node_path, NULL);
+      "./node-output2.txt", "./shog", "run", "-r", node_path, NULL);
 
   sleep(5);
 
   sprintf(node_path, "%s/node1", working_dir);
   process_t *node_process1 = RUN_EXECUTABLE(
-      "./node-output1.txt", "./shog", "node", "run", "-r", node_path, NULL);
+      "./node-output1.txt", "./shog", "run", "-r", node_path, NULL);
 
   sprintf(node_path, "%s/node3", working_dir);
   process_t *node_process3 = RUN_EXECUTABLE(
-      "./node-output3.txt", "./shog", "node", "run", "-r", node_path, NULL);
+      "./node-output3.txt", "./shog", "run", "-r", node_path, NULL);
 
   SETUP_VALUE->processes = malloc(3 * sizeof(process_t *));
   SETUP_VALUE->count = 3;
@@ -116,7 +116,7 @@ void test_suite(suite_t *suite) {
 }
 
 int main(int argc, char **argv) {
-  CAMEL_BEGIN(INTEGRATION);
+  CAMEL_BEGIN(FUNCTIONAL);
 
   ADD_SUITE(test_suite);
 

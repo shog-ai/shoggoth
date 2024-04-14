@@ -3,7 +3,7 @@ CFLAGS += -fsanitize=address,undefined,leak,undefined
 LDFLAGS += -lasan -lubsan 
 endif
 
-CFLAGS +=
+CFLAGS += -g -I ../../../netlibc/include
 LDFLAGS += $$(pkg-config --libs openssl) $(TARGET_DIR)/libnetlibc.a
 
 
@@ -55,8 +55,8 @@ build-functional-tests: target-dir build camel large-test-file
 	$(MAKE) build-functional-test-serve
 
 build-functional-test-serve:
-	$(CC) -g ./functional/serve/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/functional/serve/test 
-	$(CC) -g ./functional/serve/server.c $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/functional/serve/server
+	$(CC) $(CFLAGS) ./functional/serve/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/functional/serve/test 
+	$(CC) $(CFLAGS) ./functional/serve/server.c $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/functional/serve/server
 
 #========================================================================================
 
@@ -67,7 +67,7 @@ run-unit-tests:
 	cd $(TARGET_DIR)/tests/server/unit/ && ./test_server
 	
 build-unit-tests: target-dir build camel
-	$(CC) -g ./unit/test_server.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/unit/test_server 
+	$(CC) $(CFLAGS) ./unit/test_server.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/unit/test_server 
 	
 #========================================================================================
 
@@ -77,7 +77,7 @@ run-integration-tests:
 	cd $(TARGET_DIR)/tests/server/integration/ && ./test
 	
 build-integration-tests: target-dir build camel
-	$(CC) -g ./integration/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/integration/test 
+	$(CC) $(CFLAGS) ./integration/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/integration/test 
 	
 #========================================================================================
 
@@ -87,7 +87,7 @@ run-fuzz-tests:
 	cd $(TARGET_DIR)/tests/server/fuzz/ && ./test
 	
 build-fuzz-tests: target-dir build camel
-	$(CC) -g ./fuzz/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/fuzz/test 
+	$(CC) $(CFLAGS) ./fuzz/test.c $(TARGET_DIR)/camel.a $(LIBSONIC) $(LDFLAGS) -o $(TARGET_DIR)/tests/server/fuzz/test 
 	
 #========================================================================================
 

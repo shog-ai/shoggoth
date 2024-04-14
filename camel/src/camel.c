@@ -13,6 +13,7 @@
 #include "../include/tuwi.h"
 
 #include <netlibc/fs.h>
+#include <netlibc/log.h>
 
 #include <fcntl.h>
 #include <pthread.h>
@@ -25,39 +26,42 @@
 #include <unistd.h>
 
 bool __files_equal(char *first_file, char *second_file) {
-  char command1[1024]; // Buffer for the first checksum command
-  char command2[1024]; // Buffer for the second checksum command
+  FILE *file1 = fopen(first_file, "rb");
+  FILE *file2 = fopen(second_file, "rb");
 
-  // Create the shell command to calculate the checksum of file1
-  snprintf(command1, sizeof(command1), "md5sum \"%s\" 2>/dev/null", first_file);
-
-  // Create the shell command to calculate the checksum of file2
-  snprintf(command2, sizeof(command2), "md5sum \"%s\" 2>/dev/null",
-           second_file);
-
-  // Execute the shell commands using popen and capture their output
-  FILE *fp1 = popen(command1, "r");
-  FILE *fp2 = popen(command2, "r");
-
-  if (fp1 == NULL || fp2 == NULL) {
-    perror("popen");
-    exit(EXIT_FAILURE);
+  if (file1 == NULL || file2 == NULL) {
+    perror("Error opening file");
+    PANIC("could not open files");
   }
 
-  char checksum1[32], checksum2[32]; // Buffer to store checksums
-  fgets(checksum1, sizeof(checksum1), fp1);
-  fgets(checksum2, sizeof(checksum2), fp2);
+  int byte1;
+  int byte2;
+  bool equal = true;
 
-  // Close the file pointers
-  pclose(fp1);
-  pclose(fp2);
+  while (1) {
+    byte1 = fgetc(file1);
+    byte2 = fgetc(file2);
 
-  // Compare the checksums
-  if (strcmp(checksum1, checksum2) == 0) {
-    return true; // Checksums match
-  } else {
-    return false; // Checksums do not match
+    if (byte1 == EOF || byte2 == EOF) {
+      break;
+    }
+
+    if (byte1 != byte2) {
+      equal = false;
+      break;
+    }
   }
+
+  // Check if both files have reached EOF at the same time
+  if (byte1 != EOF || byte2 != EOF) {
+    LOG(INFO, "THIS!");
+    equal = false;
+  }
+
+  fclose(file1);
+  fclose(file2);
+
+  return equal;
 }
 
 char *__read_file(char *path) {

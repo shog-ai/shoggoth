@@ -1,5 +1,5 @@
 test-libs:
-	cd lib/sonic && make test
+	cd ./sonic && make test
 
 test: build-tests run-tests
 

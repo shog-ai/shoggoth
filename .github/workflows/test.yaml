@@ -17,6 +17,8 @@ jobs:
       run: make dev
     - name: run tests
       run: make test
+    - name: test libs
+      run: make test-libs
   
   build-macos:
     runs-on: macos-latest
@@ -28,5 +30,6 @@ jobs:
       run: make dev
     - name: run tests
       run: make test
+    - name: test libs
+      run: make test-libs
   
-

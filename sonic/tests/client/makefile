@@ -4,7 +4,7 @@ LDFLAGS += -lasan -lubsan
 endif
 
 CFLAGS +=
-LDFLAGS += -lssl -lcrypto
+LDFLAGS += $$(pkg-config --libs openssl) $(TARGET_DIR)/libnetlibc.a
 
 TARGET_DIR = ../../target
 
@@ -18,7 +18,7 @@ LIBSONIC = $(TARGET_DIR)/libsonic-sanitized.a
 camel:
 	cd $(ROOT_DIR) && $(MAKE) camel
 
-build:
+build: $(TARGET_DIR)/libnetlibc.a
 	cd $(ROOT_DIR) && $(MAKE) build-sanitized
 
 target-dir:
@@ -36,6 +36,10 @@ target-dir:
 	mkdir -p $(TARGET_DIR)/tests/client/integration
 	mkdir -p $(TARGET_DIR)/tests/client/fuzz
 	
+$(TARGET_DIR)/libnetlibc.a:
+	cd ../../../netlibc/ && make
+	cp ../../../netlibc/target/libnetlibc.a $(TARGET_DIR)/libnetlibc.a
+
 # FUNCTIONAL ========================================================================================
 
 $(TARGET_DIR)/tests/client/functional/local_requests/large_test_file.bin:

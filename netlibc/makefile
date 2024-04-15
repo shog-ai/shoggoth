@@ -36,8 +36,10 @@ uninstall:
 	$(CC) $(CFLAGS) -c ./src/fs.c -o ./target/fs.o
 	$(CC) $(CFLAGS) -c ./src/log.c -o ./target/log.o
 	$(CC) $(CFLAGS) -c ./src/string.c -o ./target/string.o
+	$(CC) $(CFLAGS) -c ./src/assert.c -o ./target/assert.o
+	 $(CC) $(CFLAGS) -c ./src/mem.c -o ./target/mem.o
 	
-	ar rcs ./target/libnetlibc.a ./target/netlibc.o ./target/error.o ./target/fs.o ./target/log.o ./target/string.o
+	ar rcs ./target/libnetlibc.a ./target/netlibc.o ./target/error.o ./target/fs.o ./target/log.o ./target/string.o ./target/assert.o ./target/mem.o
 
 target-dir:
 	mkdir -p target

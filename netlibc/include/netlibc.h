@@ -56,4 +56,39 @@ u64 get_timestamp_ms();
 
 u64 get_timestamp_s();
 
+typedef struct {
+  void *address;
+  u64 size;
+  bool freed;
+
+  char *file;
+  u64 line;
+} mem_alloc_info_t;
+
+typedef struct {
+  bool mem_debug_enabled;
+
+  mem_alloc_info_t *mem_allocations;
+  u64 mem_allocations_count;
+  u64 mem_free_count;
+} netlibc_ctx_t;
+
+extern netlibc_ctx_t *__netlibc_ctx;
+
+void __netlibc_ctx_init(bool mem_debug_enabled);
+
+void __netlibc_ctx_exit();
+
+#define MEM_DEBUG_ENABLED true
+#define MEM_DEBUG_DISABLED false
+
+#define NETLIBC_INIT(mem_debug_enabled) __netlibc_ctx_init(mem_debug_enabled)
+
+#define ASSERT_NETLIBC_INIT()                                                  \
+  do {                                                                         \
+    if (__netlibc_ctx == NULL) {                                               \
+      PANIC("NETLIBC NOT INITIALIZED");                                        \
+    }                                                                          \
+  } while (0)
+
 #endif

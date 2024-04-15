@@ -8,16 +8,12 @@
  *
  ****/
 
-#include <netlibc.h>
-#include <netlibc/error.h>
-#include <netlibc/fs.h>
-#include <netlibc/log.h>
-#include <netlibc/string.h>
+#include <netlibc/assert.h>
+#include <netlibc/mem.h>
 
 #include "../utils/utils.h"
 #include "args.h"
 
-#include <assert.h>
 #include <stdlib.h>
 
 /****U
@@ -27,11 +23,11 @@
  ****/
 result_t args_parse(const int argc, char **argv) {
   // assert preconditions
-  assert(argc > 0);
-  assert(argv != NULL);
-  assert(argv[0] != NULL);
+  ASSERT_TRUE(argc > 0, NULL);
+  ASSERT_TRUE(argv != NULL, NULL);
+  ASSERT_TRUE(argv[0] != NULL, NULL);
 
-  args_t *args = calloc(1, sizeof(args_t));
+  args_t *args = ncalloc(1, sizeof(args_t));
 
   for (int i = 1; i < argc; i++) {
     char *current_arg = argv[i];
@@ -62,7 +58,7 @@ result_t args_parse(const int argc, char **argv) {
             PANIC("realpath failed");
           }
 
-          free(runtime_path);
+          nfree(runtime_path);
 
         } else {
           return ERR("No path was passed to -r flag");

@@ -18,9 +18,6 @@
 #endif
 #endif
 
-#define RED_COLOR 227, 61, 45
-#define YELLOW_COLOR 227, 224, 45
-
 void set_color_rgb(u8 r, u8 g, u8 b) { printf("\e[38;2;%d;%d;%dm", r, g, b); }
 
 void reset_color() { printf("\e[0m"); }

@@ -41,6 +41,8 @@ result_t handle_session(args_t *args) {
 }
 
 int main(int argc, char **argv) {
+  NETLIBC_INIT(MEM_DEBUG_ENABLED);
+  
   result_t res_args = args_parse(argc, argv);
   if (!is_ok(res_args)) {
     EXIT(1, res_args.error_message);

@@ -34,18 +34,11 @@ void __netlibc_ctx_init(bool mem_debug_enabled) {
 
 void __netlibc_ctx_exit() {
   if (__netlibc_ctx->mem_debug_enabled) {
-    printf("[MEM_DEBUG] ALLOCATIONS COUNT: " U64_FORMAT_SPECIFIER " \n",
-           __netlibc_ctx->mem_allocations_count);
-    printf("[MEM_DEBUG] FREE COUNT: " U64_FORMAT_SPECIFIER " \n",
-           __netlibc_ctx->mem_free_count);
 
     u64 allocated_bytes = 0;
     for (u64 i = 0; i < __netlibc_ctx->mem_allocations_count; i++) {
       allocated_bytes += __netlibc_ctx->mem_allocations[i].size;
     }
-
-    printf("[MEM_DEBUG] ALLOCATED BYTES: " U64_FORMAT_SPECIFIER " \n",
-           allocated_bytes);
 
     u64 freed_bytes = 0;
     for (u64 i = 0; i < __netlibc_ctx->mem_allocations_count; i++) {
@@ -54,17 +47,15 @@ void __netlibc_ctx_exit() {
       }
     }
 
-    printf("[MEM_DEBUG] FREED BYTES: " U64_FORMAT_SPECIFIER " \n", freed_bytes);
-
-    printf("\n\n");
-
     u64 leaked_bytes = 0;
+    u64 leaked_allocations = 0;
     for (u64 i = 0; i < __netlibc_ctx->mem_allocations_count; i++) {
       if (!__netlibc_ctx->mem_allocations[i].freed) {
         leaked_bytes += __netlibc_ctx->mem_allocations[i].size;
+        leaked_allocations += 1;
 
-        printf("[MEM_DEBUG] LEAK OF " U64_FORMAT_SPECIFIER
-               " BYTES IN %p AT %s:" U64_FORMAT_SPECIFIER "\n",
+        printf("[MEM_DEBUG] Direct leak of " U64_FORMAT_SPECIFIER
+               " bytes (%p) allocated from %s:" U64_FORMAT_SPECIFIER "\n\n",
                __netlibc_ctx->mem_allocations[i].size,
                __netlibc_ctx->mem_allocations[i].address,
                __netlibc_ctx->mem_allocations[i].file,
@@ -72,10 +63,29 @@ void __netlibc_ctx_exit() {
       }
     }
 
-    printf("[MEM_DEBUG] LEAKED BYTES: " U64_FORMAT_SPECIFIER " \n",
-           leaked_bytes);
+    printf("[MEM_DEBUG] Total allocated bytes: " U64_FORMAT_SPECIFIER " \n",
+           allocated_bytes);
+
+    printf("[MEM_DEBUG] Total freed bytes: " U64_FORMAT_SPECIFIER " \n",
+           freed_bytes);
+
+    printf("[MEM_DEBUG] allocations: " U64_FORMAT_SPECIFIER " \n",
+           __netlibc_ctx->mem_allocations_count);
+
+    printf("[MEM_DEBUG] frees: " U64_FORMAT_SPECIFIER " \n",
+           __netlibc_ctx->mem_free_count);
 
     printf("\n");
+
+    if (leaked_bytes > 0) {
+      printf("[MEM_DEBUG] leaked " U64_FORMAT_SPECIFIER
+             " bytes in " U64_FORMAT_SPECIFIER " allocations\n",
+             leaked_bytes, leaked_allocations);
+    } else {
+      printf("[MEM_DEBUG] All memory freed");
+    }
+
+    printf("\n\n");
   }
 
   free(__netlibc_ctx->mem_allocations);

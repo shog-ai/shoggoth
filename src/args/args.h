@@ -13,8 +13,6 @@
 
 #include "../utils/utils.h"
 
-// typedef enum { COMMAND_NONE, COMMAND_CLIENT, COMMAND_NODE } command_t;
-
 typedef struct {
   bool help;
   bool version;

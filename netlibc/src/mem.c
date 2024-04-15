@@ -50,14 +50,31 @@ void *__netlibc_malloc(size_t size, char *file, u64 line) {
   return allocated;
 }
 
-void *__netlibc_calloc(u64 count, size_t size) {
+void *__netlibc_calloc(u64 count, size_t size, char *file, u64 line) {
+  ASSERT_NETLIBC_INIT();
+
   void *allocated = calloc(count, size);
+
+  if (__netlibc_ctx->mem_debug_enabled) {
+    mem_add_alloation(allocated, size * count, file, line);
+  }
 
   return allocated;
 }
 
 void *__netlibc_realloc(void *pre_allocated, size_t new_size) {
+  ASSERT_NETLIBC_INIT();
+
   void *reallocated = realloc(pre_allocated, new_size);
+
+  if (__netlibc_ctx->mem_debug_enabled) {
+    for (u64 i = 0; i < __netlibc_ctx->mem_allocations_count; i++) {
+      if (__netlibc_ctx->mem_allocations[i].address == pre_allocated) {
+        __netlibc_ctx->mem_allocations[i].address = reallocated;
+        __netlibc_ctx->mem_allocations[i].size = new_size;
+      }
+    }
+  }
 
   return reallocated;
 }

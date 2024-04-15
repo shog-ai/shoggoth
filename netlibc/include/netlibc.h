@@ -79,10 +79,11 @@ void __netlibc_ctx_init(bool mem_debug_enabled);
 
 void __netlibc_ctx_exit();
 
-#define MEM_DEBUG_ENABLED true
-#define MEM_DEBUG_DISABLED false
+#ifndef MEM_DEBUG
+#define MEM_DEBUG 0
+#endif
 
-#define NETLIBC_INIT(mem_debug_enabled) __netlibc_ctx_init(mem_debug_enabled)
+#define NETLIBC_INIT() __netlibc_ctx_init(MEM_DEBUG)
 
 #define ASSERT_NETLIBC_INIT()                                                  \
   do {                                                                         \

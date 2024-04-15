@@ -1,19 +1,18 @@
-// #define MEMDEBUG
+#define MEM_DEBUG 1
 #include "../include/netlibc/mem.h"
 #include "../include/netlibc.h"
 
 int main() {
-  NETLIBC_INIT(MEM_DEBUG_ENABLED);
+  NETLIBC_INIT();
 
-  void *allocated = nmalloc(100);
+  void *allocated = ncalloc(2, 100);
 
   void *allocated2 = nmalloc(100);
 
-  void *allocated3 = nmalloc(100);
+  void *allocated3 = nrealloc(allocated, 100);
 
-  nfree(allocated);
   nfree(allocated2);
-  // nfree(allocated3);
+  nfree(allocated3);
 
   return 0;
 }

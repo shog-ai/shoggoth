@@ -12,7 +12,7 @@ int main() {
   void *allocated3 = nrealloc(allocated, 100);
 
   nfree(allocated2);
-  nfree(allocated3);
+  // nfree(allocated3);
 
   return 0;
 }

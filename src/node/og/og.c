@@ -39,6 +39,7 @@
 
 #include <netlibc/fs.h>
 #include <netlibc/log.h>
+#include <netlibc/mem.h>
 
 unsigned char *ttf_buffer = NULL;
 unsigned char *logo_data = NULL;
@@ -87,7 +88,7 @@ char *wordwrap(const char *text, size_t width) {
   }
 
   size_t text_len = strlen(text);
-  char *wrapped_text = malloc((2 * text_len + 1) * sizeof(char));
+  char *wrapped_text = nmalloc((2 * text_len + 1) * sizeof(char));
 
   size_t current_width = 0;
   size_t wrapped_text_index = 0;
@@ -193,7 +194,7 @@ void render_wrapped_text(unsigned char *image, stbtt_fontinfo *font,
     }
     line = strtok_r(NULL, "\n", &saveptr);
   }
-  free(modified_text);
+  nfree(modified_text);
 }
 
 unsigned char *generate_og_image(const char *title, const char *desc,
@@ -201,17 +202,17 @@ unsigned char *generate_og_image(const char *title, const char *desc,
                                  float desc_size, size_t desc_wrap,
                                  int *image_size) {
 
-  stbtt_fontinfo *font = (stbtt_fontinfo *)malloc(sizeof(stbtt_fontinfo));
+  stbtt_fontinfo *font = (stbtt_fontinfo *)nmalloc(sizeof(stbtt_fontinfo));
   if (!stbtt_InitFont(font, ttf_buffer,
                       stbtt_GetFontOffsetForIndex(ttf_buffer, 0))) {
-    free(font);
-    unsigned char *dummy_buffer = malloc(1);
+    nfree(font);
+    unsigned char *dummy_buffer = nmalloc(1);
     dummy_buffer[0] = '\0';
     *image_size = 1;
     return dummy_buffer;
   }
 
-  unsigned char *image = (unsigned char *)malloc(IMG_WIDTH * IMG_HEIGHT * 3);
+  unsigned char *image = (unsigned char *)nmalloc(IMG_WIDTH * IMG_HEIGHT * 3);
   for (size_t i = 0; i < IMG_WIDTH * IMG_HEIGHT * 3; i += 3) {
     image[i] = BACKGROUND_COLOR_R;
     image[i + 1] = BACKGROUND_COLOR_G;
@@ -258,21 +259,21 @@ unsigned char *generate_og_image(const char *title, const char *desc,
   unsigned char *png_buffer = stbi_write_png_to_mem(
       image, IMG_WIDTH * 3, IMG_WIDTH, IMG_HEIGHT, 3, image_size);
   if (!png_buffer) {
-    free(image);
-    free(font);
-    unsigned char *dummy_buffer = malloc(1);
+    nfree(image);
+    nfree(font);
+    unsigned char *dummy_buffer = nmalloc(1);
     dummy_buffer[0] = '\0';
     *image_size = 1;
     return dummy_buffer;
   }
 
-  free(image);
-  free(font);
+  nfree(image);
+  nfree(font);
   return png_buffer;
 }
 
 void og_init_stb(node_ctx_t *ctx) {
-  ttf_buffer = (unsigned char *)malloc(TTF_BUFFER_SIZE);
+  ttf_buffer = (unsigned char *)nmalloc(TTF_BUFFER_SIZE);
 
   char explorer_path[FILE_PATH_SIZE];
   utils_get_node_explorer_path(ctx, explorer_path);
@@ -298,6 +299,6 @@ void og_init_stb(node_ctx_t *ctx) {
 }
 
 void og_deinit_stb() {
-  free(ttf_buffer);
+  nfree(ttf_buffer);
   stbi_image_free(logo_data);
 }

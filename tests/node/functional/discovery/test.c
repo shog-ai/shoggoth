@@ -116,6 +116,7 @@ void test_suite(suite_t *suite) {
 }
 
 int main(int argc, char **argv) {
+  NETLIBC_INIT();
   CAMEL_BEGIN(FUNCTIONAL);
 
   ADD_SUITE(test_suite);

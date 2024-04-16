@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 
+#include <netlibc/mem.h>
+
 void free_json(json_t *json) {
   cJSON *cjson = (cJSON *)json;
 
@@ -172,7 +174,7 @@ result_t json_node_manifest_to_json(node_manifest_t manifest) {
 pins_t *json_to_pins(json_t *json) {
   cJSON *pins_json = (cJSON *)json;
 
-  pins_t *pins = calloc(1, sizeof(pins_t));
+  pins_t *pins = ncalloc(1, sizeof(pins_t));
   pins->pins = NULL;
   pins->pins_count = 0;
 
@@ -180,7 +182,7 @@ pins_t *json_to_pins(json_t *json) {
   cJSON_ArrayForEach(pin_json, pins_json) {
     char *pin_str = pin_json->valuestring;
 
-    pins->pins = realloc(pins->pins, (pins->pins_count + 1) * sizeof(char *));
+    pins->pins = nrealloc(pins->pins, (pins->pins_count + 1) * sizeof(char *));
     pins->pins[pins->pins_count] = strdup(pin_str);
     pins->pins_count++;
   }
@@ -291,7 +293,7 @@ node_manifest_t *json_to_node_manifest(json_t *json) {
   bool has_explorer =
       cJSON_GetObjectItemCaseSensitive(manifest_json, "has_explorer")->valueint;
 
-  node_manifest_t *manifest = calloc(1, sizeof(node_manifest_t));
+  node_manifest_t *manifest = ncalloc(1, sizeof(node_manifest_t));
 
   manifest->public_host = public_host;
   manifest->public_key = public_key;

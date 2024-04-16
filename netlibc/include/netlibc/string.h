@@ -32,4 +32,6 @@ char *get_file_extension(char *file_path);
 
 char *escape_character(char *input, char character);
 
+char *nstringify(char *str);
+
 #endif

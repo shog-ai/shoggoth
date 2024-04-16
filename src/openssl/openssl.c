@@ -16,6 +16,8 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
+#include <netlibc/mem.h>
+
 #define RSA_KEY_BITS 2048
 
 /****
@@ -74,7 +76,7 @@ result_t openssl_generate_key_pair(const char *private_key_file,
 result_t openssl_hash_data(char *data, size_t data_len) {
   unsigned char hash[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha256;
-  char *hash_str = (char *)malloc(2 * SHA256_DIGEST_LENGTH + 1);
+  char *hash_str = (char *)nmalloc(2 * SHA256_DIGEST_LENGTH + 1);
 
   SHA256_Init(&sha256);
   SHA256_Update(&sha256, data, data_len);
@@ -141,12 +143,12 @@ result_t openssl_sign_data(char *private_key_path, char *data) {
 
   // Get the length of the signature
   unsigned int sig_len = (unsigned int)EVP_PKEY_size(pkey);
-  unsigned char *signature = (unsigned char *)malloc(sig_len);
+  unsigned char *signature = (unsigned char *)nmalloc(sig_len);
 
   if (EVP_SignFinal(md_ctx, signature, &sig_len, pkey) != 1) {
     EVP_PKEY_free(pkey);
     EVP_MD_CTX_destroy(md_ctx);
-    free(signature);
+    nfree(signature);
     ERR_print_errors_fp(stderr);
     return ERR("sign data failed");
   }
@@ -155,13 +157,13 @@ result_t openssl_sign_data(char *private_key_path, char *data) {
   EVP_MD_CTX_destroy(md_ctx);
 
   // Convert the signature to a hexadecimal string
-  char *hex_signature = (char *)malloc(sig_len * 2 + 1);
+  char *hex_signature = (char *)nmalloc(sig_len * 2 + 1);
   for (size_t i = 0; i < sig_len; i++) {
     sprintf(hex_signature + (i * 2), "%02x", signature[i]);
   }
   hex_signature[sig_len * 2] = '\0';
 
-  free(signature);
+  nfree(signature);
 
   return OK(hex_signature);
 }
@@ -210,7 +212,7 @@ result_t openssl_verify_signature(const char *public_key,
 
   // Load the signature in hexadecimal format
   size_t sig_len = strlen(signature_hex) / 2;
-  unsigned char *signature = (unsigned char *)malloc(sig_len);
+  unsigned char *signature = (unsigned char *)nmalloc(sig_len);
 
   for (size_t i = 0; i < sig_len; i++) {
     sscanf(signature_hex + 2 * i, "%02hhx", &signature[i]);
@@ -220,7 +222,7 @@ result_t openssl_verify_signature(const char *public_key,
   if (EVP_VerifyUpdate(md_ctx, data, strlen(data)) != 1) {
     EVP_PKEY_free(pkey);
     EVP_MD_CTX_destroy(md_ctx);
-    free(signature);
+    nfree(signature);
     ERR_print_errors_fp(stderr);
     return ERR("load data failed");
   }
@@ -232,7 +234,7 @@ result_t openssl_verify_signature(const char *public_key,
   // Cleanup resources
   EVP_PKEY_free(pkey);
   EVP_MD_CTX_destroy(md_ctx);
-  free(signature);
+  nfree(signature);
 
   return OK_INT(verifyResult);
 }

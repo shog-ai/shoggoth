@@ -38,6 +38,7 @@ ifeq ($(shell uname), Linux)
 CFLAGS_SANITIZE = -fsanitize=address,undefined,leak,undefined 
 LDFLAGS_SANITIZE += -lasan -lubsan
 endif
+CFLAGS_SANITIZE += -DMEM_DEBUG
 
 MAIN_OBJ = $(TARGET_DIR)/main.o
 

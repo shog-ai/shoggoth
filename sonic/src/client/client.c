@@ -22,12 +22,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <netlibc/mem.h>
+
 /****U
  * creates a new client http request instance
  *
  ****/
 sonic_client_request_t *new_client_request(sonic_method_t method, char *url) {
-  sonic_client_request_t *req = calloc(1, sizeof(sonic_client_request_t));
+  sonic_client_request_t *req = ncalloc(1, sizeof(sonic_client_request_t));
 
   req->headers = NULL;
   req->headers_count = 0;
@@ -40,7 +42,7 @@ sonic_client_request_t *new_client_request(sonic_method_t method, char *url) {
   } else if (strcmp(scheme, "https") == 0) {
     req->scheme = SCHEME_HTTPS;
   } else {
-    free(req);
+    nfree(req);
 
     client_set_errno(CLIENT_ERROR_INVALID_SCHEME);
     return NULL;
@@ -56,15 +58,15 @@ sonic_client_request_t *new_client_request(sonic_method_t method, char *url) {
   char path[256];
   extract_path_from_url(url, path);
 
-  req->host = malloc((strlen(hostname) + 1) * sizeof(char));
+  req->host = nmalloc((strlen(hostname) + 1) * sizeof(char));
   strcpy(req->host, hostname);
 
-  req->domain_name = malloc((strlen(req->host) + 1) * sizeof(char));
+  req->domain_name = nmalloc((strlen(req->host) + 1) * sizeof(char));
   strcpy(req->domain_name, req->host);
 
   req->port = port;
 
-  req->path = malloc((strlen(path) + 1) * sizeof(char));
+  req->path = nmalloc((strlen(path) + 1) * sizeof(char));
   strcpy(req->path, path);
 
   req->method = method;
@@ -100,20 +102,20 @@ void client_set_response_callback(sonic_client_request_t *req,
  *
  ****/
 void client_free_request(sonic_client_request_t *req) {
-  free(req->host);
-  free(req->path);
-  free(req->domain_name);
+  nfree(req->host);
+  nfree(req->path);
+  nfree(req->domain_name);
 
   if (req->headers_count > 0) {
     for (u64 i = 0; i < req->headers_count; i++) {
-      free(req->headers[i].key);
-      free(req->headers[i].value);
+      nfree(req->headers[i].key);
+      nfree(req->headers[i].value);
     }
 
-    free(req->headers);
+    nfree(req->headers);
   }
 
-  free(req);
+  nfree(req);
 }
 
 /****
@@ -122,19 +124,19 @@ void client_free_request(sonic_client_request_t *req) {
  ****/
 void client_free_response(sonic_client_response_t *resp) {
   if (resp->failed) {
-    free(resp->error);
+    nfree(resp->error);
   }
 
   if (resp->headers_count > 0) {
     for (u64 i = 0; i < resp->headers_count; i++) {
-      free(resp->headers[i].key);
-      free(resp->headers[i].value);
+      nfree(resp->headers[i].key);
+      nfree(resp->headers[i].value);
     }
 
-    free(resp->headers);
+    nfree(resp->headers);
   }
 
-  free(resp);
+  nfree(resp);
 }
 
 void client_request_set_body(sonic_client_request_t *req, char *request_body,
@@ -153,7 +155,7 @@ void client_set_redirect_policy(sonic_client_request_t *req,
  *
  ****/
 sonic_client_response_t *new_client_response() {
-  sonic_client_response_t *resp = malloc(sizeof(sonic_client_response_t));
+  sonic_client_response_t *resp = nmalloc(sizeof(sonic_client_response_t));
 
   resp->headers = NULL;
   resp->headers_count = 0;
@@ -241,14 +243,14 @@ void http_parse_response_head(sonic_client_response_t *resp,
 
     resp->headers_count++;
     resp->headers =
-        realloc(resp->headers, sizeof(sonic_header_t) * resp->headers_count);
+        nrealloc(resp->headers, sizeof(sonic_header_t) * resp->headers_count);
 
     resp->headers[resp->headers_count - 1].key =
-        malloc((strlen(key) + 1) * sizeof(char));
+        nmalloc((strlen(key) + 1) * sizeof(char));
     strcpy(resp->headers[resp->headers_count - 1].key, key);
 
     resp->headers[resp->headers_count - 1].value =
-        malloc((strlen(value) + 1) * sizeof(char));
+        nmalloc((strlen(value) + 1) * sizeof(char));
     strcpy(resp->headers[resp->headers_count - 1].value, value);
 
     header_line = value_end + 2; // Move to the next header line
@@ -312,7 +314,7 @@ result_t process_read_buffer(read_struct_t *read_struct) {
   if (!read_struct->headers_done) {
     if (read_struct->main_length == 0) {
       read_struct->main_buffer =
-          malloc((read_struct->bytes_read) * sizeof(char));
+          nmalloc((read_struct->bytes_read) * sizeof(char));
 
       for (int i = 0; i < read_struct->bytes_read; i++) {
         read_struct->main_buffer[i] = read_struct->buffer[i];
@@ -320,7 +322,7 @@ result_t process_read_buffer(read_struct_t *read_struct) {
 
       read_struct->main_length = read_struct->bytes_read;
     } else {
-      read_struct->main_buffer = realloc(
+      read_struct->main_buffer = nrealloc(
           read_struct->main_buffer,
           (read_struct->main_length + read_struct->bytes_read) * sizeof(char));
 
@@ -345,7 +347,7 @@ result_t process_read_buffer(read_struct_t *read_struct) {
 
       read_struct->head_length = head_end_position;
       read_struct->head_buffer =
-          malloc((read_struct->head_length + 1) * sizeof(char));
+          nmalloc((read_struct->head_length + 1) * sizeof(char));
 
       for (u64 i = 0; i < (read_struct->head_length); i++) {
         read_struct->head_buffer[i] = read_struct->main_buffer[i];
@@ -394,8 +396,8 @@ result_t process_read_buffer(read_struct_t *read_struct) {
             read_struct->content_buffer_size = remaining_bytes;
 
             read_struct->content_buffer =
-                realloc(read_struct->content_buffer,
-                        (read_struct->content_buffer_size) * sizeof(char));
+                nrealloc(read_struct->content_buffer,
+                         (read_struct->content_buffer_size) * sizeof(char));
 
             for (u64 i = 0; i < read_struct->content_buffer_size; i++) {
               read_struct->content_buffer[i] =
@@ -416,8 +418,8 @@ result_t process_read_buffer(read_struct_t *read_struct) {
         read_struct->content_buffer_size += read_struct->bytes_read;
 
         read_struct->content_buffer =
-            realloc(read_struct->content_buffer,
-                    (read_struct->content_buffer_size) * sizeof(char));
+            nrealloc(read_struct->content_buffer,
+                     (read_struct->content_buffer_size) * sizeof(char));
 
         for (int i = 0; i < read_struct->bytes_read; i++) {
           read_struct->content_buffer[read_struct->content_buffer_size -
@@ -446,7 +448,7 @@ result_t read_response(sonic_client_request_t *req,
                 recv(client_sock, buffer, sizeof(buffer), 0)) > 0) {
 
       read_struct.buffer =
-          realloc(read_struct.buffer, read_struct.bytes_read * sizeof(char));
+          nrealloc(read_struct.buffer, read_struct.bytes_read * sizeof(char));
       for (int i = 0; i < read_struct.bytes_read; i++) {
         read_struct.buffer[i] = buffer[i];
       }
@@ -471,7 +473,7 @@ result_t read_response(sonic_client_request_t *req,
            0) {
 
       read_struct.buffer =
-          realloc(read_struct.buffer, read_struct.bytes_read * sizeof(char));
+          nrealloc(read_struct.buffer, read_struct.bytes_read * sizeof(char));
       for (int i = 0; i < read_struct.bytes_read; i++) {
         read_struct.buffer[i] = buffer[i];
       }
@@ -512,9 +514,9 @@ result_t read_response(sonic_client_request_t *req,
     resp->response_body_size = read_struct.content_buffer_size;
   }
 
-  free(read_struct.main_buffer);
-  free(read_struct.head_buffer);
-  free(read_struct.buffer);
+  nfree(read_struct.main_buffer);
+  nfree(read_struct.head_buffer);
+  nfree(read_struct.buffer);
 
   return OK(NULL);
 }
@@ -600,27 +602,27 @@ result_t actually_send_request(sonic_client_request_t *req,
   // are not implemented yet
   sprintf(first_line, "%s %s HTTP/1.0\r\n", method_str, req->path);
 
-  head_str = realloc(head_str, (strlen(first_line) + 1) * sizeof(char));
+  head_str = nrealloc(head_str, (strlen(first_line) + 1) * sizeof(char));
   strcpy(head_str, first_line);
 
   for (u64 i = 0; i < req->headers_count; i++) {
-    char *buf = malloc(
+    char *buf = nmalloc(
         (strlen(req->headers[i].key) + strlen(req->headers[i].value) + 20) *
         sizeof(char));
 
     sprintf(buf, "%s: %s\r\n", req->headers[i].key, req->headers[i].value);
 
     head_str =
-        realloc(head_str, (strlen(head_str) + strlen(buf) + 1) * sizeof(char));
+        nrealloc(head_str, (strlen(head_str) + strlen(buf) + 1) * sizeof(char));
     strcat(head_str, buf);
 
-    free(buf);
+    nfree(buf);
   }
 
   char *head_end = "\r\n";
 
-  head_str = realloc(head_str,
-                     (strlen(head_str) + strlen(head_end) + 1) * sizeof(char));
+  head_str = nrealloc(head_str,
+                      (strlen(head_str) + strlen(head_end) + 1) * sizeof(char));
   strcat(head_str, head_end);
 
   if (req->scheme == SCHEME_HTTP) {
@@ -646,7 +648,7 @@ result_t actually_send_request(sonic_client_request_t *req,
       return ERR("Sending request head failed");
     }
 
-    free(head_str);
+    nfree(head_str);
 
     if (req->request_body_size > 0) {
       if (send(client_sock, req->request_body, req->request_body_size, 0) ==
@@ -691,7 +693,7 @@ result_t actually_send_request(sonic_client_request_t *req,
       return ERR("Sending request head failed");
     }
 
-    free(head_str);
+    nfree(head_str);
 
     if (req->request_body_size > 0) {
       // Send the HTTPS request
@@ -781,7 +783,7 @@ sonic_client_response_t *client_send_request(sonic_client_request_t *req) {
       char *redirect_location = resp->redirect_location;
 
       if (resp->response_body_size > 0) {
-        free(resp->response_body);
+        nfree(resp->response_body);
       }
       sonic_free_response(resp);
 
@@ -798,7 +800,7 @@ sonic_client_response_t *client_send_request(sonic_client_request_t *req) {
       sonic_client_response_t *new_resp = client_send_request(new_req);
       sonic_free_request(new_req);
 
-      free(redirect_location);
+      nfree(redirect_location);
 
       resp = new_resp;
 
@@ -808,7 +810,7 @@ sonic_client_response_t *client_send_request(sonic_client_request_t *req) {
               "Maximum redirect hops of " U64_FORMAT_SPECIFIER " reached",
               req->redirect_policy.max_hops);
 
-      free(resp->redirect_location);
+      nfree(resp->redirect_location);
       sonic_free_response(resp);
 
       return fail_response(message);
@@ -831,10 +833,10 @@ void client_request_add_header(sonic_client_request_t *req, char *key,
   new_header.value = strdup(value);
 
   if (req->headers_count == 0) {
-    req->headers = malloc((req->headers_count + 1) * sizeof(sonic_header_t));
+    req->headers = nmalloc((req->headers_count + 1) * sizeof(sonic_header_t));
   } else {
-    req->headers = realloc(req->headers,
-                           (req->headers_count + 1) * sizeof(sonic_header_t));
+    req->headers = nrealloc(req->headers,
+                            (req->headers_count + 1) * sizeof(sonic_header_t));
   }
 
   req->headers[req->headers_count] = new_header;

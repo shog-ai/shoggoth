@@ -7,9 +7,9 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
-#ifndef NDEBUG
-#define MEM_DEBUG 1
-#endif
+// #ifndef NDEBUG
+// #define MEM_DEBUG 1
+// #endif
 
 #include <netlibc.h>
 #include <netlibc/error.h>

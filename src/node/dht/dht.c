@@ -15,12 +15,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <netlibc/mem.h>
+
 /****
  * constructs a new dht_t
  *
  ****/
 dht_t *new_dht() {
-  dht_t *dht = malloc(sizeof(dht_t));
+  dht_t *dht = nmalloc(sizeof(dht_t));
 
   dht->items = NULL;
   dht->items_count = 0;
@@ -29,13 +31,13 @@ dht_t *new_dht() {
 }
 
 void free_dht_item(dht_item_t *item) {
-  free(item->host);
-  free(item->node_id);
-  free(item->public_key);
+  nfree(item->host);
+  nfree(item->node_id);
+  nfree(item->public_key);
 
   free_pins(item->pins);
 
-  free(item);
+  nfree(item);
 }
 
 void free_dht(dht_t *dht) {
@@ -44,10 +46,10 @@ void free_dht(dht_t *dht) {
       free_dht_item(dht->items[i]);
     }
 
-    free(dht->items);
+    nfree(dht->items);
   }
 
-  free(dht);
+  nfree(dht);
 }
 
 /****
@@ -55,7 +57,7 @@ void free_dht(dht_t *dht) {
  *
  ****/
 dht_item_t *new_dht_item() {
-  dht_item_t *item = calloc(1, sizeof(dht_item_t));
+  dht_item_t *item = ncalloc(1, sizeof(dht_item_t));
 
   item->host = NULL;
 
@@ -63,7 +65,7 @@ dht_item_t *new_dht_item() {
   item->public_key = NULL;
   item->unreachable_count = 0;
 
-  item->pins = calloc(1, sizeof(pins_t));
+  item->pins = ncalloc(1, sizeof(pins_t));
   item->pins->pins = NULL;
   item->pins->pins_count = 0;
 
@@ -76,10 +78,10 @@ dht_item_t *new_dht_item() {
  ****/
 void dht_add_item(dht_t *dht, dht_item_t *item) {
   if (dht->items_count == 0) {
-    dht->items = malloc(sizeof(dht_item_t *));
+    dht->items = nmalloc(sizeof(dht_item_t *));
   } else {
     dht->items =
-        realloc(dht->items, (dht->items_count + 1) * sizeof(dht_item_t *));
+        nrealloc(dht->items, (dht->items_count + 1) * sizeof(dht_item_t *));
   }
 
   dht->items[dht->items_count] = item;
@@ -187,7 +189,8 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
   char *manifest_str = NULL;
 
   if (resp->response_body_size > 0) {
-    char *resp_body_str = malloc((resp->response_body_size + 1) * sizeof(char));
+    char *resp_body_str =
+        nmalloc((resp->response_body_size + 1) * sizeof(char));
     strncpy(resp_body_str, resp->response_body, resp->response_body_size);
 
     resp_body_str[resp->response_body_size] = '\0';
@@ -228,13 +231,13 @@ result_t add_new_peer(node_ctx_t *ctx, char *peer_host) {
 
   result_t res_dht = json_string_to_dht(dht_str);
   if (is_err(res_dht)) {
-    free(dht_str);
+    nfree(dht_str);
     free_node_manifest(manifest);
     return ERR("could not parse dht");
   }
   dht_t *dht = VALUE(res_dht);
 
-  free(dht_str);
+  nfree(dht_str);
 
   bool exists = false;
 
@@ -301,7 +304,7 @@ void *dht_updater(void *thread_arg) {
     result_t res_dht = json_string_to_dht(dht_str);
     dht_t *dht = UNWRAP(res_dht);
 
-    free(dht_str);
+    nfree(dht_str);
 
     for (u64 i = 0; i < dht->items_count; i++) {
       char req_url[FILE_PATH_SIZE];
@@ -339,7 +342,7 @@ void *dht_updater(void *thread_arg) {
           count_str[strlen(count_str) - 1] = '\0';
 
           u64 count = strtoull(count_str, NULL, 10);
-          free(unreachable_count_str);
+          nfree(unreachable_count_str);
 
           u64 count_limit = 5;
 
@@ -363,7 +366,7 @@ void *dht_updater(void *thread_arg) {
       db_reset_unreachable_count(arg->ctx, dht->items[i]->node_id);
 
       char *response_body_str =
-          malloc((resp->response_body_size + 1) * sizeof(char));
+          nmalloc((resp->response_body_size + 1) * sizeof(char));
 
       if (resp->failed || resp->response_body == NULL) {
         LOG(WARN,
@@ -379,7 +382,7 @@ void *dht_updater(void *thread_arg) {
 
       response_body_str[resp->response_body_size] = '\0';
 
-      free(resp->response_body);
+      nfree(resp->response_body);
 
       sonic_free_request(req);
       sonic_free_response(resp);
@@ -392,7 +395,7 @@ void *dht_updater(void *thread_arg) {
       }
       dht_t *remote_dht = VALUE(res_remote_dht);
 
-      free(response_body_str);
+      nfree(response_body_str);
 
       for (u64 k = 0; k < remote_dht->items_count; k++) {
         char *remote_node_id = remote_dht->items[k]->node_id;

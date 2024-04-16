@@ -16,8 +16,10 @@
 
 #include <stdlib.h>
 
+#include <netlibc/mem.h>
+
 result_t toml_string_to_node_config(char *config_str) {
-  node_config_t *config = calloc(1, sizeof(node_config_t));
+  node_config_t *config = ncalloc(1, sizeof(node_config_t));
 
   char errbuf[200];
   toml_table_t *config_toml = toml_parse(config_str, errbuf, sizeof(errbuf));
@@ -33,7 +35,7 @@ result_t toml_string_to_node_config(char *config_str) {
 
   toml_datum_t network_host = toml_string_in(network_table, "host");
   config->network.host = strdup(network_host.u.s);
-  free(network_host.u.s);
+  nfree(network_host.u.s);
 
   toml_datum_t network_port = toml_int_in(network_table, "port");
   config->network.port = (u16)network_port.u.i;
@@ -41,7 +43,7 @@ result_t toml_string_to_node_config(char *config_str) {
   toml_datum_t network_public_host =
       toml_string_in(network_table, "public_host");
   config->network.public_host = strdup(network_public_host.u.s);
-  free(network_public_host.u.s);
+  nfree(network_public_host.u.s);
 
   toml_datum_t network_allow_private_network =
       toml_bool_in(network_table, "allow_private_network");
@@ -83,11 +85,11 @@ result_t toml_string_to_node_config(char *config_str) {
     bootstrap_peers_count++;
 
     bootstrap_peers =
-        realloc(bootstrap_peers, bootstrap_peers_count * sizeof(char *));
+        nrealloc(bootstrap_peers, bootstrap_peers_count * sizeof(char *));
 
     bootstrap_peers[bootstrap_peers_count - 1] = strdup(peer.u.s);
 
-    free(peer.u.s);
+    nfree(peer.u.s);
   }
 
   config->peers.bootstrap_peers = bootstrap_peers;
@@ -117,7 +119,7 @@ result_t toml_string_to_node_config(char *config_str) {
 
   toml_datum_t tunnel_server = toml_string_in(tunnel_table, "server");
   config->tunnel.server = strdup(tunnel_server.u.s);
-  free(tunnel_server.u.s);
+  nfree(tunnel_server.u.s);
 
   // EXPLORER TABLE
   toml_table_t *explorer_table = toml_table_in(config_toml, "explorer");
@@ -136,7 +138,7 @@ result_t toml_string_to_node_config(char *config_str) {
 
   toml_datum_t db_host = toml_string_in(db_table, "host");
   config->db.host = strdup(db_host.u.s);
-  free(db_host.u.s);
+  nfree(db_host.u.s);
 
   toml_datum_t db_port = toml_int_in(db_table, "port");
   config->db.port = (u16)db_port.u.i;

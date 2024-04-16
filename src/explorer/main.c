@@ -70,6 +70,8 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 }
 
 int main() {
+  NETLIBC_INIT();
+
   printf("Generating explorer ...\n");
 
   result_t res = gen("./explorer/html/explorer.html",

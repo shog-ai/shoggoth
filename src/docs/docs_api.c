@@ -1,9 +1,11 @@
 #include <stdlib.h>
 
+#include "../../handlebazz/handlebazz.h"
 #include "../include/cjson.h"
 #include "../json/json.h"
 #include "../md_to_html/md_to_html.h"
-#include "../../handlebazz/handlebazz.h"
+
+#include <netlibc/mem.h>
 
 typedef struct {
   char *key;
@@ -110,7 +112,7 @@ json_t *api_endpoints_to_json(api_endpoints_t *items) {
 }
 
 api_endpoints_t *new_api_endpoints() {
-  api_endpoints_t *items = malloc(sizeof(api_endpoints_t *));
+  api_endpoints_t *items = nmalloc(sizeof(api_endpoints_t *));
 
   items->items = NULL;
   items->items_count = 0;
@@ -120,7 +122,7 @@ api_endpoints_t *new_api_endpoints() {
 
 api_endpoint_t *new_api_endpoint(char *endpoint, char *description,
                                  char *request_body) {
-  api_endpoint_t *item = calloc(1, sizeof(api_endpoint_t));
+  api_endpoint_t *item = ncalloc(1, sizeof(api_endpoint_t));
 
   item->endpoint = strdup(endpoint);
   item->description = strdup(description);
@@ -137,7 +139,7 @@ api_endpoint_t *new_api_endpoint(char *endpoint, char *description,
 
 endpoint_response_t *new_endpoint_response(char *status, char *description,
                                            char *body) {
-  endpoint_response_t *response = malloc(sizeof(endpoint_response_t));
+  endpoint_response_t *response = nmalloc(sizeof(endpoint_response_t));
 
   response->status = strdup(status);
   response->description = strdup(description);
@@ -150,8 +152,8 @@ endpoint_response_t *new_endpoint_response(char *status, char *description,
 }
 
 void endpoint_add_header(api_endpoint_t *item, char *key, char *value) {
-  item->headers = realloc(item->headers, (item->headers_count + 1) *
-                                             sizeof(endpoint_header_t));
+  item->headers = nrealloc(item->headers, (item->headers_count + 1) *
+                                              sizeof(endpoint_header_t));
 
   item->headers[item->headers_count] =
       (endpoint_header_t){.key = strdup(key), .value = strdup(value)};
@@ -161,8 +163,9 @@ void endpoint_add_header(api_endpoint_t *item, char *key, char *value) {
 
 void endpoint_response_add_header(endpoint_response_t *response, char *key,
                                   char *value) {
-  response->headers = realloc(response->headers, (response->headers_count + 1) *
-                                                     sizeof(endpoint_header_t));
+  response->headers =
+      nrealloc(response->headers,
+               (response->headers_count + 1) * sizeof(endpoint_header_t));
 
   response->headers[response->headers_count] =
       (endpoint_header_t){.key = strdup(key), .value = strdup(value)};
@@ -171,34 +174,34 @@ void endpoint_response_add_header(endpoint_response_t *response, char *key,
 }
 
 void free_endpoint_response(endpoint_response_t *response) {
-  free(response->status);
-  free(response->description);
-  free(response->body);
+  nfree(response->status);
+  nfree(response->description);
+  nfree(response->body);
 
   if (response->headers_count > 0) {
     for (u64 i = 0; i < response->headers_count; i++) {
-      free(response->headers[i].key);
-      free(response->headers[i].value);
+      nfree(response->headers[i].key);
+      nfree(response->headers[i].value);
     }
 
-    free(response->headers);
+    nfree(response->headers);
   }
 
-  free(response);
+  nfree(response);
 }
 
 void free_api_endpoint(api_endpoint_t *item) {
-  free(item->endpoint);
-  free(item->description);
-  free(item->request_body);
+  nfree(item->endpoint);
+  nfree(item->description);
+  nfree(item->request_body);
 
   if (item->headers_count > 0) {
     for (u64 i = 0; i < item->headers_count; i++) {
-      free(item->headers[i].key);
-      free(item->headers[i].value);
+      nfree(item->headers[i].key);
+      nfree(item->headers[i].value);
     }
 
-    free(item->headers);
+    nfree(item->headers);
   }
 
   if (item->responses_count > 0) {
@@ -206,10 +209,10 @@ void free_api_endpoint(api_endpoint_t *item) {
       free_endpoint_response(item->responses[i]);
     }
 
-    free(item->responses);
+    nfree(item->responses);
   }
 
-  free(item);
+  nfree(item);
 }
 
 void free_api_endpoints(api_endpoints_t *items) {
@@ -217,12 +220,12 @@ void free_api_endpoints(api_endpoints_t *items) {
     free_api_endpoint(items->items[i]);
   }
 
-  free(items);
+  nfree(items);
 }
 
 void api_endpoints_add_endpoint(api_endpoints_t *items, api_endpoint_t *item) {
-  items->items = realloc(items->items,
-                         (items->items_count + 1) * sizeof(api_endpoint_t *));
+  items->items = nrealloc(items->items,
+                          (items->items_count + 1) * sizeof(api_endpoint_t *));
 
   items->items[items->items_count] = item;
 
@@ -231,8 +234,9 @@ void api_endpoints_add_endpoint(api_endpoints_t *items, api_endpoint_t *item) {
 
 void api_endpoint_add_response(api_endpoint_t *item,
                                endpoint_response_t *response) {
-  item->responses = realloc(item->responses, (item->responses_count + 1) *
-                                                 sizeof(endpoint_response_t *));
+  item->responses =
+      nrealloc(item->responses,
+               (item->responses_count + 1) * sizeof(endpoint_response_t *));
 
   item->responses[item->responses_count] = response;
 
@@ -251,18 +255,18 @@ result_t gen_api_docs() {
   free_api_endpoints(api_endpoints);
 
   char *api_template_data =
-      malloc((strlen(endpoints_str) + 100) * sizeof(char));
+      nmalloc((strlen(endpoints_str) + 100) * sizeof(char));
   sprintf(api_template_data,
           "{ \"apis\": %s , \"count\": " U64_FORMAT_SPECIFIER "}",
           endpoints_str, api_endpoints->items_count);
-  free(endpoints_str);
+  nfree(endpoints_str);
 
   result_t res_end_template_string =
       read_file_to_string("./explorer/templates/end.html");
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
-  free(end_template_string);
+  nfree(end_template_string);
 
   result_t res_head_template_string =
       read_file_to_string("./explorer/templates/head.html");
@@ -275,7 +279,7 @@ result_t gen_api_docs() {
       "open-source code, Machine Learning models, datasets, and research "
       "papers.\", \"og_url\": \"/explorer/static/img/og/docs_api.png\", "
       "\"url\": \"/explorer/docs/api\", \"is_api\": true}");
-  free(head_template_string);
+  nfree(head_template_string);
 
   result_t res_api_template_string =
       read_file_to_string("./explorer/docs/md/api.md");
@@ -283,8 +287,8 @@ result_t gen_api_docs() {
 
   template_t *api_template =
       create_template(api_template_string, api_template_data);
-  free(api_template_string);
-  free(api_template_data);
+  nfree(api_template_string);
+  nfree(api_template_data);
 
   template_add_partial(api_template, "head", head_template);
   template_add_partial(api_template, "end", end_template);
@@ -300,7 +304,7 @@ result_t gen_api_docs() {
 
   // LOG(INFO, "COOKED: %s", cooked_api);
 
-  free(cooked_api);
+  nfree(cooked_api);
 
   md_file_to_html_file("./explorer/out/docs/api.html",
                        "./explorer/out/docs/api.html");

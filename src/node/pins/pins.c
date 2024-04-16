@@ -14,6 +14,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <netlibc/mem.h>
+
 void download_response_callback(char *data, u64 size, void *user_pointer) {
   char *tmp_tarball_path = (char *)user_pointer;
 
@@ -22,12 +24,12 @@ void download_response_callback(char *data, u64 size, void *user_pointer) {
 
 void free_pins(pins_t *pins) {
   for (u64 i = 0; i < pins->pins_count; i++) {
-    free(pins->pins[i]);
+    nfree(pins->pins[i]);
   }
 
-  free(pins->pins);
+  nfree(pins->pins);
 
-  free(pins);
+  nfree(pins);
 }
 
 void run_update_script(node_ctx_t *ctx) {

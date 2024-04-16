@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <uuid/uuid.h>
 
+#include <netlibc/mem.h>
+
 #ifdef __APPLE__
 #define UUID_STR_LEN 37
 #endif
@@ -25,7 +27,7 @@ char *utils_gen_uuid() {
   uuid_t binuuid;
   uuid_generate_random(binuuid);
 
-  char *uuid = malloc(UUID_STR_LEN * sizeof(char));
+  char *uuid = nmalloc(UUID_STR_LEN * sizeof(char));
 
   /*
    * Produces a UUID string at uuid consisting of letters
@@ -115,7 +117,7 @@ result_t utils_hash_tarball(char *tmp_path, char *tarball_path) {
   char hash_tmp_path[FILE_PATH_SIZE];
   sprintf(hash_tmp_path, "%s/%s", tmp_path, uuid);
 
-  free(uuid);
+  nfree(uuid);
 
   result_t res_untar = utils_extract_tarball(tarball_path, hash_tmp_path);
   PROPAGATE(res_untar);
@@ -222,14 +224,14 @@ char *utils_strip_public_key(const char *input) {
       continue;
     }
 
-    strip_buf = realloc(strip_buf, (k + 1) * sizeof(char));
+    strip_buf = nrealloc(strip_buf, (k + 1) * sizeof(char));
 
     strip_buf[k] = input[i];
 
     k++;
   }
 
-  strip_buf = realloc(strip_buf, (k + 1) * sizeof(char));
+  strip_buf = nrealloc(strip_buf, (k + 1) * sizeof(char));
   strip_buf[k] = '\0';
 
   return strip_buf;

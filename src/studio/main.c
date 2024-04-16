@@ -5,6 +5,8 @@
 #include "../json/json.h"
 #include "../templating/templating.h"
 
+#include <netlibc/mem.h>
+
 typedef enum {
   EXPLORER,
   STATS,
@@ -16,7 +18,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   char *end_template_string = PROPAGATE(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
-  free(end_template_string);
+  nfree(end_template_string);
 
   result_t res_head_template_string =
       read_file_to_string("./explorer/templates/head.html");
@@ -44,13 +46,13 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   template_t *head_template =
       create_template(head_template_string, head_template_data);
-  free(head_template_string);
+  nfree(head_template_string);
 
   result_t res_template_string = read_file_to_string(source_path);
   char *template_string = PROPAGATE(res_template_string);
 
   template_t *template_object = create_template(template_string, "{}");
-  free(template_string);
+  nfree(template_string);
 
   template_add_partial(template_object, "head", head_template);
   template_add_partial(template_object, "end", end_template);
@@ -64,12 +66,14 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   write_to_file(destination_path, cooked_docs, strlen(cooked_docs));
 
-  free(cooked_docs);
+  nfree(cooked_docs);
 
   return OK(NULL);
 }
 
 int main() {
+  NETLIBC_INIT();
+
   printf("Generating explorer ...\n");
 
   result_t res = gen("./explorer/html/explorer.html",

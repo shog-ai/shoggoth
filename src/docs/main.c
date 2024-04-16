@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../../handlebazz/handlebazz.h"
 #include "../include/cjson.h"
 #include "../json/json.h"
 #include "../md_to_html/md_to_html.h"
-#include "../../handlebazz/handlebazz.h"
 #include "../utils/utils.h"
+
+#include <netlibc/mem.h>
 
 #include "docs_api.h"
 
@@ -23,7 +25,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   char *end_template_string = PROPAGATE(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
-  free(end_template_string);
+  nfree(end_template_string);
 
   result_t res_table_of_contents_template_string =
       read_file_to_string("./explorer/templates/table_of_contents.html");
@@ -32,7 +34,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   template_t *table_of_contents_template =
       create_template(table_of_contents_template_string, "{}");
-  free(table_of_contents_template_string);
+  nfree(table_of_contents_template_string);
 
   result_t res_head_template_string =
       read_file_to_string("./explorer/templates/head.html");
@@ -68,13 +70,13 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
   }
 
   template_t *head_template = create_template(head_template_string, head_data);
-  free(head_template_string);
+  nfree(head_template_string);
 
   result_t res_docs_template_string = read_file_to_string(source_path);
   char *docs_template_string = PROPAGATE(res_docs_template_string);
 
   template_t *docs_template = create_template(docs_template_string, "{}");
-  free(docs_template_string);
+  nfree(docs_template_string);
 
   template_add_partial(docs_template, "head", head_template);
   template_add_partial(docs_template, "end", end_template);
@@ -91,7 +93,7 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 
   write_to_file(destination_path, cooked_docs, strlen(cooked_docs));
 
-  free(cooked_docs);
+  nfree(cooked_docs);
 
   md_file_to_html_file(destination_path, destination_path);
 
@@ -99,6 +101,8 @@ result_t gen(char *source_path, char *destination_path, gen_type_t gen_type) {
 }
 
 int main() {
+  NETLIBC_INIT();
+
   printf("Generating docs ...\n");
 
   result_t res =

@@ -7,12 +7,14 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
-#include "../../json/json.h"
 #include "../../../handlebazz/handlebazz.h"
+#include "../../json/json.h"
 #include "../db/db.h"
 #include "api.h"
 
 #include <stdlib.h>
+
+#include <netlibc/mem.h>
 
 node_ctx_t *explorer_ctx = NULL;
 
@@ -219,7 +221,7 @@ void resource_route(sonic_server_request_t *req) {
 
     result_t res_peers = json_string_to_dht(peers_with_pin);
     dht_t *peers = UNWRAP(res_peers);
-    free(peers_with_pin);
+    nfree(peers_with_pin);
 
     if (peers->items_count > 0) {
       char location[256];
@@ -266,12 +268,12 @@ void resource_route(sonic_server_request_t *req) {
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
-  free(end_template_string);
+  nfree(end_template_string);
 
   result_t res_head_template_string = read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
-  char *head_template_data = malloc(1024 * sizeof(char));
+  char *head_template_data = nmalloc(1024 * sizeof(char));
 
   sprintf(head_template_data,
           "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth "
@@ -285,7 +287,7 @@ void resource_route(sonic_server_request_t *req) {
 
   template_t *head_template =
       create_template(head_template_string, head_template_data);
-  free(head_template_string);
+  nfree(head_template_string);
 
   result_t res_file_content = read_file_to_string(resource_template_path);
   char *file_content = UNWRAP(res_file_content);
@@ -311,7 +313,7 @@ void resource_route(sonic_server_request_t *req) {
             (float)resource_size / (1024 * 1024 * 1024));
   }
 
-  char *template_data = malloc(1024 * sizeof(char));
+  char *template_data = nmalloc(1024 * sizeof(char));
   sprintf(template_data,
           "{ \"shoggoth_id\": \"%s\", \"label\": \"%s\", \"size\": \"%s\", "
           "\"hash\": \"%s\", \"download_link\": \"%s\" }",
@@ -335,8 +337,8 @@ void resource_route(sonic_server_request_t *req) {
   free_template(head_template);
   free_template(end_template);
 
-  free(file_content);
-  free(head_template_data);
+  nfree(file_content);
+  nfree(head_template_data);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -344,7 +346,7 @@ void resource_route(sonic_server_request_t *req) {
 
   sonic_send_response(req, resp);
 
-  free(cooked);
+  nfree(cooked);
   sonic_free_server_response(resp);
 }
 

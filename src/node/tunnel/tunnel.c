@@ -32,6 +32,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <netlibc/mem.h>
+
 void *tunnel_monitor(void *thread_arg) {
   tunnel_monitor_thread_args_t *arg =
       (tunnel_monitor_thread_args_t *)thread_arg;
@@ -74,15 +76,15 @@ void *tunnel_monitor(void *thread_arg) {
 
     } else {
       char *response_body =
-          malloc((resp->response_body_size + 1) * sizeof(char));
+          nmalloc((resp->response_body_size + 1) * sizeof(char));
       strncpy(response_body, resp->response_body, resp->response_body_size);
       response_body[resp->response_body_size] = '\0';
 
       // LOG(INFO, "tunnel api manifest: %s", response_body);
 
-      free(resp->response_body);
+      nfree(resp->response_body);
       sonic_free_response(resp);
-      free(response_body);
+      nfree(response_body);
     }
   }
 
@@ -102,7 +104,7 @@ result_t kill_tunnel_client(node_ctx_t *ctx) {
     char *tunnel_pid_str = PROPAGATE(res_tunnel_pid_str);
 
     int pid = atoi(tunnel_pid_str);
-    free(tunnel_pid_str);
+    nfree(tunnel_pid_str);
 
     kill(pid, SIGKILL);
 
@@ -237,7 +239,7 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
     char *new_public_host = string_from("http://", ctx->config->tunnel.server,
                                         ":", tunnel_port, NULL);
 
-    free(tunnel_logs);
+    nfree(tunnel_logs);
 
     ctx->config->network.public_host = new_public_host;
     ctx->manifest->public_host = strdup(new_public_host);
@@ -260,7 +262,7 @@ result_t kill_tunnel_server(node_ctx_t *ctx) {
     char *tunnel_pid_str = PROPAGATE(res_tunnel_pid_str);
 
     int pid = atoi(tunnel_pid_str);
-    free(tunnel_pid_str);
+    nfree(tunnel_pid_str);
 
     kill(pid, SIGINT);
 

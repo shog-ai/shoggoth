@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <netlibc/mem.h>
+
 typedef struct {
   char *data;
   int size;
@@ -17,12 +19,12 @@ void my_callback(const MD_CHAR *data, MD_SIZE data_size, void *user_data) {
   my_data_t *casted_data = (my_data_t *)user_data;
 
   if (casted_data->size == 0) {
-    casted_data->data = malloc((data_size + 1) * sizeof(char));
+    casted_data->data = nmalloc((data_size + 1) * sizeof(char));
 
     strncpy(casted_data->data, data, data_size);
     casted_data->data[data_size] = '\0';
   } else {
-    casted_data->data = realloc(
+    casted_data->data = nrealloc(
         casted_data->data, (casted_data->size + data_size + 1) * sizeof(char));
 
     strncat(casted_data->data, data, data_size);
@@ -34,7 +36,7 @@ void my_callback(const MD_CHAR *data, MD_SIZE data_size, void *user_data) {
 }
 
 result_t generate_html(char *input) {
-  my_data_t *my_data = calloc(1, sizeof(my_data_t));
+  my_data_t *my_data = ncalloc(1, sizeof(my_data_t));
   my_data->size = 0;
   my_data->data = NULL;
 
@@ -42,7 +44,7 @@ result_t generate_html(char *input) {
   assert(error == 0);
 
   char *output_str = my_data->data;
-  free(my_data);
+  nfree(my_data);
 
   return OK(output_str);
 }
@@ -67,7 +69,7 @@ result_t merge_output(char *content, head_type_t head_type,
   }
 
   char *final_output =
-      malloc((strlen(head) + strlen(content) + strlen(end) + 1) * sizeof(char));
+      nmalloc((strlen(head) + strlen(content) + strlen(end) + 1) * sizeof(char));
 
   strcpy(final_output, head);
   strcat(final_output, content);
@@ -94,8 +96,8 @@ result_t md_file_to_html_file(char *input_path, char *output_path) {
 
   write_to_file(output_path, output, strlen(output));
 
-  free(output);
-  free(input);
+  nfree(output);
+  nfree(input);
 
   return OK(NULL);
 }

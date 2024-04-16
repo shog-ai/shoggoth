@@ -60,6 +60,8 @@ typedef struct {
   void *address;
   u64 size;
   bool freed;
+  char *freed_file;
+  u64 freed_line;
 
   char *file;
   u64 line;
@@ -78,6 +80,8 @@ extern netlibc_ctx_t *__netlibc_ctx;
 void __netlibc_ctx_init(bool mem_debug_enabled);
 
 void __netlibc_ctx_exit();
+
+void _mem_summary();
 
 #ifndef MEM_DEBUG
 #define MEM_DEBUG 0

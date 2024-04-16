@@ -61,6 +61,8 @@ result_t parse_config(char *config_str) {
 }
 
 int main() {
+  NETLIBC_INIT();
+
   result_t res_config_str = read_file_to_string("./dbconfig.toml");
   char *config_str = UNWRAP(res_config_str);
 

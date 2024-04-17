@@ -11,7 +11,6 @@
 #include "utils.h"
 #include "../include/tuwi.h"
 #include "../node/node.h"
-#include "../studio/studio.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -304,29 +303,6 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
   }
 
   nfree(runtime_path);
-}
-
-void utils_verify_studio_runtime_dirs(studio_ctx_t *ctx) {
-  char runtime_path[256];
-  strcpy(runtime_path, ctx->runtime_path);
-
-  char studio_runtime_path[256];
-  sprintf(studio_runtime_path, "%s/studio", runtime_path);
-
-  char models_path[256];
-  sprintf(models_path, "%s/models", studio_runtime_path);
-
-  if (!dir_exists(runtime_path)) {
-    create_dir(runtime_path);
-  }
-
-  if (!dir_exists(studio_runtime_path)) {
-    create_dir(studio_runtime_path);
-  }
-
-  if (!dir_exists(models_path)) {
-    create_dir(models_path);
-  }
 }
 
 /****

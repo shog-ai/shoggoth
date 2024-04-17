@@ -1,0 +1,1 @@
+~/shogstudio/bin/studio "$@"

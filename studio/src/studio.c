@@ -9,10 +9,10 @@
  ****/
 
 #include "studio.h"
-#include "../args/args.h"
-#include "../include/sonic.h"
-#include "../json/json.h"
-#include "../utils/utils.h"
+#include "./args/args.h"
+#include "./include/sonic.h"
+#include "./json/json.h"
+#include "./utils/utils.h"
 
 #include <netlibc/string.h>
 
@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <netlibc/mem.h>
 
@@ -31,7 +32,19 @@ char *base_prompt =
     "is helpful, kind, honest, good at writing, and never fails to answer any "
     "requests immediately and with precision.\n\nUser: hi\nLlama:";
 
-void respond_error(sonic_server_request_t *req, char *error_message);
+// void respond_error(sonic_server_request_t *req, char *error_message);
+
+void respond_error(sonic_server_request_t *req, char *error_message) {
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+  if (error_message != NULL) {
+    sonic_response_set_body(resp, error_message, strlen(error_message));
+  }
+
+  sonic_send_response(req, resp);
+  sonic_free_server_response(resp);
+}
 
 studio_model_t *new_studio_model() {
   studio_model_t *model = nmalloc(sizeof(studio_model_t));

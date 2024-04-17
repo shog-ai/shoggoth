@@ -18,8 +18,8 @@
 #include <netlibc/string.h>
 
 #include "./args/args.h"
+#include "./studio.h"
 #include "const.h"
-#include "node/node.h"
 
 #include <stdlib.h>
 
@@ -28,7 +28,7 @@
 #endif
 
 result_t handle_session(args_t *args) {
-  result_t res = handle_node_session(args);
+  result_t res = start_studio(args);
   PROPAGATE(res);
 
   return OK(NULL);
@@ -45,11 +45,11 @@ int main(int argc, char **argv) {
   args_t *args = UNWRAP(res_args);
 
   if (args->help || args->no_args) {
-    printf("Shoggoth - %s\n%s", VERSION, SHOG_HELP);
+    printf("Shog Studio - %s\n%s", VERSION, SHOG_HELP);
 
     exit(0);
   } else if (args->version) {
-    printf("Shoggoth -  %s\n%s", VERSION, SHOG_VERSION);
+    printf("Shog Studio -  %s\n%s", VERSION, SHOG_VERSION);
 
     exit(0);
   }

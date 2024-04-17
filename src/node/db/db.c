@@ -33,10 +33,10 @@
 #include <unistd.h>
 
 result_t kill_db(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char db_pid_path[FILE_PATH_SIZE];
+  char db_pid_path[256];
   sprintf(db_pid_path, "%s/db_pid.txt", node_runtime_path);
 
   if (file_exists(db_pid_path)) {
@@ -82,11 +82,10 @@ void launch_db(node_ctx_t *ctx) {
   result_t res_db = kill_db(ctx);
   UNWRAP(res_db);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char db_logs_path[FILE_PATH_SIZE];
-  sprintf(db_logs_path, "%s/db_logs.txt", node_runtime_path);
+  char *db_logs_path = string_from(node_runtime_path, "/db_logs.txt", NULL);
 
   pid_t pid = fork();
 
@@ -117,23 +116,24 @@ void launch_db(node_ctx_t *ctx) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char db_pid_path[FILE_PATH_SIZE];
-    sprintf(db_pid_path, "%s/db_pid.txt", node_runtime_path);
+    char *db_pid_path = string_from(node_runtime_path, "/db_pid.txt", NULL);
 
     pid_t db_pid = getpid();
     char db_pid_str[120];
     sprintf(db_pid_str, "%d", db_pid);
     write_to_file(db_pid_path, db_pid_str, strlen(db_pid_str));
 
+    nfree(db_pid_path);
+
     // Execute the executable
 
-    char db_executable[FILE_PATH_SIZE];
+    char db_executable[256];
     sprintf(db_executable, "%s/bin/shogdb", ctx->runtime_path);
 
-    char config_path[FILE_PATH_SIZE];
+    char config_path[256];
     sprintf(config_path, "%s/dbconfig.toml", node_runtime_path);
 
-    char config_arg[FILE_PATH_SIZE];
+    char config_arg[256];
     strcpy(config_arg, config_path);
 
     execlp(db_executable, db_executable, config_arg, NULL);
@@ -158,6 +158,8 @@ void launch_db(node_ctx_t *ctx) {
       PANIC("error occured while launching db executable.\nDB LOGS:\n%s",
             db_logs);
     }
+
+    nfree(db_logs_path);
   }
 }
 

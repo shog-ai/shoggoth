@@ -114,8 +114,7 @@ result_t utils_create_tarball(char *dir_path, char *output_path) {
 result_t utils_hash_tarball(char *tmp_path, char *tarball_path) {
   char *uuid = utils_gen_uuid();
 
-  char hash_tmp_path[FILE_PATH_SIZE];
-  sprintf(hash_tmp_path, "%s/%s", tmp_path, uuid);
+  char *hash_tmp_path = string_from(tmp_path, "/", uuid, NULL);
 
   nfree(uuid);
 
@@ -150,6 +149,8 @@ result_t utils_hash_tarball(char *tmp_path, char *tarball_path) {
 
   result_t res_delete = delete_dir(hash_tmp_path);
   PROPAGATE(res_delete);
+
+  nfree(hash_tmp_path);
 
   if (WIFEXITED(status)) {
     int exit_status = WEXITSTATUS(status);
@@ -243,13 +244,16 @@ char *utils_strip_public_key(const char *input) {
  *
  ****/
 bool utils_keys_exist(char *keys_path) {
-  char private_key_path[FILE_PATH_SIZE];
-  sprintf(private_key_path, "%s/private.txt", keys_path);
+  char *private_key_path = string_from(keys_path, "/private.txt", NULL);
+  char *public_key_path = string_from(keys_path, "/public.txt", NULL);
 
-  char public_key_path[FILE_PATH_SIZE];
-  sprintf(public_key_path, "%s/public.txt", keys_path);
+  bool public_exists = file_exists(public_key_path);
+  bool private_exists = file_exists(private_key_path);
 
-  if (file_exists(public_key_path) && file_exists(private_key_path)) {
+  nfree(public_key_path);
+  nfree(private_key_path);
+
+  if (public_exists && private_exists) {
     return true;
   } else {
     return false;
@@ -263,19 +267,18 @@ bool utils_keys_exist(char *keys_path) {
  *
  ****/
 void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
-  char runtime_path[FILE_PATH_SIZE];
-  strcpy(runtime_path, ctx->runtime_path);
+  char *runtime_path = string_from(ctx->runtime_path, NULL);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char node_explorer_path[FILE_PATH_SIZE];
+  char node_explorer_path[256];
   utils_get_node_explorer_path(ctx, node_explorer_path);
 
-  char node_tmp_path[FILE_PATH_SIZE];
+  char node_tmp_path[256];
   utils_get_node_tmp_path(ctx, node_tmp_path);
 
-  char node_update_path[FILE_PATH_SIZE];
+  char node_update_path[256];
   utils_get_node_update_path(ctx, node_update_path);
 
   assert(runtime_path != NULL);
@@ -299,16 +302,18 @@ void utils_verify_node_runtime_dirs(node_ctx_t *ctx) {
   if (!dir_exists(node_update_path)) {
     create_dir(node_update_path);
   }
+
+  nfree(runtime_path);
 }
 
 void utils_verify_studio_runtime_dirs(studio_ctx_t *ctx) {
-  char runtime_path[FILE_PATH_SIZE];
+  char runtime_path[256];
   strcpy(runtime_path, ctx->runtime_path);
 
-  char studio_runtime_path[FILE_PATH_SIZE];
+  char studio_runtime_path[256];
   sprintf(studio_runtime_path, "%s/studio", runtime_path);
 
-  char models_path[FILE_PATH_SIZE];
+  char models_path[256];
   sprintf(models_path, "%s/models", studio_runtime_path);
 
   if (!dir_exists(runtime_path)) {
@@ -353,7 +358,7 @@ int utils_get_default_runtime_path(char runtime_path[]) {
  *
  ****/
 void utils_get_node_runtime_path(node_ctx_t *ctx, char node_runtime_path[]) {
-  char runtime_path[FILE_PATH_SIZE];
+  char runtime_path[256];
   strcpy(runtime_path, ctx->runtime_path);
 
   char *relative_path = "/node";
@@ -368,7 +373,7 @@ void utils_get_node_runtime_path(node_ctx_t *ctx, char node_runtime_path[]) {
  *
  ****/
 void utils_get_node_explorer_path(node_ctx_t *ctx, char node_explorer_path[]) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *relative_path = "/explorer";
@@ -383,7 +388,7 @@ void utils_get_node_explorer_path(node_ctx_t *ctx, char node_explorer_path[]) {
  *
  ****/
 void utils_get_node_tmp_path(node_ctx_t *ctx, char node_tmp_path[]) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *relative_path = "/tmp";
@@ -392,7 +397,7 @@ void utils_get_node_tmp_path(node_ctx_t *ctx, char node_tmp_path[]) {
 }
 
 void utils_get_node_update_path(node_ctx_t *ctx, char node_update_path[]) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *relative_path = "/update";

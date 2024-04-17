@@ -56,7 +56,7 @@ result_t generate_node_key_pair(char *keys_path, char *public_key_path,
 result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   // chdir(ctx->runtime_path);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *keys_path = string_from(node_runtime_path, "/keys", NULL);
@@ -318,7 +318,7 @@ result_t shog_init_node(args_t *args, bool print_info) {
     LOG(INFO, "Initializing node");
   }
 
-  char default_runtime_path[FILE_PATH_SIZE];
+  char default_runtime_path[256];
   utils_get_default_runtime_path(default_runtime_path);
 
   if (args->set_runtime_path) {
@@ -420,7 +420,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
     sa.sa_handler = sigchld_handler;
     sigaction(SIGCHLD, &sa, NULL);
 
-    char node_runtime_path[FILE_PATH_SIZE];
+    char node_runtime_path[256];
     utils_get_node_runtime_path(ctx, node_runtime_path);
 
     char *monitor_logs_path =
@@ -475,7 +475,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
 result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
   LOG(INFO, "Starting node as a service");
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   pid_t pid = fork();
@@ -554,7 +554,7 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
 }
 
 result_t check_node_service(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
@@ -585,7 +585,7 @@ result_t check_node_service(node_ctx_t *ctx) {
 }
 
 result_t stop_node_service(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
@@ -629,7 +629,7 @@ result_t stop_node_service(node_ctx_t *ctx) {
 }
 
 result_t print_node_service_logs(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_logs_path =
@@ -654,7 +654,7 @@ result_t print_node_service_logs(node_ctx_t *ctx) {
 result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   LOG(INFO, "Restarting node service");
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
@@ -803,7 +803,7 @@ result_t shoggoth_id_from_hash(char *hash) {
 result_t node_unpin_resource(node_ctx_t *ctx, char *shoggoth_id) {
   LOG(INFO, "unpinning resource `%s`", shoggoth_id);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
@@ -840,7 +840,7 @@ result_t node_pin_resource(node_ctx_t *ctx, char *file_path, char *label) {
   result_t res_id = shoggoth_id_from_hash(hash);
   char *id = PROPAGATE(res_id);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
@@ -867,11 +867,10 @@ void clone_response_callback(char *data, u64 size, void *user_pointer) {
 result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
   LOG(INFO, "cloning resource `%s`", url);
 
-  char tmp_path[FILE_PATH_SIZE];
+  char tmp_path[256];
   utils_get_node_tmp_path(ctx, tmp_path);
 
-  char tmp_file_path[FILE_PATH_SIZE];
-  sprintf(tmp_file_path, "%s/clone.tmp", tmp_path);
+  char *tmp_file_path = string_from(tmp_path, "/clone.tmp", NULL);
 
   sonic_request_t *req = sonic_new_request(METHOD_GET, url);
 
@@ -894,6 +893,8 @@ result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
   UNWRAP(node_pin_resource(ctx, tmp_file_path, label));
 
   delete_file(tmp_file_path);
+
+  nfree(tmp_file_path);
 
   LOG(INFO, "resource cloned successfully");
 

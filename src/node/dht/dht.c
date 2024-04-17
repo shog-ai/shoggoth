@@ -307,10 +307,10 @@ void *dht_updater(void *thread_arg) {
     nfree(dht_str);
 
     for (u64 i = 0; i < dht->items_count; i++) {
-      char req_url[FILE_PATH_SIZE];
-      sprintf(req_url, "%s/api/get_dht", dht->items[i]->host);
+      char *req_url = string_from(dht->items[i]->host, "/api/get_dht", NULL);
 
       sonic_request_t *req = sonic_new_request(METHOD_GET, req_url);
+      nfree(req_url);
       if (req == NULL) {
         PANIC(sonic_get_error());
       }

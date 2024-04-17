@@ -152,9 +152,8 @@ void api_index_route(sonic_server_request_t *req) {
 }
 
 void launch_model_server(char *model_name) {
-  char model_server_logs_path[FILE_PATH_SIZE];
-  sprintf(model_server_logs_path, "%s/studio/model_server_logs.txt",
-          studio_ctx->runtime_path);
+  char *model_server_logs_path = string_from(
+      studio_ctx->runtime_path, "/studio/model_server_logs.txt", NULL);
 
   pid_t pid = fork();
 
@@ -170,7 +169,7 @@ void launch_model_server(char *model_name) {
     PANIC("could not fork model server process \n");
   } else if (pid == 0) {
     // CHILD PROCESS
-    char server_active_dir[FILE_PATH_SIZE];
+    char server_active_dir[256];
     sprintf(server_active_dir, "%s/studio/model_server",
             studio_ctx->runtime_path);
     chdir(server_active_dir);
@@ -188,7 +187,7 @@ void launch_model_server(char *model_name) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char server_pid_path[FILE_PATH_SIZE];
+    char server_pid_path[256];
     sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
             studio_ctx->runtime_path);
 
@@ -199,13 +198,11 @@ void launch_model_server(char *model_name) {
 
     // Execute the executable
 
-    char model_server_executable[FILE_PATH_SIZE];
-    sprintf(model_server_executable, "%s/bin/shog_model_server",
-            studio_ctx->runtime_path);
+    char *model_server_executable =
+        string_from(studio_ctx->runtime_path, "/bin/shog_model_server", NULL);
 
-    char model_path[FILE_PATH_SIZE];
-    sprintf(model_path, "%s/studio/models/%s", studio_ctx->runtime_path,
-            model_name);
+    char *model_path = string_from(studio_ctx->runtime_path, "/studio/models/",
+                                   model_name, NULL);
 
     execlp(model_server_executable, model_server_executable, "--port", "6967",
            "-m", model_path, "-c", "2048", "-r", "User:", NULL);
@@ -233,6 +230,8 @@ void launch_model_server(char *model_name) {
             logs);
     }
   }
+
+  nfree(model_server_logs_path);
 }
 
 void api_mount_model_route(sonic_server_request_t *req) {
@@ -264,9 +263,8 @@ result_t kill_model_server() {
   // char node_runtime_path[FILE_PATH_SIZE];
   // utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char server_pid_path[FILE_PATH_SIZE];
-  sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
-          studio_ctx->runtime_path);
+  char *server_pid_path = string_from(studio_ctx->runtime_path,
+                                      "/studio/model_server_pid.txt", NULL);
 
   if (file_exists(server_pid_path)) {
     result_t res_server_pid_str = read_file_to_string(server_pid_path);
@@ -421,10 +419,11 @@ void add_studio_api_routes(sonic_server_t *server) {
 }
 
 void index_route(sonic_server_request_t *req) {
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/studio/html/studio.html", studio_ctx->runtime_path);
+  char *file_path =
+      string_from(studio_ctx->runtime_path, "/studio/html/studio.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -443,10 +442,11 @@ void index_route(sonic_server_request_t *req) {
 void add_frontend_routes(sonic_server_t *server) {
   sonic_add_route(server, "/", METHOD_GET, index_route);
 
-  char static_dir[FILE_PATH_SIZE];
-  sprintf(static_dir, "%s/studio/static", studio_ctx->runtime_path);
+  char *static_dir =
+      string_from(studio_ctx->runtime_path, "/studio/static", NULL);
 
   sonic_add_directory_route(server, "/static", static_dir);
+  nfree(static_dir);
 }
 
 /****
@@ -498,7 +498,7 @@ result_t shog_init_studio(args_t *args, bool print_info) {
     LOG(INFO, "Initializing studio");
   }
 
-  char default_runtime_path[FILE_PATH_SIZE];
+  char default_runtime_path[256];
   utils_get_default_runtime_path(default_runtime_path);
 
   if (args->set_runtime_path) {

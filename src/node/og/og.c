@@ -275,24 +275,26 @@ unsigned char *generate_og_image(const char *title, const char *desc,
 void og_init_stb(node_ctx_t *ctx) {
   ttf_buffer = (unsigned char *)nmalloc(TTF_BUFFER_SIZE);
 
-  char explorer_path[FILE_PATH_SIZE];
+  char explorer_path[256];
   utils_get_node_explorer_path(ctx, explorer_path);
 
-  char font_path[FILE_PATH_SIZE];
-  sprintf(font_path, "%s/static/font/Roboto/Roboto-Regular.ttf", explorer_path);
+  char *font_path = string_from(explorer_path,
+                                "/static/font/Roboto/Roboto-Regular.ttf", NULL);
 
   FILE *fontFile = fopen(font_path, "rb");
   if (!fontFile) {
     PANIC("Error opening font file\n");
   }
+  nfree(font_path);
   fread(ttf_buffer, 1, TTF_BUFFER_SIZE, fontFile);
   fclose(fontFile);
 
-  char logo_path[FILE_PATH_SIZE];
-  sprintf(logo_path, "%s/static/img/icon/icon-250x250.png", explorer_path);
+  char *logo_path =
+      string_from(explorer_path, "/static/img/icon/icon-250x250.png", NULL);
 
   logo_data =
       stbi_load(logo_path, &logo_width, &logo_height, &logo_channels, 0);
+  nfree(logo_path);
   if (!logo_data) {
     PANIC("Error loading PNG file\n");
   }

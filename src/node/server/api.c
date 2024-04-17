@@ -47,11 +47,10 @@ void api_download_route(sonic_server_request_t *req) {
     return;
   }
 
-  char runtime_path[FILE_PATH_SIZE];
+  char runtime_path[256];
   utils_get_node_runtime_path(api_ctx, runtime_path);
 
-  char pin_dir_path[FILE_PATH_SIZE];
-  sprintf(pin_dir_path, "%s/pins/%s", runtime_path, shoggoth_id);
+  char *pin_dir_path = string_from(runtime_path, "/pins/", shoggoth_id, NULL);
 
   if (!file_exists(pin_dir_path)) {
     result_t res_peers_with_pin = db_get_peers_with_pin(api_ctx, shoggoth_id);
@@ -99,6 +98,8 @@ void api_download_route(sonic_server_request_t *req) {
 
     sonic_free_server_response(resp);
   }
+
+  nfree(pin_dir_path);
 }
 
 void add_peer(char *peer_manifest) {
@@ -152,31 +153,6 @@ void api_get_pins_route(sonic_server_request_t *req) {
   sonic_response_set_body(resp, body, strlen(body));
 
   sonic_response_add_header(resp, "Access-Control-Allow-Origin", "*");
-
-  sonic_send_response(req, resp);
-  nfree(body);
-  sonic_free_server_response(resp);
-}
-
-void api_get_fingerprint_route(sonic_server_request_t *req) {
-  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
-
-  char runtime_path[FILE_PATH_SIZE];
-  utils_get_node_runtime_path(api_ctx, runtime_path);
-
-  char fingerprint_path[FILE_PATH_SIZE];
-  sprintf(fingerprint_path, "%s/pins/%s/.shoggoth/fingerprint.json",
-          runtime_path, shoggoth_id);
-
-  result_t res_fingerprint_str = read_file_to_string(fingerprint_path);
-  SERVER_ERR(res_fingerprint_str);
-  char *fingerprint_str = VALUE(res_fingerprint_str);
-
-  char *body = fingerprint_str;
-
-  sonic_server_response_t *resp =
-      sonic_new_response(STATUS_200, MIME_APPLICATION_JSON);
-  sonic_response_set_body(resp, body, strlen(body));
 
   sonic_send_response(req, resp);
   nfree(body);

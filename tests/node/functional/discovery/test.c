@@ -50,7 +50,7 @@ VALUE_T setup_start_triple_nodes() {
   process_t *node_process2 = RUN_EXECUTABLE(
       "./node-output2.txt", "./shog", "run", "-r", node_path, NULL);
 
-  sleep(5);
+  sleep(10);
 
   sprintf(node_path, "%s/node1", working_dir);
   process_t *node_process1 = RUN_EXECUTABLE(

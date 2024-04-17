@@ -10,6 +10,8 @@
 
 #include "../include/netlibc/fs.h"
 #include "../include/netlibc/log.h"
+#include "../include/netlibc/mem.h"
+#include "../include/netlibc/string.h"
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -20,8 +22,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include <netlibc/mem.h>
-#include <netlibc/string.h>
 
 result_t delete_file(const char *file_path) {
   if (remove(file_path) == 0) {

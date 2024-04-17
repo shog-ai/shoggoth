@@ -32,6 +32,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <netlibc/mem.h>
+
 void *tunnel_monitor(void *thread_arg) {
   tunnel_monitor_thread_args_t *arg =
       (tunnel_monitor_thread_args_t *)thread_arg;
@@ -74,15 +76,15 @@ void *tunnel_monitor(void *thread_arg) {
 
     } else {
       char *response_body =
-          malloc((resp->response_body_size + 1) * sizeof(char));
+          nmalloc((resp->response_body_size + 1) * sizeof(char));
       strncpy(response_body, resp->response_body, resp->response_body_size);
       response_body[resp->response_body_size] = '\0';
 
       // LOG(INFO, "tunnel api manifest: %s", response_body);
 
-      free(resp->response_body);
+      nfree(resp->response_body);
       sonic_free_response(resp);
-      free(response_body);
+      nfree(response_body);
     }
   }
 
@@ -91,18 +93,18 @@ void *tunnel_monitor(void *thread_arg) {
 
 // FIXME: the process is not terminating
 result_t kill_tunnel_client(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char tunnel_pid_path[FILE_PATH_SIZE];
-  sprintf(tunnel_pid_path, "%s/tunnel_pid.txt", node_runtime_path);
+  char *tunnel_pid_path =
+      string_from(node_runtime_path, "/tunnel_pid.txt", NULL);
 
   if (file_exists(tunnel_pid_path)) {
     result_t res_tunnel_pid_str = read_file_to_string(tunnel_pid_path);
     char *tunnel_pid_str = PROPAGATE(res_tunnel_pid_str);
 
     int pid = atoi(tunnel_pid_str);
-    free(tunnel_pid_str);
+    nfree(tunnel_pid_str);
 
     kill(pid, SIGKILL);
 
@@ -129,6 +131,8 @@ result_t kill_tunnel_client(node_ctx_t *ctx) {
     delete_file(tunnel_pid_path);
   }
 
+  nfree(tunnel_pid_path);
+
   return OK(NULL);
 }
 
@@ -136,11 +140,11 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
   // result_t res_kill = kill_tunnel_client(ctx);
   // UNWRAP(res_kill);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char tunnel_logs_path[FILE_PATH_SIZE];
-  sprintf(tunnel_logs_path, "%s/tunnel_logs.txt", node_runtime_path);
+  char *tunnel_logs_path =
+      string_from(node_runtime_path, "/tunnel_logs.txt", NULL);
 
   pid_t pid = fork();
 
@@ -171,18 +175,20 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char tunnel_pid_path[FILE_PATH_SIZE];
-    sprintf(tunnel_pid_path, "%s/tunnel_pid.txt", node_runtime_path);
+    char *tunnel_pid_path =
+        string_from(node_runtime_path, "/tunnel_pid.txt", NULL);
 
     pid_t tunnel_pid = getpid();
     char tunnel_pid_str[120];
     sprintf(tunnel_pid_str, "%d", tunnel_pid);
     write_to_file(tunnel_pid_path, tunnel_pid_str, strlen(tunnel_pid_str));
 
+    nfree(tunnel_pid_path);
+
     // Execute the executable
 
-    char tunnel_executable[FILE_PATH_SIZE];
-    sprintf(tunnel_executable, "%s/bin/shog_tunnel", ctx->runtime_path);
+    char *tunnel_executable =
+        string_from(ctx->runtime_path, "/bin/shog_tunnel", NULL);
 
     char local_port[100];
     sprintf(local_port, "%d", ctx->config->network.port);
@@ -221,11 +227,11 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
                  tunnel_logs);
     }
 
-    char node_runtime_path[FILE_PATH_SIZE];
+    char node_runtime_path[256];
     utils_get_node_runtime_path(ctx, node_runtime_path);
 
-    char tunnel_logs_path[FILE_PATH_SIZE];
-    sprintf(tunnel_logs_path, "%s/tunnel_logs.txt", node_runtime_path);
+    // char *tunnel_logs_path =
+    // string_from(node_runtime_path, "/tunnel_logs.txt", NULL);
 
     char *tunnel_logs = UNWRAP(read_file_to_string(tunnel_logs_path));
     char *last_colon = strrchr(tunnel_logs, ':');
@@ -237,7 +243,7 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
     char *new_public_host = string_from("http://", ctx->config->tunnel.server,
                                         ":", tunnel_port, NULL);
 
-    free(tunnel_logs);
+    nfree(tunnel_logs);
 
     ctx->config->network.public_host = new_public_host;
     ctx->manifest->public_host = strdup(new_public_host);
@@ -245,22 +251,24 @@ result_t launch_tunnel_client(node_ctx_t *ctx, u64 custom_port) {
     LOG(INFO, "TUNNELED PUBLIC HOST: %s", ctx->config->network.public_host);
   }
 
+  nfree(tunnel_logs_path);
+
   return OK(NULL);
 }
 
 result_t kill_tunnel_server(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char tunnel_pid_path[FILE_PATH_SIZE];
-  sprintf(tunnel_pid_path, "%s/tunnel_server_pid.txt", node_runtime_path);
+  char *tunnel_pid_path =
+      string_from(node_runtime_path, "/tunnel_server_pid.txt", NULL);
 
   if (file_exists(tunnel_pid_path)) {
     result_t res_tunnel_pid_str = read_file_to_string(tunnel_pid_path);
     char *tunnel_pid_str = PROPAGATE(res_tunnel_pid_str);
 
     int pid = atoi(tunnel_pid_str);
-    free(tunnel_pid_str);
+    nfree(tunnel_pid_str);
 
     kill(pid, SIGINT);
 
@@ -287,6 +295,8 @@ result_t kill_tunnel_server(node_ctx_t *ctx) {
     delete_file(tunnel_pid_path);
   }
 
+  nfree(tunnel_pid_path);
+
   return OK(NULL);
 }
 
@@ -294,10 +304,10 @@ void launch_tunnel_server(node_ctx_t *ctx) {
   result_t res_kill = kill_tunnel_server(ctx);
   UNWRAP(res_kill);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char tunnel_logs_path[FILE_PATH_SIZE];
+  char tunnel_logs_path[256];
   sprintf(tunnel_logs_path, "%s/tunnel_server_logs.txt", node_runtime_path);
 
   pid_t pid = fork();
@@ -329,7 +339,7 @@ void launch_tunnel_server(node_ctx_t *ctx) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char tunnel_pid_path[FILE_PATH_SIZE];
+    char tunnel_pid_path[256];
     sprintf(tunnel_pid_path, "%s/tunnel_server_pid.txt", node_runtime_path);
 
     pid_t tunnel_pid = getpid();
@@ -339,7 +349,7 @@ void launch_tunnel_server(node_ctx_t *ctx) {
 
     // Execute the executable
 
-    char tunnel_executable[FILE_PATH_SIZE];
+    char tunnel_executable[256];
     sprintf(tunnel_executable, "%s/bin/shog_tunnel", ctx->runtime_path);
 
     execlp(tunnel_executable, tunnel_executable, "server", NULL);

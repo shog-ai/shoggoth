@@ -7,6 +7,10 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
+// #ifndef NDEBUG
+// #define MEM_DEBUG 1
+// #endif
+
 #include <netlibc.h>
 #include <netlibc/error.h>
 #include <netlibc/fs.h>
@@ -16,7 +20,6 @@
 #include "./args/args.h"
 #include "const.h"
 #include "node/node.h"
-#include "studio/studio.h"
 
 #include <stdlib.h>
 
@@ -24,25 +27,16 @@
 #define VERSION "0.0.0"
 #endif
 
-/****
- * handles a node session.
- *
- ****/
 result_t handle_session(args_t *args) {
-  if (strcmp(args->command, "studio") == 0) {
-    result_t res = start_studio(args);
-    PROPAGATE(res);
-  } else {
-    result_t res = handle_node_session(args);
-    PROPAGATE(res);
-  }
+  result_t res = handle_node_session(args);
+  PROPAGATE(res);
 
   return OK(NULL);
 }
 
 int main(int argc, char **argv) {
-  NETLIBC_INIT(MEM_DEBUG_ENABLED);
-  
+  NETLIBC_INIT();
+
   result_t res_args = args_parse(argc, argv);
   if (!is_ok(res_args)) {
     EXIT(1, res_args.error_message);

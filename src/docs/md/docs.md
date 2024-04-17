@@ -43,7 +43,7 @@ Shoggoth currently supports Linux, macOS, and Windows (only with WSL).
 
 ### Download Precompiled Binaries
 
-You can download Shoggoth from [https://shog.ai/download.html](https://shog.ai/download.html).
+You can download Shoggoth from [https://shog.ai/shoggoth](https://shog.ai/shoggoth).
 Once the download is complete, verify the file hash with the following command to ensure it was not tampered with in transit:
 
 ```bash

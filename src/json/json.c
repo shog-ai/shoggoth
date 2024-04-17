@@ -11,12 +11,13 @@
 #include "../include/cjson.h"
 #include "../node/dht/dht.h"
 #include "../node/server/server.h"
-#include "../studio/studio.h"
 #include "../utils/utils.h"
 
 #include "json.h"
 
 #include <stdlib.h>
+
+#include <netlibc/mem.h>
 
 void free_json(json_t *json) {
   cJSON *cjson = (cJSON *)json;
@@ -28,91 +29,6 @@ char *json_to_string(json_t *json) {
   cJSON *cjson = (cJSON *)json;
 
   return cJSON_Print(cjson);
-}
-
-result_t json_to_studio_model(json_t *json) {
-  cJSON *model_json = (cJSON *)json;
-
-  studio_model_t *model = new_studio_model();
-
-  model->name =
-      strdup(cJSON_GetObjectItemCaseSensitive(model_json, "name")->valuestring);
-
-  return OK(model);
-}
-
-result_t json_to_studio_active_model(json_t *json) {
-  cJSON *model_json = (cJSON *)json;
-
-  studio_active_model_t *model = new_studio_active_model();
-
-  model->name =
-      strdup(cJSON_GetObjectItemCaseSensitive(model_json, "name")->valuestring);
-
-  model->status = "unmounted";
-
-  return OK(model);
-}
-
-result_t json_to_studio_models(json_t *json) {
-  cJSON *models_json = (cJSON *)json;
-
-  studio_models_t *models = new_studio_models();
-
-  const cJSON *model_json = NULL;
-  cJSON_ArrayForEach(models_json, model_json) {
-    result_t res_new_item = json_to_studio_model((void *)model_json);
-    studio_model_t *new_item = PROPAGATE(res_new_item);
-
-    studio_models_add_model(models, new_item);
-  }
-
-  return OK(models);
-}
-
-result_t json_studio_model_to_json(studio_model_t model) {
-  cJSON *model_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(model_json, "name", model.name);
-
-  return OK(model_json);
-}
-
-result_t json_studio_active_model_to_json(studio_active_model_t model) {
-  cJSON *model_json = cJSON_CreateObject();
-
-  cJSON_AddStringToObject(model_json, "name", model.name);
-  cJSON_AddStringToObject(model_json, "status", model.status);
-
-  return OK(model_json);
-}
-
-result_t json_studio_models_to_json(studio_models_t models) {
-  cJSON *models_json = cJSON_CreateArray();
-
-  for (u64 i = 0; i < models.items_count; i++) {
-    result_t res_item_json = json_studio_model_to_json(*models.items[i]);
-    cJSON *item_json = (cJSON *)PROPAGATE(res_item_json);
-
-    cJSON_AddItemToArray(models_json, item_json);
-  }
-
-  return OK(models_json);
-}
-
-result_t json_studio_state_to_json(studio_state_t state) {
-  cJSON *state_json = cJSON_CreateObject();
-
-  result_t res_models_json = json_studio_models_to_json(*state.models);
-  cJSON *models_json = PROPAGATE(res_models_json);
-  cJSON_AddItemToObject(state_json, "models", models_json);
-
-  result_t res_active_model_json =
-      json_studio_active_model_to_json(*state.active_model);
-  cJSON *active_model_json = PROPAGATE(res_active_model_json);
-  cJSON_AddItemToObject(state_json, "active_model", active_model_json);
-
-  return OK(state_json);
 }
 
 result_t json_dht_item_to_json(dht_item_t item) {
@@ -172,7 +88,7 @@ result_t json_node_manifest_to_json(node_manifest_t manifest) {
 pins_t *json_to_pins(json_t *json) {
   cJSON *pins_json = (cJSON *)json;
 
-  pins_t *pins = calloc(1, sizeof(pins_t));
+  pins_t *pins = ncalloc(1, sizeof(pins_t));
   pins->pins = NULL;
   pins->pins_count = 0;
 
@@ -180,7 +96,7 @@ pins_t *json_to_pins(json_t *json) {
   cJSON_ArrayForEach(pin_json, pins_json) {
     char *pin_str = pin_json->valuestring;
 
-    pins->pins = realloc(pins->pins, (pins->pins_count + 1) * sizeof(char *));
+    pins->pins = nrealloc(pins->pins, (pins->pins_count + 1) * sizeof(char *));
     pins->pins[pins->pins_count] = strdup(pin_str);
     pins->pins_count++;
   }
@@ -212,20 +128,6 @@ result_t json_to_dht_item(json_t *json) {
   dht_item->pins = json_to_pins((void *)pins_json);
 
   return OK(dht_item);
-}
-
-result_t json_to_completion_request(json_t *json) {
-  cJSON *req_json = (cJSON *)json;
-
-  completion_request_t *req = new_completion_request();
-
-  cJSON *prompt = cJSON_GetObjectItemCaseSensitive(req_json, "prompt");
-  if (prompt == NULL) {
-    return ERR("prompt object not found");
-  }
-  req->prompt = strdup(prompt->valuestring);
-
-  return OK(req);
 }
 
 result_t json_to_dht(json_t *json) {
@@ -291,7 +193,7 @@ node_manifest_t *json_to_node_manifest(json_t *json) {
   bool has_explorer =
       cJSON_GetObjectItemCaseSensitive(manifest_json, "has_explorer")->valueint;
 
-  node_manifest_t *manifest = calloc(1, sizeof(node_manifest_t));
+  node_manifest_t *manifest = ncalloc(1, sizeof(node_manifest_t));
 
   manifest->public_host = public_host;
   manifest->public_key = public_key;
@@ -313,18 +215,4 @@ result_t json_string_to_node_manifest(char *manifest_str) {
   cJSON_Delete(manifest_json);
 
   return OK(manifest);
-}
-
-result_t json_string_to_completion_request(char *str) {
-  cJSON *req_json = cJSON_Parse(str);
-  if (req_json == NULL) {
-    return ERR("Could not parse completion request json: %s\n", str);
-  }
-
-  result_t res_req = json_to_completion_request((void *)req_json);
-  completion_request_t *req = PROPAGATE(res_req);
-
-  cJSON_Delete(req_json);
-
-  return OK(req);
 }

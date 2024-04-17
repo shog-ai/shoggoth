@@ -19,7 +19,7 @@
 
 #include <sys/stat.h>
 
-#define FILE_PATH_SIZE 256
+// #define FILE_PATH_SIZE 256
 
 #define SHOGGOTH_ID_SIZE 512
 #define NODE_ID_SIZE 512

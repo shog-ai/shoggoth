@@ -54,6 +54,7 @@ void utils_test_suite(suite_t *suite) {
 }
 
 int main(int argc, char **argv) {
+  NETLIBC_INIT();
   CAMEL_BEGIN(UNIT);
 
   ADD_SUITE(utils_test_suite);

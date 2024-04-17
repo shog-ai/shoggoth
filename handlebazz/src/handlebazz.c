@@ -14,6 +14,8 @@
 #include "../../src/include/cjson.h"
 
 #include <netlibc/log.h>
+#include <netlibc/mem.h>
+#include <netlibc/string.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -36,7 +38,7 @@ typedef struct {
 } template_command_t;
 
 template_t *create_template(char *template_string, char *template_data) {
-  template_t *template_object = calloc(1, sizeof(template_t));
+  template_t *template_object = ncalloc(1, sizeof(template_t));
 
   template_object->template_string = strdup(template_string);
   template_object->template_data = strdup(template_data);
@@ -50,8 +52,8 @@ template_t *create_template(char *template_string, char *template_data) {
 result_t template_add_partial(template_t *parent, char *partial_name,
                               template_t *partial_template) {
 
-  parent->partials = realloc(parent->partials, (parent->partials_count + 1) *
-                                                   sizeof(template_partial_t));
+  parent->partials = nrealloc(parent->partials, (parent->partials_count + 1) *
+                                                    sizeof(template_partial_t));
 
   parent->partials[parent->partials_count].partial_template = partial_template;
   parent->partials[parent->partials_count].partial_name = strdup(partial_name);
@@ -62,22 +64,22 @@ result_t template_add_partial(template_t *parent, char *partial_name,
 }
 
 void free_template(template_t *template_object) {
-  free(template_object->template_string);
-  free(template_object->template_data);
+  nfree(template_object->template_string);
+  nfree(template_object->template_data);
 
   if (template_object->partials_count > 0) {
     for (u64 i = 0; i < template_object->partials_count; i++) {
-      free(template_object->partials[i].partial_name);
+      nfree(template_object->partials[i].partial_name);
     }
 
-    free(template_object->partials);
+    nfree(template_object->partials);
   }
 
-  free(template_object);
+  nfree(template_object);
 }
 
 result_t add_to_buffer(char **buffer, u64 *buffer_size, char ch) {
-  char *new_buffer = realloc(*buffer, (*buffer_size + 1) * sizeof(char));
+  char *new_buffer = nrealloc(*buffer, (*buffer_size + 1) * sizeof(char));
   new_buffer[*buffer_size] = ch;
 
   *buffer = new_buffer;
@@ -132,9 +134,9 @@ char *get_json_anytype(cJSON *json) {
   char *value_str = NULL;
 
   if (cJSON_IsString(json)) {
-    value_str = strdup(json->valuestring);
+    value_str = nstringify(strdup(json->valuestring));
   } else {
-    value_str = cJSON_Print(json);
+    value_str = nstringify(cJSON_Print(json));
   }
 
   return value_str;
@@ -162,7 +164,7 @@ result_t process_command(template_t *template_object, char **buffer,
         PROPAGATE(res_add);
       }
 
-      free(value);
+      nfree(value);
     } else if (strlen(com.key) > 5 && strncmp(com.key, "this.", 5) == 0) {
       result_t res_value_json = get_json_object(&com.key[5], com.data);
       cJSON *value_json = PROPAGATE(res_value_json);
@@ -184,7 +186,7 @@ result_t process_command(template_t *template_object, char **buffer,
         PROPAGATE(res_add);
       }
 
-      free(value);
+      nfree(value);
     }
   } else if (com.command_type == FOR_LOOP) {
     cJSON *value = NULL;
@@ -215,7 +217,7 @@ result_t process_command(template_t *template_object, char **buffer,
         PROPAGATE(res_add);
       }
 
-      free(cooked_iteration_value);
+      nfree(cooked_iteration_value);
     }
   } else if (com.command_type == IF_CONDITION) {
     bool bool_value = false;
@@ -256,7 +258,7 @@ result_t process_command(template_t *template_object, char **buffer,
         PROPAGATE(res_add);
       }
 
-      free(cooked_body_value);
+      nfree(cooked_body_value);
     }
   } else if (com.command_type == PARTIAL) {
     template_t *partial_template = NULL;
@@ -280,7 +282,7 @@ result_t process_command(template_t *template_object, char **buffer,
       PROPAGATE(res_add);
     }
 
-    free(cooked_partial);
+    nfree(cooked_partial);
   }
 
   return OK(NULL);
@@ -330,7 +332,7 @@ result_t cook_block_template(template_t *template_object, char *template_string,
 
       command_buffer[command_buffer_size - 1] = '\0';
 
-      char *command_key = strdup(&command_buffer[2]);
+      char *command_key = nstringify(strdup(&command_buffer[2]));
       command_key[strlen(command_key) - 2] = '\0';
 
       template_command_t com = {0};
@@ -364,7 +366,8 @@ result_t cook_block_template(template_t *template_object, char *template_string,
               }
             }
 
-            loop_body = realloc(loop_body, (loop_body_size + 1) * sizeof(char));
+            loop_body =
+                nrealloc(loop_body, (loop_body_size + 1) * sizeof(char));
             loop_body[loop_body_size] = template_string[i + 1];
 
             loop_body_size++;
@@ -425,8 +428,8 @@ result_t cook_block_template(template_t *template_object, char *template_string,
               }
             }
 
-            condition_body = realloc(condition_body,
-                                     (condition_body_size + 1) * sizeof(char));
+            condition_body = nrealloc(condition_body,
+                                      (condition_body_size + 1) * sizeof(char));
             condition_body[condition_body_size] = template_string[i + 1];
 
             condition_body_size++;
@@ -446,7 +449,7 @@ result_t cook_block_template(template_t *template_object, char *template_string,
             result_t res =
                 process_command(template_object, &buffer, &buffer_size, com);
 
-            free(condition_body);
+            nfree(condition_body);
             PROPAGATE(res);
           } else {
             com = (template_command_t){.command_type = IF_CONDITION,
@@ -461,7 +464,7 @@ result_t cook_block_template(template_t *template_object, char *template_string,
             result_t res =
                 process_command(template_object, &buffer, &buffer_size, com);
 
-            free(condition_body);
+            nfree(condition_body);
             PROPAGATE(res);
           }
         }
@@ -508,9 +511,9 @@ result_t cook_block_template(template_t *template_object, char *template_string,
         }
       }
 
-      free(command_key);
+      nfree(command_key);
 
-      free(command_buffer);
+      nfree(command_buffer);
       command_buffer = NULL;
       command_buffer_size = 0;
 

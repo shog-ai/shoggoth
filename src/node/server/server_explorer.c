@@ -7,23 +7,25 @@
  * SPDX-License-Identifier: MIT
  *
  ****/
-#include "../../json/json.h"
 #include "../../../handlebazz/handlebazz.h"
+#include "../../json/json.h"
 #include "../db/db.h"
 #include "api.h"
 
 #include <stdlib.h>
 
+#include <netlibc/mem.h>
+
 node_ctx_t *explorer_ctx = NULL;
 
 void explorer_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/explorer.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/explorer.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -40,13 +42,13 @@ void explorer_route(sonic_server_request_t *req) {
 }
 
 void stats_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/stats.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/stats.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -63,13 +65,13 @@ void stats_route(sonic_server_request_t *req) {
 }
 
 void docs_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/docs/docs.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/docs/docs.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -86,13 +88,13 @@ void docs_route(sonic_server_request_t *req) {
 }
 
 void docs_api_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/docs/api.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/docs/api.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -109,13 +111,13 @@ void docs_api_route(sonic_server_request_t *req) {
 }
 
 void docs_sonic_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/docs/sonic.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/docs/sonic.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -132,13 +134,13 @@ void docs_sonic_route(sonic_server_request_t *req) {
 }
 
 void docs_camel_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/docs/camel.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/docs/camel.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -155,13 +157,13 @@ void docs_camel_route(sonic_server_request_t *req) {
 }
 
 void docs_tuwi_route(sonic_server_request_t *req) {
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/docs/tuwi.html", explorer_dir);
+  char *file_path = string_from(explorer_dir, "/docs/tuwi.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -206,11 +208,10 @@ void resource_route(sonic_server_request_t *req) {
     return;
   }
 
-  char runtime_path[FILE_PATH_SIZE];
+  char runtime_path[256];
   utils_get_node_runtime_path(explorer_ctx, runtime_path);
 
-  char resource_path[FILE_PATH_SIZE];
-  sprintf(resource_path, "%s/pins/%s", runtime_path, shoggoth_id);
+  char *resource_path = string_from(runtime_path, "/pins/", shoggoth_id, NULL);
 
   if (!file_exists(resource_path)) {
     result_t res_peers_with_pin =
@@ -219,7 +220,7 @@ void resource_route(sonic_server_request_t *req) {
 
     result_t res_peers = json_string_to_dht(peers_with_pin);
     dht_t *peers = UNWRAP(res_peers);
-    free(peers_with_pin);
+    nfree(peers_with_pin);
 
     if (peers->items_count > 0) {
       char location[256];
@@ -250,28 +251,30 @@ void resource_route(sonic_server_request_t *req) {
     return;
   }
 
-  char explorer_dir[FILE_PATH_SIZE];
+  nfree(resource_path);
+
+  char explorer_dir[256];
   utils_get_node_explorer_path(explorer_ctx, explorer_dir);
 
-  char head_template_path[FILE_PATH_SIZE];
+  char head_template_path[256];
   sprintf(head_template_path, "%s/templates/head.html", explorer_dir);
 
-  char end_template_path[FILE_PATH_SIZE];
+  char end_template_path[256];
   sprintf(end_template_path, "%s/templates/end.html", explorer_dir);
 
-  char resource_template_path[FILE_PATH_SIZE];
+  char resource_template_path[256];
   sprintf(resource_template_path, "%s/templates/resource.html", explorer_dir);
 
   result_t res_end_template_string = read_file_to_string(end_template_path);
   char *end_template_string = UNWRAP(res_end_template_string);
 
   template_t *end_template = create_template(end_template_string, "{}");
-  free(end_template_string);
+  nfree(end_template_string);
 
   result_t res_head_template_string = read_file_to_string(head_template_path);
   char *head_template_string = UNWRAP(res_head_template_string);
 
-  char *head_template_data = malloc(1024 * sizeof(char));
+  char *head_template_data = nmalloc(1024 * sizeof(char));
 
   sprintf(head_template_data,
           "{\"title\": \"Shoggoth Explorer - %s\", \"desc\": \"%s on Shoggoth "
@@ -285,7 +288,7 @@ void resource_route(sonic_server_request_t *req) {
 
   template_t *head_template =
       create_template(head_template_string, head_template_data);
-  free(head_template_string);
+  nfree(head_template_string);
 
   result_t res_file_content = read_file_to_string(resource_template_path);
   char *file_content = UNWRAP(res_file_content);
@@ -311,7 +314,7 @@ void resource_route(sonic_server_request_t *req) {
             (float)resource_size / (1024 * 1024 * 1024));
   }
 
-  char *template_data = malloc(1024 * sizeof(char));
+  char *template_data = nmalloc(1024 * sizeof(char));
   sprintf(template_data,
           "{ \"shoggoth_id\": \"%s\", \"label\": \"%s\", \"size\": \"%s\", "
           "\"hash\": \"%s\", \"download_link\": \"%s\" }",
@@ -335,8 +338,8 @@ void resource_route(sonic_server_request_t *req) {
   free_template(head_template);
   free_template(end_template);
 
-  free(file_content);
-  free(head_template_data);
+  nfree(file_content);
+  nfree(head_template_data);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -344,7 +347,7 @@ void resource_route(sonic_server_request_t *req) {
 
   sonic_send_response(req, resp);
 
-  free(cooked);
+  nfree(cooked);
   sonic_free_server_response(resp);
 }
 
@@ -352,13 +355,12 @@ void add_explorer_routes(node_ctx_t *ctx, sonic_server_t *server) {
   explorer_ctx = ctx;
 
   // serve static files
-  char explorer_dir[FILE_PATH_SIZE];
+  char explorer_dir[256];
   utils_get_node_explorer_path(ctx, explorer_dir);
 
-  char static_dir[FILE_PATH_SIZE];
-  sprintf(static_dir, "%s/static", explorer_dir);
-
+  char *static_dir = string_from(explorer_dir, "/static", NULL);
   sonic_add_directory_route(server, "/explorer/static", static_dir);
+  nfree(static_dir);
 
   sonic_add_route(server, "/", METHOD_GET, home_route);
 

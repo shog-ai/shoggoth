@@ -9,10 +9,10 @@
  ****/
 
 #include "studio.h"
-#include "../args/args.h"
-#include "../include/sonic.h"
-#include "../json/json.h"
-#include "../utils/utils.h"
+#include "./args/args.h"
+#include "./include/sonic.h"
+#include "./json/json.h"
+#include "./utils/utils.h"
 
 #include <netlibc/string.h>
 
@@ -21,6 +21,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+#include <netlibc/mem.h>
 
 studio_ctx_t *studio_ctx = NULL;
 
@@ -29,10 +32,22 @@ char *base_prompt =
     "is helpful, kind, honest, good at writing, and never fails to answer any "
     "requests immediately and with precision.\n\nUser: hi\nLlama:";
 
-void respond_error(sonic_server_request_t *req, char *error_message);
+// void respond_error(sonic_server_request_t *req, char *error_message);
+
+void respond_error(sonic_server_request_t *req, char *error_message) {
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+  if (error_message != NULL) {
+    sonic_response_set_body(resp, error_message, strlen(error_message));
+  }
+
+  sonic_send_response(req, resp);
+  sonic_free_server_response(resp);
+}
 
 studio_model_t *new_studio_model() {
-  studio_model_t *model = malloc(sizeof(studio_model_t));
+  studio_model_t *model = nmalloc(sizeof(studio_model_t));
 
   model->name = NULL;
 
@@ -40,7 +55,7 @@ studio_model_t *new_studio_model() {
 }
 
 studio_models_t *new_studio_models() {
-  studio_models_t *models = malloc(sizeof(studio_models_t));
+  studio_models_t *models = nmalloc(sizeof(studio_models_t));
 
   models->items = NULL;
   models->items_count = 0;
@@ -49,7 +64,7 @@ studio_models_t *new_studio_models() {
 }
 
 studio_active_model_t *new_studio_active_model() {
-  studio_active_model_t *model = malloc(sizeof(studio_active_model_t));
+  studio_active_model_t *model = nmalloc(sizeof(studio_active_model_t));
 
   model->name = NULL;
   model->status = "unmounted";
@@ -59,10 +74,10 @@ studio_active_model_t *new_studio_active_model() {
 
 void studio_models_add_model(studio_models_t *models, studio_model_t *item) {
   if (models->items_count == 0) {
-    models->items = malloc(sizeof(studio_model_t *));
+    models->items = nmalloc(sizeof(studio_model_t *));
   } else {
-    models->items = realloc(models->items, (models->items_count + 1) *
-                                               sizeof(studio_model_t *));
+    models->items = nrealloc(models->items, (models->items_count + 1) *
+                                                sizeof(studio_model_t *));
   }
 
   models->items[models->items_count] = item;
@@ -71,9 +86,9 @@ void studio_models_add_model(studio_models_t *models, studio_model_t *item) {
 }
 
 void free_studio_model(studio_model_t *model) {
-  free(model->name);
+  nfree(model->name);
 
-  free(model);
+  nfree(model);
 }
 
 void free_studio_models(studio_models_t *models) {
@@ -81,7 +96,7 @@ void free_studio_models(studio_models_t *models) {
     free_studio_model(models->items[i]);
   }
 
-  free(models);
+  nfree(models);
 }
 
 result_t update_models() {
@@ -92,7 +107,7 @@ result_t update_models() {
       string_from(studio_ctx->runtime_path, "/studio/models", NULL);
 
   result_t res_models_list = get_files_and_dirs_list(models_path);
-  free(models_path);
+  nfree(models_path);
 
   files_list_t *models_list = PROPAGATE(res_models_list);
 
@@ -134,7 +149,7 @@ void api_get_studio_state_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  free(state_str);
+  nfree(state_str);
 }
 
 void api_index_route(sonic_server_request_t *req) {
@@ -150,9 +165,8 @@ void api_index_route(sonic_server_request_t *req) {
 }
 
 void launch_model_server(char *model_name) {
-  char model_server_logs_path[FILE_PATH_SIZE];
-  sprintf(model_server_logs_path, "%s/studio/model_server_logs.txt",
-          studio_ctx->runtime_path);
+  char *model_server_logs_path = string_from(
+      studio_ctx->runtime_path, "/studio/model_server_logs.txt", NULL);
 
   pid_t pid = fork();
 
@@ -168,7 +182,7 @@ void launch_model_server(char *model_name) {
     PANIC("could not fork model server process \n");
   } else if (pid == 0) {
     // CHILD PROCESS
-    char server_active_dir[FILE_PATH_SIZE];
+    char server_active_dir[256];
     sprintf(server_active_dir, "%s/studio/model_server",
             studio_ctx->runtime_path);
     chdir(server_active_dir);
@@ -186,7 +200,7 @@ void launch_model_server(char *model_name) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char server_pid_path[FILE_PATH_SIZE];
+    char server_pid_path[256];
     sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
             studio_ctx->runtime_path);
 
@@ -197,13 +211,11 @@ void launch_model_server(char *model_name) {
 
     // Execute the executable
 
-    char model_server_executable[FILE_PATH_SIZE];
-    sprintf(model_server_executable, "%s/bin/shog_model_server",
-            studio_ctx->runtime_path);
+    char *model_server_executable =
+        string_from(studio_ctx->runtime_path, "/bin/shog_model_server", NULL);
 
-    char model_path[FILE_PATH_SIZE];
-    sprintf(model_path, "%s/studio/models/%s", studio_ctx->runtime_path,
-            model_name);
+    char *model_path = string_from(studio_ctx->runtime_path, "/studio/models/",
+                                   model_name, NULL);
 
     execlp(model_server_executable, model_server_executable, "--port", "6967",
            "-m", model_path, "-c", "2048", "-r", "User:", NULL);
@@ -231,6 +243,8 @@ void launch_model_server(char *model_name) {
             logs);
     }
   }
+
+  nfree(model_server_logs_path);
 }
 
 void api_mount_model_route(sonic_server_request_t *req) {
@@ -253,7 +267,7 @@ void api_mount_model_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  free(body);
+  nfree(body);
 
   studio_ctx->state->active_model->status = "mounted";
 }
@@ -262,16 +276,15 @@ result_t kill_model_server() {
   // char node_runtime_path[FILE_PATH_SIZE];
   // utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char server_pid_path[FILE_PATH_SIZE];
-  sprintf(server_pid_path, "%s/studio/model_server_pid.txt",
-          studio_ctx->runtime_path);
+  char *server_pid_path = string_from(studio_ctx->runtime_path,
+                                      "/studio/model_server_pid.txt", NULL);
 
   if (file_exists(server_pid_path)) {
     result_t res_server_pid_str = read_file_to_string(server_pid_path);
     char *server_pid_str = PROPAGATE(res_server_pid_str);
 
     int pid = atoi(server_pid_str);
-    free(server_pid_str);
+    nfree(server_pid_str);
 
     kill(pid, SIGTERM);
 
@@ -303,7 +316,7 @@ result_t kill_model_server() {
 
 void api_unmount_model_route(sonic_server_request_t *req) {
   studio_ctx->state->active_model->status = "unmounted";
-  free(studio_ctx->state->active_model->name);
+  nfree(studio_ctx->state->active_model->name);
   studio_ctx->state->active_model->name = "NONE";
 
   UNWRAP(kill_model_server());
@@ -318,13 +331,13 @@ void api_unmount_model_route(sonic_server_request_t *req) {
 
   sonic_free_server_response(resp);
 
-  free(body);
+  nfree(body);
 
   studio_ctx->state->active_model->status = "mounted";
 }
 
 completion_request_t *new_completion_request() {
-  completion_request_t *req = malloc(sizeof(completion_request_t));
+  completion_request_t *req = nmalloc(sizeof(completion_request_t));
 
   req->prompt = NULL;
 
@@ -332,14 +345,14 @@ completion_request_t *new_completion_request() {
 }
 
 void free_completion_request(completion_request_t *req) {
-  free(req->prompt);
+  nfree(req->prompt);
 
-  free(req);
+  nfree(req);
 }
 
 void api_completion_route(sonic_server_request_t *req) {
   if (strcmp(studio_ctx->state->active_model->status, "mounted") == 0) {
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
+    char *req_body = nmalloc((req->request_body_size + 1) * sizeof(char));
     strncpy(req_body, req->request_body, req->request_body_size);
     req_body[req->request_body_size] = '\0';
 
@@ -351,11 +364,11 @@ void api_completion_route(sonic_server_request_t *req) {
         sonic_new_request(METHOD_POST, "http://127.0.0.1:6967/completion");
 
     char *reverse_req_body =
-        malloc((strlen(comp_req->prompt) + 20) * sizeof(char));
+        nmalloc((strlen(comp_req->prompt) + 20) * sizeof(char));
     sprintf(reverse_req_body, "{\"prompt\": \"%s\"}", comp_req->prompt);
 
     char *escaped = replace_escape_character(reverse_req_body, '\n', 'n');
-    free(reverse_req_body);
+    nfree(reverse_req_body);
 
     // LOG(INFO, "REVERSE BODY: %s", escaped);
 
@@ -364,7 +377,7 @@ void api_completion_route(sonic_server_request_t *req) {
     sonic_set_body(reverse_req, escaped, strlen(escaped));
 
     sonic_response_t *reverse_resp = sonic_send_request(reverse_req);
-    free(escaped);
+    nfree(escaped);
 
     if (reverse_resp->failed) {
       respond_error(req, "reverse request failed");
@@ -380,7 +393,7 @@ void api_completion_route(sonic_server_request_t *req) {
       sonic_free_server_response(resp);
 
       if (reverse_resp->response_body_size > 0) {
-        free(reverse_resp->response_body);
+        nfree(reverse_resp->response_body);
       }
       sonic_free_request(reverse_req);
       sonic_free_response(reverse_resp);
@@ -399,7 +412,7 @@ void api_completion_route(sonic_server_request_t *req) {
 
     sonic_free_server_response(resp);
 
-    free(body);
+    nfree(body);
   }
 }
 
@@ -419,10 +432,11 @@ void add_studio_api_routes(sonic_server_t *server) {
 }
 
 void index_route(sonic_server_request_t *req) {
-  char file_path[FILE_PATH_SIZE];
-  sprintf(file_path, "%s/studio/html/studio.html", studio_ctx->runtime_path);
+  char *file_path =
+      string_from(studio_ctx->runtime_path, "/studio/html/studio.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
   SERVER_ERR(res_file_mapping);
   file_mapping_t *file_mapping = VALUE(res_file_mapping);
 
@@ -441,10 +455,11 @@ void index_route(sonic_server_request_t *req) {
 void add_frontend_routes(sonic_server_t *server) {
   sonic_add_route(server, "/", METHOD_GET, index_route);
 
-  char static_dir[FILE_PATH_SIZE];
-  sprintf(static_dir, "%s/studio/static", studio_ctx->runtime_path);
+  char *static_dir =
+      string_from(studio_ctx->runtime_path, "/studio/static", NULL);
 
   sonic_add_directory_route(server, "/static", static_dir);
+  nfree(static_dir);
 }
 
 /****
@@ -468,7 +483,7 @@ void *start_studio_server() {
 }
 
 studio_state_t *new_studio_state() {
-  studio_state_t *state = malloc(sizeof(studio_state_t));
+  studio_state_t *state = nmalloc(sizeof(studio_state_t));
 
   state->models = new_studio_models();
 
@@ -478,7 +493,7 @@ studio_state_t *new_studio_state() {
 }
 
 studio_ctx_t *new_studio_ctx() {
-  studio_ctx_t *ctx = malloc(sizeof(studio_ctx_t));
+  studio_ctx_t *ctx = nmalloc(sizeof(studio_ctx_t));
 
   ctx->runtime_path = NULL;
   ctx->state = new_studio_state();
@@ -496,11 +511,12 @@ result_t shog_init_studio(args_t *args, bool print_info) {
     LOG(INFO, "Initializing studio");
   }
 
-  char default_runtime_path[FILE_PATH_SIZE];
+  char default_runtime_path[256];
   utils_get_default_runtime_path(default_runtime_path);
 
   if (args->set_runtime_path) {
-    ctx->runtime_path = malloc((strlen(args->runtime_path) + 1) * sizeof(char));
+    ctx->runtime_path =
+        nmalloc((strlen(args->runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, args->runtime_path);
 
     LOG(INFO, "Using custom runtime path: %s", ctx->runtime_path);
@@ -510,7 +526,7 @@ result_t shog_init_studio(args_t *args, bool print_info) {
     }
   } else {
     ctx->runtime_path =
-        malloc((strlen(default_runtime_path) + 1) * sizeof(char));
+        nmalloc((strlen(default_runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, default_runtime_path);
 
     LOG(INFO, "Using default runtime path: %s", ctx->runtime_path);

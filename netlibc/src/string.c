@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/netlibc/mem.h"
+
 char *string_from(const char *str1, ...) {
   va_list args;
   va_start(args, str1);
@@ -30,7 +32,7 @@ char *string_from(const char *str1, ...) {
   va_end(args);
 
   // Allocate memory for the concatenated string
-  char *result = (char *)malloc(total_length + 1);
+  char *result = (char *)nmalloc(total_length + 1);
 
   if (result == NULL) {
     fprintf(stderr, "Memory allocation failed\n");
@@ -50,6 +52,17 @@ char *string_from(const char *str1, ...) {
   va_end(args);
 
   return result;
+}
+
+// creatse a copy of a string and frees the original copy, but uses the netlibc
+// allocator
+char *nstringify(char *str) {
+  char *new_str = nmalloc((strlen(str) + 1) * sizeof(char));
+  strcpy(new_str, str);
+
+  free(str);
+
+  return new_str;
 }
 
 char *escape_character(char *input, char character) {

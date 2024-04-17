@@ -11,7 +11,7 @@
 #ifndef SHOG_STUDIO_H
 #define SHOG_STUDIO_H
 
-#include "../args/args.h"
+#include "./args/args.h"
 
 #include <sys/wait.h>
 

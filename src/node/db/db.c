@@ -12,6 +12,7 @@
 #include <netlibc/error.h>
 #include <netlibc/fs.h>
 #include <netlibc/log.h>
+#include <netlibc/mem.h>
 #include <netlibc/string.h>
 
 #include "../../include/cjson.h"
@@ -32,10 +33,10 @@
 #include <unistd.h>
 
 result_t kill_db(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char db_pid_path[FILE_PATH_SIZE];
+  char db_pid_path[256];
   sprintf(db_pid_path, "%s/db_pid.txt", node_runtime_path);
 
   if (file_exists(db_pid_path)) {
@@ -43,7 +44,7 @@ result_t kill_db(node_ctx_t *ctx) {
     char *db_pid_str = PROPAGATE(res_db_pid_str);
 
     int pid = atoi(db_pid_str);
-    free(db_pid_str);
+    nfree(db_pid_str);
 
     kill(pid, SIGINT);
 
@@ -81,11 +82,10 @@ void launch_db(node_ctx_t *ctx) {
   result_t res_db = kill_db(ctx);
   UNWRAP(res_db);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
-  char db_logs_path[FILE_PATH_SIZE];
-  sprintf(db_logs_path, "%s/db_logs.txt", node_runtime_path);
+  char *db_logs_path = string_from(node_runtime_path, "/db_logs.txt", NULL);
 
   pid_t pid = fork();
 
@@ -116,23 +116,24 @@ void launch_db(node_ctx_t *ctx) {
     dup2(logs_fd, STDOUT_FILENO);
     dup2(logs_fd, STDERR_FILENO);
 
-    char db_pid_path[FILE_PATH_SIZE];
-    sprintf(db_pid_path, "%s/db_pid.txt", node_runtime_path);
+    char *db_pid_path = string_from(node_runtime_path, "/db_pid.txt", NULL);
 
     pid_t db_pid = getpid();
     char db_pid_str[120];
     sprintf(db_pid_str, "%d", db_pid);
     write_to_file(db_pid_path, db_pid_str, strlen(db_pid_str));
 
+    nfree(db_pid_path);
+
     // Execute the executable
 
-    char db_executable[FILE_PATH_SIZE];
+    char db_executable[256];
     sprintf(db_executable, "%s/bin/shogdb", ctx->runtime_path);
 
-    char config_path[FILE_PATH_SIZE];
+    char config_path[256];
     sprintf(config_path, "%s/dbconfig.toml", node_runtime_path);
 
-    char config_arg[FILE_PATH_SIZE];
+    char config_arg[256];
     strcpy(config_arg, config_path);
 
     execlp(db_executable, db_executable, config_arg, NULL);
@@ -157,6 +158,8 @@ void launch_db(node_ctx_t *ctx) {
       PANIC("error occured while launching db executable.\nDB LOGS:\n%s",
             db_logs);
     }
+
+    nfree(db_logs_path);
   }
 }
 
@@ -176,16 +179,17 @@ result_t shogdb_get(node_ctx_t *ctx, char *endpoint, char *body) {
   if (resp->failed) {
     return ERR("request failed: %s \n", resp->error);
   } else {
-    char *response_body = malloc((resp->response_body_size + 1) * sizeof(char));
+    char *response_body =
+        nmalloc((resp->response_body_size + 1) * sizeof(char));
     strncpy(response_body, resp->response_body, resp->response_body_size);
     response_body[resp->response_body_size] = '\0';
 
-    free(resp->response_body);
+    nfree(resp->response_body);
     sonic_free_response(resp);
 
     if (strncmp(response_body, "JSON", 4) == 0) {
       result_t res = shogdb_parse_message(response_body);
-      free(response_body);
+      nfree(response_body);
 
       db_value_t *value = PROPAGATE(res);
 
@@ -233,7 +237,7 @@ result_t db_get_pin_label(node_ctx_t *ctx, char *shoggoth_id) {
 
   result_t res_str = shogdb_get(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
-  free(path);
+  nfree(path);
 
   return OK(str);
 }
@@ -266,9 +270,9 @@ result_t db_dht_add_item(node_ctx_t *ctx, dht_item_t *item) {
 
   result_t res_str = shogdb_get(ctx, "dht/add_item", item_str);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
-  free(item_str);
+  nfree(item_str);
 
   return OK(NULL);
 }
@@ -276,7 +280,7 @@ result_t db_dht_add_item(node_ctx_t *ctx, dht_item_t *item) {
 result_t db_dht_remove_item(node_ctx_t *ctx, char *node_id) {
   result_t res_str = shogdb_get(ctx, "dht/remove_item", node_id);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -285,7 +289,7 @@ result_t db_increment_unreachable_count(node_ctx_t *ctx, char *node_id) {
   result_t res_str =
       shogdb_get(ctx, "dht/increment_unreachable_count", node_id);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -293,7 +297,7 @@ result_t db_increment_unreachable_count(node_ctx_t *ctx, char *node_id) {
 result_t db_reset_unreachable_count(node_ctx_t *ctx, char *node_id) {
   result_t res_str = shogdb_get(ctx, "dht/reset_unreachable_count", node_id);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -314,8 +318,8 @@ result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id, char *label) {
 
   result_t res_str = shogdb_get(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
-  free(str);
-  free(path);
+  nfree(str);
+  nfree(path);
 
   return OK(NULL);
 }
@@ -325,7 +329,7 @@ result_t db_pins_remove_resource(node_ctx_t *ctx, char *shoggoth_id) {
 
   result_t res_str = shogdb_get(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -342,7 +346,7 @@ result_t db_get_peers_with_pin(node_ctx_t *ctx, char *shoggoth_id) {
 result_t db_clear_peer_pins(node_ctx_t *ctx, char *node_id) {
   result_t res_str = shogdb_get(ctx, "dht/peer_clear_pins", node_id);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -355,7 +359,7 @@ result_t db_peer_pins_add_resource(node_ctx_t *ctx, char *node_id,
 
   result_t res_str = shogdb_get(ctx, endpoint, shoggoth_id);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -363,7 +367,7 @@ result_t db_peer_pins_add_resource(node_ctx_t *ctx, char *node_id,
 result_t db_clear_local_pins(node_ctx_t *ctx) {
   result_t res_str = shogdb_get(ctx, "pins/clear", NULL);
   char *str = PROPAGATE(res_str);
-  free(str);
+  nfree(str);
 
   return OK(NULL);
 }
@@ -381,7 +385,7 @@ result_t db_verify_data(node_ctx_t *ctx) {
     PROPAGATE(res_gen_peers);
   }
 
-  free(local_dht);
+  nfree(local_dht);
 
   // result_t res_clear = db_clear_local_pins(ctx);
   // PROPAGATE(res_clear);

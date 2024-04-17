@@ -27,6 +27,8 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include <netlibc/mem.h>
+
 /****
  * frees a response and all its used memory
  *
@@ -34,14 +36,14 @@
 void free_server_response(sonic_server_response_t *resp) {
   if (resp->headers_count > 0) {
     for (u64 i = 0; i < resp->headers_count; i++) {
-      free(resp->headers[i].key);
-      free(resp->headers[i].value);
+      nfree(resp->headers[i].key);
+      nfree(resp->headers[i].value);
     }
 
-    free(resp->headers);
+    nfree(resp->headers);
   }
 
-  free(resp);
+  nfree(resp);
 }
 
 /****
@@ -70,34 +72,34 @@ result_t server_send_response(sonic_server_request_t *req,
   char first_line[1024];
   sprintf(first_line, "HTTP/1.1 %s\r\n", status_code);
 
-  head_str = realloc(head_str, (strlen(first_line) + 1) * sizeof(char));
+  head_str = nrealloc(head_str, (strlen(first_line) + 1) * sizeof(char));
   strcpy(head_str, first_line);
 
   for (u64 i = 0; i < resp->headers_count; i++) {
-    char *buf = malloc(
+    char *buf = nmalloc(
         (strlen(resp->headers[i].key) + strlen(resp->headers[i].value) + 20) *
         sizeof(char));
 
     sprintf(buf, "%s: %s\r\n", resp->headers[i].key, resp->headers[i].value);
 
     head_str =
-        realloc(head_str, (strlen(head_str) + strlen(buf) + 1) * sizeof(char));
+        nrealloc(head_str, (strlen(head_str) + strlen(buf) + 1) * sizeof(char));
     strcat(head_str, buf);
 
-    free(buf);
+    nfree(buf);
   }
 
   char *head_end = "\r\n";
 
-  head_str = realloc(head_str,
-                     (strlen(head_str) + strlen(head_end) + 1) * sizeof(char));
+  head_str = nrealloc(head_str,
+                      (strlen(head_str) + strlen(head_end) + 1) * sizeof(char));
   strcat(head_str, head_end);
 
   if (send(req->client_sock, head_str, strlen(head_str), MSG_NOSIGNAL) == -1) {
     return ERR("send failed");
   }
 
-  free(head_str);
+  nfree(head_str);
 
   if (!resp->is_file) {
     u64 sent = 0;
@@ -140,7 +142,7 @@ result_t server_send_response(sonic_server_request_t *req,
     u64 chunk_size = 1000000;
 
     FILE *file;
-    char *buffer = malloc(chunk_size * sizeof(char));
+    char *buffer = nmalloc(chunk_size * sizeof(char));
 
     file = fopen(resp->file_path, "rb");
     if (file == NULL) {
@@ -177,7 +179,7 @@ result_t server_send_response(sonic_server_request_t *req,
       }
 
       if (send(req->client_sock, buffer, sending, MSG_NOSIGNAL) == -1) {
-        free(buffer);
+        nfree(buffer);
         fclose(file);
         return ERR("send failed");
       }
@@ -185,7 +187,7 @@ result_t server_send_response(sonic_server_request_t *req,
       sent += sending;
     }
 
-    free(buffer);
+    nfree(buffer);
     fclose(file);
   }
 
@@ -205,11 +207,11 @@ void not_found_route(sonic_server_request_t *req) {
 
 void free_path(sonic_path_t *path) {
   for (u64 i = 0; i < path->segments_count; i++) {
-    free(path->segments[i].value);
+    nfree(path->segments[i].value);
   }
 
-  free(path->segments);
-  free(path);
+  nfree(path->segments);
+  nfree(path);
 }
 
 result_t raw_path_to_sonic_path(char *input_path) {
@@ -222,7 +224,7 @@ result_t raw_path_to_sonic_path(char *input_path) {
     return ERR("raw path is NULL");
   }
 
-  sonic_path_t *path = (sonic_path_t *)calloc(1, sizeof(sonic_path_t));
+  sonic_path_t *path = (sonic_path_t *)ncalloc(1, sizeof(sonic_path_t));
   path->segments = NULL;
   path->segments_count = 0;
   path->has_wildcard = false;
@@ -235,7 +237,7 @@ result_t raw_path_to_sonic_path(char *input_path) {
   u64 count = 0;
 
   while (token != NULL) {
-    path->segments = (sonic_path_segment_t *)realloc(
+    path->segments = (sonic_path_segment_t *)nrealloc(
         path->segments, (count + 1) * sizeof(sonic_path_segment_t));
 
     path->segments[count].is_generic = false;
@@ -248,7 +250,7 @@ result_t raw_path_to_sonic_path(char *input_path) {
                 .value[(strlen(path->segments[count].value) - 1)] == '}') {
 
       char *new_value =
-          malloc((strlen(path->segments[count].value) - 1) * sizeof(char));
+          nmalloc((strlen(path->segments[count].value) - 1) * sizeof(char));
 
       for (u64 w = 1; w < (strlen(path->segments[count].value) - 1); w++) {
         new_value[w - 1] = path->segments[count].value[w];
@@ -256,7 +258,7 @@ result_t raw_path_to_sonic_path(char *input_path) {
 
       new_value[strlen(path->segments[count].value) - 2] = '\0';
 
-      free(path->segments[count].value);
+      nfree(path->segments[count].value);
       path->segments[count].value = new_value;
 
       path->segments[count].is_generic = true;
@@ -286,7 +288,7 @@ result_t raw_path_to_sonic_path(char *input_path) {
 
   path->segments_count = count;
 
-  free(raw_path);
+  nfree(raw_path);
 
   return OK(path);
 }
@@ -312,7 +314,7 @@ server_get_path_wildcard_segments(sonic_server_request_t *req) {
 
   for (u64 i = req->matched_route->path->wildcard_index;
        i < req->path->segments_count; i++) {
-    segments = realloc(segments, (count + 1) * sizeof(char *));
+    segments = nrealloc(segments, (count + 1) * sizeof(char *));
 
     segments[count] = req->path->segments[i].value;
 
@@ -325,7 +327,7 @@ server_get_path_wildcard_segments(sonic_server_request_t *req) {
 }
 
 void server_free_path_wildcard_segments(sonic_wildcard_segments_t segments) {
-  free(segments.segments);
+  nfree(segments.segments);
 }
 
 bool paths_match(sonic_path_t *left, sonic_path_t *right) {
@@ -387,7 +389,7 @@ new_server_middleware_response(bool should_respond,
   }
 
   sonic_middleware_response_t *resp =
-      malloc(sizeof(sonic_middleware_response_t));
+      nmalloc(sizeof(sonic_middleware_response_t));
 
   resp->should_respond = should_respond;
   resp->middleware_response = response;
@@ -400,7 +402,7 @@ void free_server_middleware_response(sonic_middleware_response_t *resp) {
     free_server_response(resp->middleware_response);
   }
 
-  free(resp);
+  nfree(resp);
 }
 
 /****
@@ -576,7 +578,7 @@ void directory_home_route(sonic_server_request_t *req) {
   char *body = "<h1>TODO: list files</h1>\n";
 
   html =
-      malloc((strlen(head) + strlen(body) + strlen(tail) + 1) * sizeof(char));
+      nmalloc((strlen(head) + strlen(body) + strlen(tail) + 1) * sizeof(char));
   strcpy(html, head);
   strcat(html, body);
   strcat(html, tail);
@@ -605,7 +607,7 @@ void server_add_directory_route(sonic_server_t *server, char *path,
     strcpy(relative_path, path);
     char *without_prefix = remove_prefix(directory_path, file_item_str);
     strcat(relative_path, without_prefix);
-    free(without_prefix);
+    nfree(without_prefix);
 
     char *file_extension = get_file_extension(relative_path);
 
@@ -646,7 +648,7 @@ void server_add_file_route(sonic_server_t *server, char *path,
 sonic_route_t *server_add_route(sonic_server_t *server, char *path,
                                 sonic_method_t method,
                                 sonic_route_func_t route_func) {
-  sonic_route_t *new_route = calloc(1, sizeof(sonic_route_t));
+  sonic_route_t *new_route = ncalloc(1, sizeof(sonic_route_t));
 
   new_route->is_file_route = false;
 
@@ -660,8 +662,8 @@ sonic_route_t *server_add_route(sonic_server_t *server, char *path,
   new_route->middlewares = NULL;
   new_route->middlewares_count = 0;
 
-  server->routes = realloc(server->routes, (server->routes_count + 1) *
-                                               sizeof(sonic_route_t *));
+  server->routes = nrealloc(server->routes, (server->routes_count + 1) *
+                                                sizeof(sonic_route_t *));
   server->routes[server->routes_count] = new_route;
 
   server->routes_count++;
@@ -674,14 +676,14 @@ void server_add_route_middleware(sonic_route_t *route,
                                  void *user_pointer) {
 
   sonic_route_middleware_t *new_middleware =
-      malloc(sizeof(sonic_route_middleware_t));
+      nmalloc(sizeof(sonic_route_middleware_t));
 
   new_middleware->middleware_func = middleware_func;
   new_middleware->user_pointer = user_pointer;
 
   route->middlewares =
-      realloc(route->middlewares, (route->middlewares_count + 1) *
-                                      sizeof(sonic_route_middleware_t *));
+      nrealloc(route->middlewares, (route->middlewares_count + 1) *
+                                       sizeof(sonic_route_middleware_t *));
 
   route->middlewares[route->middlewares_count] = new_middleware;
 
@@ -693,14 +695,14 @@ void server_add_server_middleware(sonic_server_t *server,
                                   void *user_pointer) {
 
   sonic_route_middleware_t *new_middleware =
-      malloc(sizeof(sonic_route_middleware_t));
+      nmalloc(sizeof(sonic_route_middleware_t));
 
   new_middleware->middleware_func = middleware_func;
   new_middleware->user_pointer = user_pointer;
 
   server->middlewares =
-      realloc(server->middlewares, (server->middlewares_count + 1) *
-                                       sizeof(sonic_route_middleware_t *));
+      nrealloc(server->middlewares, (server->middlewares_count + 1) *
+                                        sizeof(sonic_route_middleware_t *));
 
   server->middlewares[server->middlewares_count] = new_middleware;
 
@@ -839,14 +841,14 @@ result_t parse_request_headers(sonic_server_request_t *req, char *head_buffer) {
 
     req->headers_count++;
     req->headers =
-        realloc(req->headers, sizeof(sonic_header_t) * req->headers_count);
+        nrealloc(req->headers, sizeof(sonic_header_t) * req->headers_count);
 
     req->headers[req->headers_count - 1].key =
-        malloc((strlen(key) + 1) * sizeof(char));
+        nmalloc((strlen(key) + 1) * sizeof(char));
     strcpy(req->headers[req->headers_count - 1].key, key);
 
     req->headers[req->headers_count - 1].value =
-        malloc((strlen(value) + 1) * sizeof(char));
+        nmalloc((strlen(value) + 1) * sizeof(char));
     strcpy(req->headers[req->headers_count - 1].value, value);
 
     header_line = value_end + 2; // Move to the next header line
@@ -860,7 +862,7 @@ result_t parse_request_headers(sonic_server_request_t *req, char *head_buffer) {
  *
  ****/
 sonic_server_request_t *new_server_request() {
-  sonic_server_request_t *req = malloc(sizeof(sonic_server_request_t));
+  sonic_server_request_t *req = nmalloc(sizeof(sonic_server_request_t));
 
   // Initialize fields to NULL or default values
   req->method = METHOD_GET;
@@ -879,20 +881,20 @@ sonic_server_request_t *new_server_request() {
  *
  ****/
 void free_server_request(sonic_server_request_t *req) {
-  free(req->client_ip);
+  nfree(req->client_ip);
 
   free_path(req->path);
 
   if (req->headers_count > 0) {
     for (u64 i = 0; i < req->headers_count; i++) {
-      free(req->headers[i].key);
-      free(req->headers[i].value);
+      nfree(req->headers[i].key);
+      nfree(req->headers[i].value);
     }
 
-    free(req->headers);
+    nfree(req->headers);
   }
 
-  free(req);
+  nfree(req);
 }
 
 typedef struct {
@@ -935,7 +937,7 @@ void *handle_request(void *thread_args) {
          0) {
     if (!headers_done) {
       if (main_length == 0) {
-        main_buffer = malloc((bytes_read) * sizeof(char));
+        main_buffer = nmalloc((bytes_read) * sizeof(char));
 
         for (int i = 0; i < bytes_read; i++) {
           main_buffer[i] = buffer[i];
@@ -944,7 +946,7 @@ void *handle_request(void *thread_args) {
         main_length = bytes_read;
       } else {
         main_buffer =
-            realloc(main_buffer, (main_length + bytes_read) * sizeof(char));
+            nrealloc(main_buffer, (main_length + bytes_read) * sizeof(char));
 
         for (int i = 0; i < bytes_read; i++) {
           main_buffer[main_length + i] = buffer[i];
@@ -963,7 +965,7 @@ void *handle_request(void *thread_args) {
         u64 head_end_position = found_head_end - main_buffer + 4;
 
         head_length = head_end_position;
-        head_buffer = malloc((head_length + 1) * sizeof(char));
+        head_buffer = nmalloc((head_length + 1) * sizeof(char));
 
         for (u64 i = 0; i < (head_length); i++) {
           head_buffer[i] = main_buffer[i];
@@ -997,7 +999,7 @@ void *handle_request(void *thread_args) {
         if (content_length > content_length_limit) {
           content_length_error = strdup("content length too large");
         } else {
-          content_buffer = malloc(content_length * sizeof(char));
+          content_buffer = nmalloc(content_length * sizeof(char));
 
           // copy if any, the remaining data in main buffer that are not
           // part of head to content
@@ -1040,17 +1042,17 @@ void *handle_request(void *thread_args) {
   }
 
   if (bytes_read == -1) {
-    free(req);
+    nfree(req);
     close(args->client_sock);
-    free(args);
+    nfree(args);
 
     return NULL;
   }
 
   if (head_length == 0) {
-    free(req);
+    nfree(req);
     close(args->client_sock);
-    free(args);
+    nfree(args);
 
     return NULL;
   };
@@ -1064,15 +1066,15 @@ void *handle_request(void *thread_args) {
     server_send_response(req, resp);
     free_server_response(resp);
 
-    free(parse_headers_error);
+    nfree(parse_headers_error);
 
-    free(main_buffer);
-    free(head_buffer);
-    free(content_buffer);
+    nfree(main_buffer);
+    nfree(head_buffer);
+    nfree(content_buffer);
     free_server_request(req);
 
     close(args->client_sock);
-    free(args);
+    nfree(args);
 
     return NULL;
   };
@@ -1086,15 +1088,15 @@ void *handle_request(void *thread_args) {
     server_send_response(req, resp);
     free_server_response(resp);
 
-    free(content_length_error);
+    nfree(content_length_error);
 
-    free(main_buffer);
-    free(head_buffer);
-    free(content_buffer);
+    nfree(main_buffer);
+    nfree(head_buffer);
+    nfree(content_buffer);
     free_server_request(req);
 
     close(args->client_sock);
-    free(args);
+    nfree(args);
 
     return NULL;
   };
@@ -1109,13 +1111,13 @@ void *handle_request(void *thread_args) {
 
   process_request(args->http_server, req);
 
-  free(main_buffer);
-  free(head_buffer);
-  free(content_buffer);
+  nfree(main_buffer);
+  nfree(head_buffer);
+  nfree(content_buffer);
   free_server_request(req);
 
   close(args->client_sock);
-  free(args);
+  nfree(args);
 
   return NULL;
 }
@@ -1196,7 +1198,7 @@ int start_server(sonic_server_t *http_server) {
 
         pthread_t handle_request_thread;
         handle_request_thread_args_t *handle_request_thread_args =
-            malloc(sizeof(handle_request_thread_args_t));
+            nmalloc(sizeof(handle_request_thread_args_t));
         handle_request_thread_args[0] =
             (handle_request_thread_args_t){.http_server = http_server,
                                            .client_sock = client_sock,
@@ -1218,18 +1220,18 @@ void free_route(sonic_route_t *route) {
   free_path(route->path);
 
   if (route->is_file_route) {
-    free(route->file_route_path);
+    nfree(route->file_route_path);
   }
 
   for (u64 i = 0; i < route->middlewares_count; i++) {
-    free(route->middlewares[i]);
+    nfree(route->middlewares[i]);
   }
 
   if (route->middlewares_count > 0) {
-    free(route->middlewares);
+    nfree(route->middlewares);
   }
 
-  free(route);
+  nfree(route);
 }
 
 /****
@@ -1246,15 +1248,15 @@ void stop_server(sonic_server_t *server) {
   }
 
   for (u64 i = 0; i < server->middlewares_count; i++) {
-    free(server->middlewares[i]);
+    nfree(server->middlewares[i]);
   }
 
   if (server->middlewares_count > 0) {
-    free(server->middlewares);
+    nfree(server->middlewares);
   }
 
   if (server->routes_count > 0) {
-    free(server->routes);
+    nfree(server->routes);
   }
 }
 
@@ -1263,7 +1265,7 @@ void stop_server(sonic_server_t *server) {
  *
  ****/
 sonic_server_t *new_server(char *host, u16 port) {
-  sonic_server_t *server = malloc(sizeof(sonic_server_t));
+  sonic_server_t *server = nmalloc(sizeof(sonic_server_t));
 
   server->port = port;
   server->host = host;
@@ -1285,7 +1287,7 @@ sonic_server_t *new_server(char *host, u16 port) {
 sonic_server_response_t *
 new_server_response(sonic_status_t status, sonic_content_type_t content_type) {
 
-  sonic_server_response_t *resp = malloc(sizeof(sonic_server_response_t));
+  sonic_server_response_t *resp = nmalloc(sizeof(sonic_server_response_t));
 
   resp->headers = NULL;
   resp->headers_count = 0;
@@ -1304,7 +1306,7 @@ new_server_response(sonic_status_t status, sonic_content_type_t content_type) {
 
 sonic_server_response_t *new_server_file_response(sonic_status_t status,
                                                   char *file_path) {
-  sonic_server_response_t *resp = malloc(sizeof(sonic_server_response_t));
+  sonic_server_response_t *resp = nmalloc(sizeof(sonic_server_response_t));
 
   resp->headers = NULL;
   resp->headers_count = 0;
@@ -1344,17 +1346,17 @@ void server_response_add_header(sonic_server_response_t *resp, char *key,
                                 char *value) {
   sonic_header_t new_header;
 
-  new_header.key = malloc((strlen(key) + 1) * sizeof(char));
+  new_header.key = nmalloc((strlen(key) + 1) * sizeof(char));
   strcpy(new_header.key, key);
 
-  new_header.value = malloc((strlen(value) + 1) * sizeof(char));
+  new_header.value = nmalloc((strlen(value) + 1) * sizeof(char));
   strcpy(new_header.value, value);
 
   if (resp->headers_count == 0) {
-    resp->headers = malloc((resp->headers_count + 1) * sizeof(sonic_header_t));
+    resp->headers = nmalloc((resp->headers_count + 1) * sizeof(sonic_header_t));
   } else {
-    resp->headers = realloc(resp->headers,
-                            (resp->headers_count + 1) * sizeof(sonic_header_t));
+    resp->headers = nrealloc(resp->headers, (resp->headers_count + 1) *
+                                                sizeof(sonic_header_t));
   }
 
   resp->headers[resp->headers_count] = new_header;

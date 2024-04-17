@@ -85,6 +85,7 @@ typedef struct {
 } node_config_t;
 
 typedef struct NODE_CTX {
+  args_t *args;
   node_manifest_t *manifest;
   node_config_t *config;
   pid_t db_pid;

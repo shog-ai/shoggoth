@@ -46,21 +46,16 @@ generate-runtime: check-path-arg build-explorer shogdb tunnel
 	mkdir -p $(RP)/bin/
 	mkdir -p $(RP)/scripts/
 	mkdir -p $(RP)/node
-	mkdir -p $(RP)/studio
 	
 	mkdir -p $(RP)/node/keys $(RP)/node/tmp $(RP)/node/update
 	
 	mkdir -p $(RP)/node/explorer $(RP)/node/explorer/docs/ $(RP)/node/explorer/static/ $(RP)/node/explorer/templates/
 	
-	mkdir -p $(RP)/studio/static $(RP)/studio/templates/ $(RP)/studio/html/ $(RP)/studio/model_server
 	
 	cp ./src/node/default-node-config.toml $(RP)/node/config.toml
 
 	cp $(TARGET_DIR)/shogdb $(RP)/bin/
 	cp ./shogdb/src/dbconfig.toml $(RP)/node/
-
-# cp $(TARGET_DIR)/model_server $(RP)/bin/shog_model_server
-# cp ./lib/llamacpp/ggml-metal.metal $(RP)/studio/model_server/
 
 	cp $(TARGET_DIR)/tunnel $(RP)/bin/shog_tunnel
 	
@@ -68,10 +63,6 @@ generate-runtime: check-path-arg build-explorer shogdb tunnel
 	cp -r ./src/explorer/static/* $(RP)/node/explorer/static/
 	cp -r ./src/explorer/templates/* $(RP)/node/explorer/templates/
 
-	cp -r ./src/studio/static/* $(RP)/studio/static/
-	cp -r ./src/studio/html/* $(RP)/studio/html/
-	cp -r ./src/studio/templates/* $(RP)/studio/templates/
-	
 package-release:
 	$(eval PREFIX = release)
 

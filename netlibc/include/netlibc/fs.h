@@ -1,7 +1,7 @@
 #ifndef NETLIBC_FS_H
 #define NETLIBC_FS_H
 
-#define FILE_PATH_SIZE 256
+// #define FILE_PATH_SIZE 256
 
 #include "../netlibc.h"
 #include "./error.h"

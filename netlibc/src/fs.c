@@ -10,6 +10,8 @@
 
 #include "../include/netlibc/fs.h"
 #include "../include/netlibc/log.h"
+#include "../include/netlibc/mem.h"
+#include "../include/netlibc/string.h"
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -19,6 +21,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
 
 result_t delete_file(const char *file_path) {
   if (remove(file_path) == 0) {
@@ -40,18 +43,19 @@ result_t delete_dir(const char *dir_path) {
   }
 
   while ((entry = readdir(dir)) != NULL) {
-    char filePath[FILE_PATH_SIZE + 256];
-    sprintf(filePath, "%s/%s", dir_path, entry->d_name);
+    // char filePath[FILE_PATH_SIZE + 256];
+    char *file_path = string_from(dir_path, "/", entry->d_name, NULL);
 
-    if (lstat(filePath, &statbuf) == -1) {
+    if (lstat(file_path, &statbuf) == -1) {
       perror("lstat");
       closedir(dir);
+      nfree(file_path);
       return ERR("lstat error");
     }
 
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-        result_t res = delete_dir(filePath);
+        result_t res = delete_dir(file_path);
 
         if (!is_ok(res)) {
           closedir(dir);
@@ -61,12 +65,15 @@ result_t delete_dir(const char *dir_path) {
       }
     } else {
       // Delete regular files
-      if (remove(filePath) == -1) {
+      if (remove(file_path) == -1) {
         perror("remove");
         closedir(dir);
+        nfree(file_path);
         return ERR("remove failed");
       }
     }
+
+    nfree(file_path);
   }
 
   closedir(dir);
@@ -267,14 +274,14 @@ result_t get_files_and_dirs_list(char *dir_path) {
 
 void free_files_list(files_list_t *list) {
   for (u64 i = 0; i < list->files_count; i++) {
-    free(list->files[i]);
+    nfree(list->files[i]);
   }
 
   if (list->files_count > 0) {
-    free(list->files);
+    nfree(list->files);
   }
 
-  free(list);
+  nfree(list);
 }
 /****
  * duplicates a file
@@ -322,30 +329,37 @@ result_t copy_dir(char *src_path, char *dest_path) {
   }
 
   while ((entry = readdir(srcDir)) != NULL) {
-    char srcFile[FILE_PATH_SIZE + 256];
-    char destFile[FILE_PATH_SIZE + 256];
-    sprintf(srcFile, "%s/%s", src_path, entry->d_name);
-    sprintf(destFile, "%s/%s", dest_path, entry->d_name);
+    // char srcFile[FILE_PATH_SIZE + 256];
+    // char destFile[FILE_PATH_SIZE + 256];
 
-    if (lstat(srcFile, &statbuf) == -1) {
+    char *src_file = string_from(src_path, "/", entry->d_name, NULL);
+    char *dest_file = string_from(dest_path, "/", entry->d_name, NULL);
+
+    if (lstat(src_file, &statbuf) == -1) {
       perror("lstat");
       closedir(srcDir);
+      nfree(src_file);
+      nfree(dest_file);
+
       return ERR("lstat error");
     }
 
     if (S_ISDIR(statbuf.st_mode)) {
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-        result_t res = copy_dir(srcFile, destFile);
+        result_t res = copy_dir(src_file, dest_file);
         PROPAGATE(res);
       }
     } else {
       // Copy regular files
-      FILE *srcFilePtr = fopen(srcFile, "rb");
-      FILE *destFilePtr = fopen(destFile, "wb");
+      FILE *srcFilePtr = fopen(src_file, "rb");
+      FILE *destFilePtr = fopen(dest_file, "wb");
 
       if (srcFilePtr == NULL || destFilePtr == NULL) {
         perror("fopen");
         closedir(srcDir);
+        nfree(src_file);
+        nfree(dest_file);
+
         return ERR("open error");
       }
 
@@ -357,6 +371,9 @@ result_t copy_dir(char *src_path, char *dest_path) {
       fclose(srcFilePtr);
       fclose(destFilePtr);
     }
+
+    nfree(src_file);
+    nfree(dest_file);
   }
 
   closedir(srcDir);
@@ -430,9 +447,9 @@ void release_file_lock(file_lock_t *lock) {
   // LOG(INFO, "released file lock on %s", lock->path);
 
   close(lock->fd);
-  free(lock->path);
+  nfree(lock->path);
 
-  free(lock);
+  nfree(lock);
 }
 
 result_t is_file_plain_text(const char *file_path) {
@@ -487,7 +504,7 @@ void unmap_file(file_mapping_t *file_mapping) {
 
   close(file_mapping->fd);
 
-  free(file_mapping);
+  nfree(file_mapping);
 }
 
 result_t get_dir_size(char *path) {

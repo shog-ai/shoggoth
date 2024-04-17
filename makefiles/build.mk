@@ -38,12 +38,13 @@ ifeq ($(shell uname), Linux)
 CFLAGS_SANITIZE = -fsanitize=address,undefined,leak,undefined 
 LDFLAGS_SANITIZE += -lasan -lubsan
 endif
+CFLAGS_SANITIZE += -DMEM_DEBUG
 
 MAIN_OBJ = $(TARGET_DIR)/main.o
 
 # object files for node
 # OBJS += $(TARGET_DIR)/args.o
-OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/studio.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/tunnel.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
+OBJS += $(TARGET_DIR)/node.o $(TARGET_DIR)/utils.o $(TARGET_DIR)/openssl.o $(TARGET_DIR)/db.o $(TARGET_DIR)/tunnel.o $(TARGET_DIR)/json.o $(TARGET_DIR)/toml.o $(TARGET_DIR)/api.o
 OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(TARGET_DIR)/pins.o $(TARGET_DIR)/dht.o $(TARGET_DIR)/og.o
 OBJS += $(TARGET_DIR)/server_explorer.o
 
@@ -168,7 +169,6 @@ build-objects-debug:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/dht/dht.c
 		
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/studio/studio.c
 	
 	mv ./*.o $(TARGET_DIR)
 
@@ -200,7 +200,6 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(NODE_SRC_DIR)/dht/dht.c
 	
-	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/studio/studio.c
 	
 	mv ./*.o $(TARGET_DIR)
 
@@ -232,7 +231,6 @@ build-objects-flat:
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/server/server_explorer.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(NODE_SRC_DIR)/dht/dht.c
 
-	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/studio/studio.c
 	
 	mv ./*.o $(TARGET_DIR)
 

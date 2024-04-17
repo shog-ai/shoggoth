@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 
+#include <netlibc/mem.h>
+
 node_ctx_t *node_global_ctx;
 
 #ifndef VERSION
@@ -54,7 +56,7 @@ result_t generate_node_key_pair(char *keys_path, char *public_key_path,
 result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   // chdir(ctx->runtime_path);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *keys_path = string_from(node_runtime_path, "/keys", NULL);
@@ -72,13 +74,13 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
     PROPAGATE(res);
   }
 
-  free(keys_path);
+  nfree(keys_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
   if (!dir_exists(pins_path)) {
     create_dir(pins_path);
   }
-  free(pins_path);
+  nfree(pins_path);
 
   char *config_path = NULL;
 
@@ -95,32 +97,32 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
   result_t res_config_str = read_file_to_string(config_path);
   char *config_str = PROPAGATE(res_config_str);
 
-  free(config_path);
+  nfree(config_path);
 
   result_t res_config = toml_string_to_node_config(config_str);
   node_config_t *config = PROPAGATE(res_config);
 
-  free(config_str);
+  nfree(config_str);
 
   ctx->config = config;
 
   result_t res_public_key_string = read_file_to_string(public_key_path);
   char *public_key_string = PROPAGATE(res_public_key_string);
 
-  free(public_key_path);
-  free(private_key_path);
+  nfree(public_key_path);
+  nfree(private_key_path);
 
   result_t res_manifest_str =
       generate_node_manifest(public_key_string, config->network.public_host,
                              config->explorer.enable, VERSION);
   char *manifest_str = PROPAGATE(res_manifest_str);
 
-  free(public_key_string);
+  nfree(public_key_string);
 
   result_t res_manifest = json_string_to_node_manifest(manifest_str);
   node_manifest_t *manifest = PROPAGATE(res_manifest);
 
-  free(manifest_str);
+  nfree(manifest_str);
 
   ctx->manifest = manifest;
 
@@ -134,8 +136,9 @@ result_t init_node_runtime(node_ctx_t *ctx, args_t *args) {
  *
  ****/
 node_ctx_t *new_node_ctx() {
-  node_ctx_t *ctx = malloc(sizeof(node_ctx_t));
+  node_ctx_t *ctx = nmalloc(sizeof(node_ctx_t));
 
+  ctx->args = NULL;
   ctx->runtime_path = NULL;
   ctx->db_launched = true;
   ctx->node_server_started = false;
@@ -160,7 +163,7 @@ void shoggoth_node_exit(int exit_code) {
   sleep(5);
 
   if (node_global_ctx->node_server_started) {
-    free(node_global_ctx->node_http_server);
+    nfree(node_global_ctx->node_http_server);
   }
 
   // Send a kill signal to the db process
@@ -181,29 +184,30 @@ void shoggoth_node_exit(int exit_code) {
     LOG(ERROR, "db child process did not exit normally");
   }
 
-  free(node_global_ctx->runtime_path);
+  nfree(node_global_ctx->runtime_path);
 
-  free(node_global_ctx->config->network.host);
-  free(node_global_ctx->config->network.public_host);
-  free(node_global_ctx->config->tunnel.server);
-  free(node_global_ctx->config->db.host);
+  nfree(node_global_ctx->config->network.host);
+  nfree(node_global_ctx->config->network.public_host);
+  nfree(node_global_ctx->config->tunnel.server);
+  nfree(node_global_ctx->config->db.host);
 
   for (u64 i = 0; i < node_global_ctx->config->peers.bootstrap_peers_count;
        i++) {
-    free(node_global_ctx->config->peers.bootstrap_peers[i]);
+    nfree(node_global_ctx->config->peers.bootstrap_peers[i]);
   }
   if (node_global_ctx->config->peers.bootstrap_peers_count > 0) {
-    free(node_global_ctx->config->peers.bootstrap_peers);
+    nfree(node_global_ctx->config->peers.bootstrap_peers);
   }
 
-  free(node_global_ctx->config);
+  nfree(node_global_ctx->config);
+  nfree(node_global_ctx->args);
 
-  free(node_global_ctx->manifest->public_host);
-  free(node_global_ctx->manifest->public_key);
-  free(node_global_ctx->manifest->node_id);
-  free(node_global_ctx->manifest->version);
+  nfree(node_global_ctx->manifest->public_host);
+  nfree(node_global_ctx->manifest->public_key);
+  nfree(node_global_ctx->manifest->node_id);
+  nfree(node_global_ctx->manifest->version);
 
-  free(node_global_ctx);
+  nfree(node_global_ctx);
 
   exit(exit_code);
 }
@@ -305,6 +309,8 @@ result_t shog_init_node(args_t *args, bool print_info) {
 
   node_global_ctx = ctx;
 
+  ctx->args = args;
+
   if (args->set_config) {
     LOG(INFO, "Initializing node with custom config file: %s",
         args->config_path);
@@ -312,11 +318,12 @@ result_t shog_init_node(args_t *args, bool print_info) {
     LOG(INFO, "Initializing node");
   }
 
-  char default_runtime_path[FILE_PATH_SIZE];
+  char default_runtime_path[256];
   utils_get_default_runtime_path(default_runtime_path);
 
   if (args->set_runtime_path) {
-    ctx->runtime_path = malloc((strlen(args->runtime_path) + 1) * sizeof(char));
+    ctx->runtime_path =
+        nmalloc((strlen(args->runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, args->runtime_path);
 
     LOG(INFO, "Using custom runtime path: %s", ctx->runtime_path);
@@ -326,7 +333,7 @@ result_t shog_init_node(args_t *args, bool print_info) {
     }
   } else {
     ctx->runtime_path =
-        malloc((strlen(default_runtime_path) + 1) * sizeof(char));
+        nmalloc((strlen(default_runtime_path) + 1) * sizeof(char));
     strcpy(ctx->runtime_path, default_runtime_path);
 
     LOG(INFO, "Using default runtime path: %s", ctx->runtime_path);
@@ -413,7 +420,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
     sa.sa_handler = sigchld_handler;
     sigaction(SIGCHLD, &sa, NULL);
 
-    char node_runtime_path[FILE_PATH_SIZE];
+    char node_runtime_path[256];
     utils_get_node_runtime_path(ctx, node_runtime_path);
 
     char *monitor_logs_path =
@@ -424,7 +431,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
       PANIC("could not open node monitor log file");
     }
 
-    free(monitor_logs_path);
+    nfree(monitor_logs_path);
 
     // Redirect stdin to the read end of the pipe
     dup2(parent_to_child_pipe[0], STDIN_FILENO);
@@ -448,7 +455,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
       }
 
       int pid = atoi(node_pid_str);
-      free(node_pid_str);
+      nfree(node_pid_str);
 
       int result = kill(pid, 0);
 
@@ -468,7 +475,7 @@ result_t start_node_monitor(node_ctx_t *ctx, args_t *args) {
 result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
   LOG(INFO, "Starting node as a service");
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   pid_t pid = fork();
@@ -503,14 +510,14 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
     sprintf(node_pid_str, "%d", node_pid);
     write_to_file(node_pid_path, node_pid_str, strlen(node_pid_str));
 
-    free(node_pid_path);
+    nfree(node_pid_path);
 
     int logs_fd = open(node_logs_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (logs_fd == -1) {
       PANIC("could not open node log file");
     }
 
-    free(node_logs_path);
+    nfree(node_logs_path);
 
     // Redirect stdin to the read end of the pipe
     dup2(parent_to_child_pipe[0], STDIN_FILENO);
@@ -525,15 +532,15 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
 
     char *config_arg = strdup(node_config_path);
 
-    free(node_config_path);
+    nfree(node_config_path);
 
     char *node_runtime_arg = strdup(ctx->runtime_path);
 
     execlp("nohup", "nohup", node_executable, "run", "-c", config_arg, "-r",
            node_runtime_arg, NULL);
 
-    free(config_arg);
-    free(node_runtime_arg);
+    nfree(config_arg);
+    nfree(node_runtime_arg);
 
     close(logs_fd);
     PANIC("error occured while launching node executable \n");
@@ -547,14 +554,14 @@ result_t start_node_service(node_ctx_t *ctx, args_t *args, bool monitor) {
 }
 
 result_t check_node_service(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
       string_from(node_runtime_path, "/node_service_pid.txt", NULL);
 
   result_t res_node_pid_str = read_file_to_string(node_pid_path);
-  free(node_pid_path);
+  nfree(node_pid_path);
 
   char *node_pid_str = PROPAGATE(res_node_pid_str);
 
@@ -564,7 +571,7 @@ result_t check_node_service(node_ctx_t *ctx) {
   }
 
   int pid = atoi(node_pid_str);
-  free(node_pid_str);
+  nfree(node_pid_str);
 
   int result = kill(pid, 0);
 
@@ -578,7 +585,7 @@ result_t check_node_service(node_ctx_t *ctx) {
 }
 
 result_t stop_node_service(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
@@ -596,7 +603,7 @@ result_t stop_node_service(node_ctx_t *ctx) {
   PROPAGATE(res_delete);
 
   int pid = atoi(node_pid_str);
-  free(node_pid_str);
+  nfree(node_pid_str);
 
   kill(pid, SIGINT);
 
@@ -614,7 +621,7 @@ result_t stop_node_service(node_ctx_t *ctx) {
 
   delete_file(node_pid_path);
 
-  free(node_pid_path);
+  nfree(node_pid_path);
 
   LOG(INFO, "Node service stopped");
 
@@ -622,14 +629,14 @@ result_t stop_node_service(node_ctx_t *ctx) {
 }
 
 result_t print_node_service_logs(node_ctx_t *ctx) {
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_logs_path =
       string_from(node_runtime_path, "/node_service_logs.txt", NULL);
 
   result_t res_node_logs_str = read_file_to_string(node_logs_path);
-  free(node_logs_path);
+  nfree(node_logs_path);
 
   char *node_logs_str = PROPAGATE(res_node_logs_str);
 
@@ -639,7 +646,7 @@ result_t print_node_service_logs(node_ctx_t *ctx) {
 
   puts(node_logs_str);
 
-  free(node_logs_str);
+  nfree(node_logs_str);
 
   return OK(NULL);
 }
@@ -647,7 +654,7 @@ result_t print_node_service_logs(node_ctx_t *ctx) {
 result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   LOG(INFO, "Restarting node service");
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *node_pid_path =
@@ -662,7 +669,7 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
   }
 
   int pid = atoi(node_pid_str);
-  free(node_pid_str);
+  nfree(node_pid_str);
 
   int result = kill(pid, 0);
 
@@ -683,7 +690,7 @@ result_t restart_node_service(node_ctx_t *ctx, args_t *args) {
 
     delete_file(node_pid_path);
 
-    free(node_pid_path);
+    nfree(node_pid_path);
 
     LOG(INFO, "Node service stopped");
 
@@ -706,35 +713,35 @@ result_t node_backup(node_ctx_t *ctx) {
   char *config_path = string_from(node_runtime_path, "/config.toml", NULL);
   char *backup_config_path = string_from(backup_path, "/config.toml", NULL);
   UNWRAP(copy_file(config_path, backup_config_path));
-  free(config_path);
-  free(backup_config_path);
+  nfree(config_path);
+  nfree(backup_config_path);
 
   char *dbconfig_path = string_from(node_runtime_path, "/dbconfig.toml", NULL);
   char *backup_dbconfig_path = string_from(backup_path, "/dbconfig.toml", NULL);
   UNWRAP(copy_file(dbconfig_path, backup_dbconfig_path));
-  free(dbconfig_path);
-  free(backup_dbconfig_path);
+  nfree(dbconfig_path);
+  nfree(backup_dbconfig_path);
 
   char *dbsave_path = string_from(node_runtime_path, "/save.sdb", NULL);
   char *backup_dbsave_path = string_from(backup_path, "/save.sdb", NULL);
   UNWRAP(copy_file(dbsave_path, backup_dbsave_path));
-  free(dbsave_path);
-  free(backup_dbsave_path);
+  nfree(dbsave_path);
+  nfree(backup_dbsave_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
   char *backup_pins_path = string_from(backup_path, "/pins", NULL);
   UNWRAP(copy_dir(pins_path, backup_pins_path));
-  free(pins_path);
-  free(backup_pins_path);
+  nfree(pins_path);
+  nfree(backup_pins_path);
 
   char *tarball_path = string_from(node_runtime_path, "/backup.tar", NULL);
   UNWRAP(utils_create_tarball(backup_path, tarball_path));
-  free(tarball_path);
+  nfree(tarball_path);
 
   delete_dir(backup_path);
 
-  free(node_runtime_path);
-  free(backup_path);
+  nfree(node_runtime_path);
+  nfree(backup_path);
 
   LOG(INFO, "Node backup finished");
 
@@ -749,34 +756,34 @@ result_t node_restore(node_ctx_t *ctx) {
 
   char *tarball_path = string_from(node_runtime_path, "/backup.tar", NULL);
   UNWRAP(utils_extract_tarball(tarball_path, backup_path));
-  free(tarball_path);
+  nfree(tarball_path);
 
   char *config_path = string_from(node_runtime_path, "/config.toml", NULL);
   char *backup_config_path = string_from(backup_path, "/config.toml", NULL);
   UNWRAP(copy_file(backup_config_path, config_path));
-  free(config_path);
-  free(backup_config_path);
+  nfree(config_path);
+  nfree(backup_config_path);
 
   char *dbconfig_path = string_from(node_runtime_path, "/dbconfig.toml", NULL);
   char *backup_dbconfig_path = string_from(backup_path, "/dbconfig.toml", NULL);
   UNWRAP(copy_file(backup_dbconfig_path, dbconfig_path));
-  free(dbconfig_path);
-  free(backup_dbconfig_path);
+  nfree(dbconfig_path);
+  nfree(backup_dbconfig_path);
 
   char *dbsave_path = string_from(node_runtime_path, "/save.sdb", NULL);
   char *backup_dbsave_path = string_from(backup_path, "/save.sdb", NULL);
   UNWRAP(copy_file(backup_dbsave_path, dbsave_path));
-  free(dbsave_path);
-  free(backup_dbsave_path);
+  nfree(dbsave_path);
+  nfree(backup_dbsave_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
   char *backup_pins_path = string_from(backup_path, "/pins", NULL);
   UNWRAP(copy_dir(backup_pins_path, pins_path));
-  free(pins_path);
-  free(backup_pins_path);
+  nfree(pins_path);
+  nfree(backup_pins_path);
 
-  free(node_runtime_path);
-  free(backup_path);
+  nfree(node_runtime_path);
+  nfree(backup_path);
 
   LOG(INFO, "Node restore finished");
 
@@ -796,7 +803,7 @@ result_t shoggoth_id_from_hash(char *hash) {
 result_t node_unpin_resource(node_ctx_t *ctx, char *shoggoth_id) {
   LOG(INFO, "unpinning resource `%s`", shoggoth_id);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
@@ -833,7 +840,7 @@ result_t node_pin_resource(node_ctx_t *ctx, char *file_path, char *label) {
   result_t res_id = shoggoth_id_from_hash(hash);
   char *id = PROPAGATE(res_id);
 
-  char node_runtime_path[FILE_PATH_SIZE];
+  char node_runtime_path[256];
   utils_get_node_runtime_path(ctx, node_runtime_path);
 
   char *pins_path = string_from(node_runtime_path, "/pins", NULL);
@@ -860,11 +867,10 @@ void clone_response_callback(char *data, u64 size, void *user_pointer) {
 result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
   LOG(INFO, "cloning resource `%s`", url);
 
-  char tmp_path[FILE_PATH_SIZE];
+  char tmp_path[256];
   utils_get_node_tmp_path(ctx, tmp_path);
 
-  char tmp_file_path[FILE_PATH_SIZE];
-  sprintf(tmp_file_path, "%s/clone.tmp", tmp_path);
+  char *tmp_file_path = string_from(tmp_path, "/clone.tmp", NULL);
 
   sonic_request_t *req = sonic_new_request(METHOD_GET, url);
 
@@ -874,7 +880,7 @@ result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
 
   sonic_response_t *resp = sonic_send_request(req);
 
-  free(user_ptr);
+  nfree(user_ptr);
 
   if (resp->failed) {
     return ERR("CLONE FAILED: %s", sonic_get_error());
@@ -887,6 +893,8 @@ result_t node_clone_resource(node_ctx_t *ctx, char *url, char *label) {
   UNWRAP(node_pin_resource(ctx, tmp_file_path, label));
 
   delete_file(tmp_file_path);
+
+  nfree(tmp_file_path);
 
   LOG(INFO, "resource cloned successfully");
 

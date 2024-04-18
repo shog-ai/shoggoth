@@ -27,10 +27,10 @@
 
 studio_ctx_t *studio_ctx = NULL;
 
-char *base_prompt =
-    "This is a conversation between User and Llama, a friendly chatbot. Llama "
-    "is helpful, kind, honest, good at writing, and never fails to answer any "
-    "requests immediately and with precision.\n\nUser: hi\nLlama:";
+// char *base_prompt =
+// "This is a conversation between User and Llama, a friendly chatbot. Llama "
+// "is helpful, kind, honest, good at writing, and never fails to answer any "
+// "requests immediately and with precision.\n\nUser: hi\nLlama:";
 
 // void respond_error(sonic_server_request_t *req, char *error_message);
 
@@ -214,10 +214,10 @@ void launch_model_server(char *model_name) {
     char *model_path = string_from(studio_ctx->runtime_path, "/studio/models/",
                                    model_name, NULL);
 
-    LOG(INFO, "MODEL PATH: %s", model_path);
+    // LOG(INFO, "MODEL PATH: %s", model_path);
 
     execlp("python3", "python3", "-m", "llama_cpp.server", "--model",
-           model_path, NULL);
+           model_path, "--port", "6961", NULL);
 
     close(logs_fd);
 
@@ -359,12 +359,14 @@ void api_completion_route(sonic_server_request_t *req) {
     SERVER_ERR(res_comp_req);
     completion_request_t *comp_req = VALUE(res_comp_req);
 
-    sonic_request_t *reverse_req =
-        sonic_new_request(METHOD_POST, "http://127.0.0.1:8000/v1/chat/completions");
+    sonic_request_t *reverse_req = sonic_new_request(
+        METHOD_POST, "http://127.0.0.1:6961/v1/chat/completions");
 
-    char *reverse_req_body =
-        nmalloc((strlen(comp_req->prompt) + 20) * sizeof(char));
-    sprintf(reverse_req_body, "{\"prompt\": \"%s\"}", comp_req->prompt);
+    char *reverse_req_body = string_from(
+        "{\"model\": \"gpt-3.5-turbo\",\"messages\": [{\"role\": "
+        "\"system\",\"content\": \"You are a helpful assistant.\"},{\"role\": "
+        "\"user\",\"content\": \"",
+        comp_req->prompt, "\"}]}", NULL);
 
     char *escaped = replace_escape_character(reverse_req_body, '\n', 'n');
     nfree(reverse_req_body);

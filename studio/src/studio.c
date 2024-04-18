@@ -211,19 +211,12 @@ void launch_model_server(char *model_name) {
 
     // Execute the executable
 
-    // char *model_server_executable =
-    // string_from("python3 -m llama_cpp.server --model",  NULL);
-
     char *model_path = string_from(studio_ctx->runtime_path, "/studio/models/",
                                    model_name, NULL);
 
     LOG(INFO, "MODEL PATH: %s", model_path);
 
-    execlp("python3",
-           "python3"
-           "-m"
-           "llama_cpp.server"
-           "--model",
+    execlp("python3", "python3", "-m", "llama_cpp.server", "--model",
            model_path, NULL);
 
     close(logs_fd);
@@ -367,7 +360,7 @@ void api_completion_route(sonic_server_request_t *req) {
     completion_request_t *comp_req = VALUE(res_comp_req);
 
     sonic_request_t *reverse_req =
-        sonic_new_request(METHOD_POST, "http://127.0.0.1:6967/completion");
+        sonic_new_request(METHOD_POST, "http://127.0.0.1:8000/v1/chat/completions");
 
     char *reverse_req_body =
         nmalloc((strlen(comp_req->prompt) + 20) * sizeof(char));

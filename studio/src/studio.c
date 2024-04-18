@@ -211,14 +211,20 @@ void launch_model_server(char *model_name) {
 
     // Execute the executable
 
-    char *model_server_executable =
-        string_from(studio_ctx->runtime_path, "/bin/shog_model_server", NULL);
+    // char *model_server_executable =
+    // string_from("python3 -m llama_cpp.server --model",  NULL);
 
     char *model_path = string_from(studio_ctx->runtime_path, "/studio/models/",
                                    model_name, NULL);
 
-    execlp(model_server_executable, model_server_executable, "--port", "6967",
-           "-m", model_path, "-c", "2048", "-r", "User:", NULL);
+    LOG(INFO, "MODEL PATH: %s", model_path);
+
+    execlp("python3",
+           "python3"
+           "-m"
+           "llama_cpp.server"
+           "--model",
+           model_path, NULL);
 
     close(logs_fd);
 

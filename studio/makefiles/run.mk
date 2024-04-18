@@ -1,7 +1,7 @@
 START_FLAGS = 
 
 # NODE =======================================================================================================
-run-studio: dev
+run: dev
 	echo "\n\n"	
 	cd $(TARGET_DIR)/dev-$(VERSION)/ && ./bin/studio run
 

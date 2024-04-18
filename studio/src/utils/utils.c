@@ -63,7 +63,7 @@ int utils_get_default_runtime_path(char runtime_path[]) {
     return 1;
   }
 
-  char *sub_dir = "/shoggoth";
+  char *sub_dir = "/shogstudio";
   sprintf(runtime_path, "%s%s", home_path, sub_dir);
 
   return 0;

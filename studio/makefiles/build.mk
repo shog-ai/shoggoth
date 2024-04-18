@@ -12,9 +12,17 @@ CC = gcc
 endif
 LD = $(CC)
 
+ifndef CX
+CX = gcc
+endif
+LD = $(CX)
+
 # flags
-CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length $$(pkg-config --cflags openssl)  -I ../netlibc/include
+CFLAGS = -g -std=c11 -D_GNU_SOURCE -Wno-unused-value -Wno-format-zero-length -I ../netlibc/include
 CFLAGS_FLAT = -DNDEBUG
+
+CXFLAGS =
+CXFLAGS_FLAT =
 
 ifdef ANDROID
 CFLAGS += -D__android__
@@ -100,11 +108,6 @@ $(TARGET_DIR)/model_server:
 	cd ./lib/llamacpp/ && make server > /dev/null
 	cp ./lib/llamacpp/server $(TARGET_DIR)/model_server
 
-$(TARGET_DIR)/tunnel:
-	echo "Building tunnel..."
-	cd ./lib/bore/ && cargo build --release > /dev/null
-	cp ./lib/bore/target/release/bore $(TARGET_DIR)/tunnel
-
 
 dev: package-dev
 
@@ -123,7 +126,7 @@ build-static: target-dir build-objects-debug
 	ar rcs $(TARGET_DIR)/libshoggoth.a $(OBJS)
 
 build-objects-debug:
-	echo "Building Shoggoth (debug)..."
+	echo "Building Studio (debug)..."
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -DVERSION="\"$(VERSION)\"" -c $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) -c $(SRC_DIR)/args/args.c
@@ -135,14 +138,14 @@ build-objects-debug:
 	mv ./*.o $(TARGET_DIR)
 
 link-objects-debug: $(STATIC_LIBS)
-	echo "Linking Shoggoth (debug)..."
+	echo "Linking Studio (debug)..."
 	
 	$(LD) $(OBJS) $(MAIN_OBJ) $(STATIC_LIBS) $(LDFLAGS) -o $(TARGET_DIR)/$(TARGET)-dev 
 
 
 
 build-objects-sanitized:
-	echo "Building Shoggoth (sanitized)..."
+	echo "Building Studio (sanitized)..."
 
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -DVERSION="\"$(VERSION)\"" -c $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/args/args.c
@@ -150,18 +153,19 @@ build-objects-sanitized:
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/json/json.c
 	
 	$(CC) $(CFLAGS) $(WARN_CFLAGS) $(CFLAGS_SANITIZE) -c $(SRC_DIR)/studio.c
+# $(CX) $(CXFLAGS) -c $(SRC_DIR)/libllama.cpp
 	
 	mv ./*.o $(TARGET_DIR)
 
 link-objects-sanitized: $(STATIC_LIBS_SANITIZED)
-	echo "Linking Shoggoth (sanitized)..."
+	echo "Linking Studio (sanitized)..."
 	
 	$(LD) $(OBJS) $(MAIN_OBJ) $(LDFLAGS_SANITIZE) $(STATIC_LIBS_SANITIZED) $(LDFLAGS) -o $(TARGET_DIR)/$(TARGET)-sanitized 
 
 
 
 build-objects-flat:
-	echo "Building Shoggoth (flat)..."
+	echo "Building Studio (flat)..."
 
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -DVERSION="\"$(VERSION)\"" -c $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(CFLAGS_FLAT) $(WARN_CFLAGS) -c $(SRC_DIR)/args/args.c

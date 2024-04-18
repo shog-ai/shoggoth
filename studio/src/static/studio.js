@@ -9,7 +9,7 @@ let state_active_model_status;
 
 let first_run = true;
 
-let chat_history = "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n\nUser: ";
+// let chat_history = "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n\nUser: ";
 
 
 async function set_models() {
@@ -135,7 +135,7 @@ async function send_message_pressed() {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    prompt: chat_history + msg_str + "\nLlama:",
+    prompt: msg_str,
   }),
   })
   .then(response => {
@@ -149,7 +149,9 @@ async function send_message_pressed() {
     // Handle the JSON data
     let resp = JSON.parse(data);
 
-    add_view_msg("AI", resp.content);
+    console.log(resp);
+
+    add_view_msg("AI", resp.choices[0].message.content);
   })
   .catch(error => {
     // Handle any errors that occurred during the fetch

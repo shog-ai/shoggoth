@@ -9,7 +9,7 @@ let state_active_model_status;
 
 let first_run = true;
 
-// let chat_history = "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n\nUser: ";
+let chat_history = [{"role": "system","content": "You are a helpful assistant."}];
 
 
 async function set_models() {
@@ -128,6 +128,7 @@ async function send_message_pressed() {
 
   add_view_msg("AI", "...");
 
+  chat_history.push({"role": "user", "content": msg_str});
   
   await fetch(api_url + "completion", {
   method: 'POST',
@@ -135,7 +136,7 @@ async function send_message_pressed() {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    prompt: msg_str,
+    prompt: JSON.stringify(chat_history),
   }),
   })
   .then(response => {
@@ -152,6 +153,8 @@ async function send_message_pressed() {
     console.log(resp);
 
     add_view_msg("AI", resp.choices[0].message.content);
+
+    chat_history.push({"role": "assistant", "content": resp.choices[0].message.content});
   })
   .catch(error => {
     // Handle any errors that occurred during the fetch

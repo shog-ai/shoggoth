@@ -19,7 +19,7 @@
 
 #include "../sonic.h"
 
-char *utils_status_code_to_string(sonic_status_t status_code);
+result_t utils_status_code_to_string(sonic_status_t status_code);
 
 char *utils_get_header_value(sonic_header_t *headers, u64 headers_count,
                              char *key);
@@ -36,7 +36,7 @@ void list_files_recursive(files_list_t *result, char *dir_path);
 
 char *concat_path(char *path1, char *path2);
 
-sonic_method_t str_to_http_method(const char *method_str);
+result_t str_to_http_method(const char *method_str);
 
 void extract_scheme_from_url(const char *url, char scheme[]);
 
@@ -53,10 +53,10 @@ int resolve_domain_to_ip(const char *domain, char *ip_buffer,
 
 bool is_ip_address(const char *str);
 
-char *http_method_to_str(sonic_method_t method);
+result_t http_method_to_str(sonic_method_t method);
 
-char *content_type_to_string(sonic_content_type_t content_type);
+result_t content_type_to_string(sonic_content_type_t content_type);
 
-sonic_status_t number_to_status_code(u16 status);
+result_t number_to_status_code(u16 status);
 
 #endif

@@ -2,6 +2,8 @@
 
 #include "../../../include/client.h"
 
+#include <netlibc.h>
+
 #include <stdlib.h>
 
 void test_new_client_request(test_t *test) {
@@ -117,6 +119,8 @@ void test_suite(suite_t *suite) {
 }
 
 int main(int argc, char **argv) {
+  NETLIBC_INIT();
+  
   CAMEL_BEGIN(UNIT);
 
   ADD_SUITE(test_suite);

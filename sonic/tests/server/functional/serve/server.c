@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <netlibc.h>
+
 void serve_200(sonic_server_request_t *req) {
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -17,6 +19,8 @@ void serve_200(sonic_server_request_t *req) {
 }
 
 int main() {
+  NETLIBC_INIT();
+
   sonic_server_t *server = sonic_new_server("127.0.0.1", 5000);
 
   sonic_add_route(server, "/serve_200", METHOD_GET, serve_200);

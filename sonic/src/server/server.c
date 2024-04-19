@@ -749,8 +749,9 @@ void server_add_server_rate_limiter_middleware(sonic_server_t *server,
  * extracts the method from a buffer containing a http request head
  *
  ****/
-result_t extract_request_method(const char *head_buffer,
-                                char request_method[]) {
+result_t extract_request_method(const char *head_buffer) {
+  char request_method[64];
+
   // Find the first space in the HTTP request header
   const char *space_ptr = strchr(head_buffer, ' ');
 
@@ -766,14 +767,18 @@ result_t extract_request_method(const char *head_buffer,
     return ERR("Invalid HTTP request header.\n");
   }
 
-  return OK(NULL);
+  char *res_request_method = nstrdup(request_method);
+
+  return OK(res_request_method);
 }
 
 /****
  * extracts the path from a buffer containing a http request head
  *
  ****/
-result_t extract_request_path(const char *head_buffer, char request_path[]) {
+result_t extract_request_path(const char *head_buffer) {
+  char request_path[256];
+
   // Find the start and end positions of the request path
   const char *start = strchr(head_buffer, ' '); // Find the first space
   if (start == NULL) {
@@ -797,7 +802,9 @@ result_t extract_request_path(const char *head_buffer, char request_path[]) {
   strncpy(request_path, start, length);
   request_path[length] = '\0';
 
-  return OK(NULL);
+  char *res_request_path = nstrdup(request_path);
+
+  return OK(res_request_path);
 }
 
 /****
@@ -806,19 +813,19 @@ result_t extract_request_path(const char *head_buffer, char request_path[]) {
  *
  ****/
 result_t parse_request_headers(sonic_server_request_t *req, char *head_buffer) {
-  char request_method[64];
-  result_t res_extract_method =
-      extract_request_method(head_buffer, request_method);
-  PROPAGATE(res_extract_method);
+  result_t res_extract_method = extract_request_method(head_buffer);
+  char *request_method = PROPAGATE(res_extract_method);
 
   result_t res_method = str_to_http_method(request_method);
+  nfree(request_method);
+
   req->method = PROPAGATE_INT(res_method);
 
-  char request_path[256];
-  result_t res_extract_path = extract_request_path(head_buffer, request_path);
-  PROPAGATE(res_extract_path);
+  result_t res_extract_path = extract_request_path(head_buffer);
+  char *request_path = PROPAGATE(res_extract_path);
 
   result_t res_path = raw_path_to_sonic_path(request_path);
+  nfree(request_path);
   if (is_err(res_path)) {
     return res_path;
   }

@@ -11,7 +11,7 @@
 #define _GNU_SOURCE
 
 #include "../sonic.h"
-#include "./include/utils.h"
+#include "../include/utils.h"
 
 #include <netlibc.h>
 #include <netlibc/error.h>

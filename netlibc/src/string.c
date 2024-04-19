@@ -65,6 +65,12 @@ char *nstringify(char *str) {
   return new_str;
 }
 
+char *nstrdup(char *str) {
+  char *duped = strdup(str);
+
+  return nstringify(duped);
+}
+
 char *escape_character(char *input, char character) {
   if (input == NULL) {
     return NULL; // Return NULL if the input string is not valid.

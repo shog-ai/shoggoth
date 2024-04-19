@@ -34,4 +34,6 @@ char *escape_character(char *input, char character);
 
 char *nstringify(char *str);
 
+char *nstrdup(char *str);
+
 #endif

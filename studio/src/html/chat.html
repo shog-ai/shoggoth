@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Shog Studio</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/icon/favicon-16x16.png">
+  <link rel="manifest" href="/static/img/icon/site.webmanifest">
+
+  <link rel="stylesheet" href="/static/studio.css" />
+  
+  <script src="/static/chat.js"></script>
+</head>
+
+
+<body>
+  <div class="content">
+    <div class="side">
+      <div class="side-nav">
+        <div class="navbar-brand">
+          <img class="navbar-icon" src="/static/img/icon.png"\>
+          <div class="navbar-title"><b>SHOG STUDIO</b></div>
+        </div>
+      </div>
+
+      <div class="side-nav">
+        <div class="add-chat-btn" onclick="add_chat_pressed()">
+          <img src="/static/img/add.png" class="add-icon" />
+          New Chat
+        </div>
+      </div>
+
+      <div class="chat-items">
+        <div class="chat-item">New Chat</div>
+        <div class="chat-item">New Chat</div>
+        <div class="chat-item">New Chat</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="top-nav">
+        <a href="/chat"><div class="top-nav-item">Chat</div></a>
+        <a href="/hub"><div class="top-nav-item">Hub</div></a>
+        <a href="/node"><div class="top-nav-item">Node</div></a>
+      </div>
+
+      <div class="main-nav">
+        <div class="model-label">Model:</div>
+
+        <select name="model-select" id="model-select" class="model-select">
+          <option value="">--choose a model--</option>
+        </select>
+        
+        <div class="mount-btn" id="mount-btn" onclick="mount_model_pressed()">Mount</div>
+        <div class="mount-btn unmount-btn" id="unmount-btn" onclick="unmount_model_pressed()">Unmount</div>
+        <div class="mount-btn mounting-btn" id="mounting-btn">Mounting</div>
+      </div>
+
+      <div class="main-content">
+        <div class="chat-view" id="chat-view">
+         
+        </div>
+      </div>
+    
+      <div class="input-section">
+        <div class="search-bar">
+          <input class="search-input" id="search-input" onkeyup="handle_search_key_press(event)" placeholder="message" />
+        </div>
+      
+        <div class="search-btn" onclick="send_message_pressed()">Send</div>
+      </div>
+      <div class="footer-nav">
+        Shog Studio ⋅ built and maintained by <a class="footer-link" href="https://shog.ai" target="blank">ShogAI</a>
+      </div>
+
+    </div>
+  
+  </div>
+</body>
+</html>

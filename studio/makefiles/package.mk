@@ -18,14 +18,13 @@ generate-runtime: check-path-arg
 	mkdir -p $(RP)/scripts/
 	mkdir -p $(RP)/studio
 	
-	mkdir -p $(RP)/studio/static $(RP)/studio/models $(RP)/studio/templates/ $(RP)/studio/html/ $(RP)/studio/model_server
+	mkdir -p $(RP)/studio/static $(RP)/studio/models $(RP)/studio/html/ $(RP)/studio/model_server
 
 # cp $(TARGET_DIR)/model_server $(RP)/bin/shog_model_server
 # cp ./lib/llamacpp/ggml-metal.metal $(RP)/studio/model_server/
 
 	cp -r ./src/static/* $(RP)/studio/static/
 	cp -r ./src/html/* $(RP)/studio/html/
-	cp -r ./src/templates/* $(RP)/studio/templates/
 	
 package-release:
 	$(eval PREFIX = release)

@@ -50,7 +50,7 @@ void sonic_add_directory_route(sonic_server_t *server, char *path,
 
 void sonic_stop_server(sonic_server_t *server) { return stop_server(server); }
 
-char *sonic_status_to_string(sonic_status_t status_code) {
+result_t sonic_status_to_string(sonic_status_t status_code) {
   return utils_status_code_to_string(status_code);
 }
 

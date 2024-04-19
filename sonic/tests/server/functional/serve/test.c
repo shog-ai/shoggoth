@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <netlibc.h>
+
 void serve_200(test_t *test) {
   sonic_request_t *req =
       sonic_new_request(METHOD_GET, "http://127.0.0.1:5000/serve_200");
@@ -167,6 +169,8 @@ void test_suite(suite_t *suite) {
 }
 
 int main(int argc, char **argv) {
+  NETLIBC_INIT();
+
   CAMEL_BEGIN(FUNCTIONAL);
 
   ADD_SUITE(test_suite);

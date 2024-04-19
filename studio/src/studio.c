@@ -363,22 +363,13 @@ void api_completion_route(sonic_server_request_t *req) {
         METHOD_POST, "http://127.0.0.1:6961/v1/chat/completions");
 
     char *reverse_req_body = string_from(
-        "{\"model\": \"gpt-3.5-turbo\",\"messages\": [{\"role\": "
-        "\"system\",\"content\": \"You are a helpful assistant.\"},{\"role\": "
-        "\"user\",\"content\": \"",
-        comp_req->prompt, "\"}]}", NULL);
+        "{\"model\": \"gpt-3.5-turbo\",\"messages\": ", comp_req->prompt, " }",
+        NULL);
 
-    char *escaped = replace_escape_character(reverse_req_body, '\n', 'n');
-    nfree(reverse_req_body);
-
-    // LOG(INFO, "REVERSE BODY: %s", escaped);
-
-    // print_string_as_ascii(escaped);
-
-    sonic_set_body(reverse_req, escaped, strlen(escaped));
+    sonic_set_body(reverse_req, reverse_req_body, strlen(reverse_req_body));
 
     sonic_response_t *reverse_resp = sonic_send_request(reverse_req);
-    nfree(escaped);
+    nfree(reverse_req_body);
 
     if (reverse_resp->failed) {
       respond_error(req, "reverse request failed");
@@ -432,9 +423,51 @@ void add_studio_api_routes(sonic_server_t *server) {
   sonic_add_route(server, "/api/completion", METHOD_POST, api_completion_route);
 }
 
-void index_route(sonic_server_request_t *req) {
+void chat_route(sonic_server_request_t *req) {
   char *file_path =
-      string_from(studio_ctx->runtime_path, "/studio/html/studio.html", NULL);
+      string_from(studio_ctx->runtime_path, "/studio/html/chat.html", NULL);
+
+  result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
+  SERVER_ERR(res_file_mapping);
+  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_200, MIME_TEXT_HTML);
+  sonic_response_set_body(resp, file_mapping->content,
+                          (u64)file_mapping->info.st_size);
+
+  sonic_send_response(req, resp);
+
+  sonic_free_server_response(resp);
+
+  unmap_file(file_mapping);
+}
+
+void hub_route(sonic_server_request_t *req) {
+  char *file_path =
+      string_from(studio_ctx->runtime_path, "/studio/html/hub.html", NULL);
+
+  result_t res_file_mapping = map_file(file_path);
+  nfree(file_path);
+  SERVER_ERR(res_file_mapping);
+  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_200, MIME_TEXT_HTML);
+  sonic_response_set_body(resp, file_mapping->content,
+                          (u64)file_mapping->info.st_size);
+
+  sonic_send_response(req, resp);
+
+  sonic_free_server_response(resp);
+
+  unmap_file(file_mapping);
+}
+
+void node_route(sonic_server_request_t *req) {
+  char *file_path =
+      string_from(studio_ctx->runtime_path, "/studio/html/node.html", NULL);
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
@@ -454,7 +487,10 @@ void index_route(sonic_server_request_t *req) {
 }
 
 void add_frontend_routes(sonic_server_t *server) {
-  sonic_add_route(server, "/", METHOD_GET, index_route);
+  sonic_add_route(server, "/", METHOD_GET, chat_route);
+  sonic_add_route(server, "/chat", METHOD_GET, chat_route);
+  sonic_add_route(server, "/hub", METHOD_GET, hub_route);
+  sonic_add_route(server, "/node", METHOD_GET, node_route);
 
   char *static_dir =
       string_from(studio_ctx->runtime_path, "/studio/static", NULL);

@@ -213,7 +213,9 @@ void http_parse_response_head(sonic_client_response_t *resp,
                               char *head_buffer) {
   u16 status_code = 0;
   http_extract_status_code(head_buffer, &status_code);
-  resp->status = number_to_status_code(status_code);
+
+  result_t res_status = number_to_status_code(status_code);
+  resp->status = UNWRAP_INT(res_status);
 
   const char *header_start =
       strstr(head_buffer, "\r\n") + 2; // Skip the first line
@@ -593,7 +595,8 @@ result_t actually_send_request(sonic_client_request_t *req,
   client_request_add_header(req, "Connection", "close");
   client_request_add_header(req, "Host", req->domain_name);
 
-  char *method_str = http_method_to_str(req->method);
+  result_t res_method_str = http_method_to_str(req->method);
+  char *method_str = PROPAGATE(res_method_str);
 
   char *head_str = NULL;
 

@@ -8,6 +8,7 @@
  *
  ****/
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,23 @@ char *string_from(const char *str1, ...) {
   va_end(args);
 
   return result;
+}
+
+char *string_lowercase(char *str) {
+  // Get the length of the input string
+  size_t length = strlen(str);
+
+  // Allocate memory for the new string
+  char *lowercase_str = (char *)nmalloc((length + 1) * sizeof(char));
+
+  // Convert each character to lowercase
+  for (size_t i = 0; i < length; i++) {
+    lowercase_str[i] = tolower(str[i]);
+  }
+
+  lowercase_str[length] = '\0'; // Null-terminate the string
+
+  return lowercase_str;
 }
 
 // creatse a copy of a string and frees the original copy, but uses the netlibc

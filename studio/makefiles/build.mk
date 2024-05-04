@@ -58,7 +58,7 @@ STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_
 STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a
 .PHONY: target-dir shogdb model-server $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
-.PHONY: build-objects-debug
+.PHONY: build-objects-debug tauri
 
 check-cc:
 	echo $(shell if [ "$$(cc --help 2>&1 | grep -o -m 1 'gcc')" = "gcc" ]; then echo "gcc" ; elif [ "$$(cc --help 2>&1 | grep -o -m 1 'clang')" = "clang" ]; then echo "clang"; else echo "NONE"; fi)
@@ -184,3 +184,8 @@ link-objects-flat: $(STATIC_LIBS)
 
 
 
+app: all install
+	cd tauri && cargo tauri build
+	cp -r ./tauri/target/release/bundle/ ./target/bundles/
+
+		

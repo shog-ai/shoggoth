@@ -1,6 +1,7 @@
 clean:
 	rm -rf ./target/*
 	$(MAKE) target-dir
+	cd tauri && cargo clean
 
 version:
 	echo $(VERSION)

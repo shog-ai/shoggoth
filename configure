@@ -3,10 +3,12 @@
 if command -v brew &> /dev/null; then
     brew install gcc make openssl@1.1 ossp-uuid pkg-config curl coreutils
     curl https://sh.rustup.rs -sSf -y | sh
+    cargo install tauri-cli
 elif command -v apt &> /dev/null; then
     # ubuntu / debian
     sudo apt install gcc make build-essential libssl-dev uuid-dev pkgconf curl
     curl https://sh.rustup.rs -sSf -y | sh
+    cargo install tauri-cli
 elif command -v xbps-install &> /dev/null; then
     # void linux
     xbps-install pkg-config gcc make which openssl openssl-devel libuuid libuuid-devel libsanitizer-devel findutils zip curl

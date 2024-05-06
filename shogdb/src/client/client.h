@@ -22,6 +22,7 @@ typedef struct {
 
 typedef enum {
   VALUE_NULL,
+  VALUE_ERR,
 
   VALUE_UINT,
   VALUE_INT,
@@ -36,6 +37,8 @@ typedef struct {
   pthread_mutex_t mutex;
 
   value_type_t value_type;
+
+  char *value_err;
 
   // integer types
   u64 value_uint;
@@ -54,8 +57,11 @@ result_t shogdb_set_float(shogdb_ctx_t *ctx, char *key, f64 value);
 result_t shogdb_set_str(shogdb_ctx_t *ctx, char *key, char *value);
 result_t shogdb_set_bool(shogdb_ctx_t *ctx, char *key, bool value);
 result_t shogdb_set_json(shogdb_ctx_t *ctx, char *key, char *value);
+result_t shogdb_print(shogdb_ctx_t *ctx);
 
 result_t shogdb_get(shogdb_ctx_t *ctx, char *key);
+
+result_t shogdb_delete(shogdb_ctx_t *ctx, char *key);
 
 shogdb_ctx_t *new_shogdb(char *address);
 void free_shogdb(shogdb_ctx_t *ctx);

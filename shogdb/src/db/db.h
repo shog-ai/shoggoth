@@ -26,6 +26,7 @@ typedef struct {
 } network_config_t;
 
 typedef struct {
+  bool enabled;
   char *path;
   u64 interval;
 } save_config_t;

@@ -429,6 +429,27 @@ void get_route(sonic_server_request_t *req) {
 void set_route(sonic_server_request_t *req) {
   char *key = sonic_get_path_segment(req, "key");
 
+  result_t res_existing = db_get_value(global_ctx, key);
+
+  if (is_ok(res_existing)) {
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+    char err[256];
+    sprintf(err, "ERR key already exists");
+
+    sonic_response_set_body(resp, err, strlen(err));
+    sonic_send_response(req, resp);
+
+    sonic_free_server_response(resp);
+
+    free_result(res_existing);
+
+    return;
+  } else {
+    free_result(res_existing);
+  }
+
   if (req->request_body_size < 5) {
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
@@ -1544,17 +1565,20 @@ result_t start_db(db_ctx_t *ctx) {
   LOG(INFO, "Database running at http://%s:%d", ctx->config->network.host,
       ctx->config->network.port);
 
-  int restored = UNWRAP_INT(db_restore_data(ctx));
-
-  if (restored == 1) {
-    LOG(INFO, "Setting up DHT and PINS");
-    UNWRAP(setup_dht(ctx));
-    UNWRAP(setup_pins(ctx));
-  }
-
   pthread_t data_saver_thread;
-  if (pthread_create(&data_saver_thread, NULL, start_data_saver, NULL) != 0) {
-    PANIC("could not spawn server thread");
+
+  if (ctx->config->save.enabled) {
+    int restored = UNWRAP_INT(db_restore_data(ctx));
+
+    if (restored == 1) {
+      LOG(INFO, "Setting up DHT and PINS");
+      UNWRAP(setup_dht(ctx));
+      UNWRAP(setup_pins(ctx));
+    }
+
+    if (pthread_create(&data_saver_thread, NULL, start_data_saver, NULL) != 0) {
+      PANIC("could not spawn server thread");
+    }
   }
 
   ctx->server_started = true;
@@ -1564,7 +1588,9 @@ result_t start_db(db_ctx_t *ctx) {
     exit(1);
   }
 
-  pthread_join(data_saver_thread, NULL);
+  if (ctx->config->save.enabled) {
+    pthread_join(data_saver_thread, NULL);
+  }
 
   return OK(NULL);
 }

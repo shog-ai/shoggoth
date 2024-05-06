@@ -24,9 +24,6 @@ result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
 
   sonic_request_t *req = sonic_new_request(METHOD_GET, url);
 
-  // char body[256];
-  // sprintf(body, "INT %d", value);
-
   sonic_set_body(req, value, strlen(value));
 
   sonic_response_t *resp = sonic_send_request(req);
@@ -36,10 +33,16 @@ result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
     return ERR("request failed: %s \n", resp->error);
   }
 
-  nfree(resp->response_body);
-  sonic_free_response(resp);
+  if (strcmp(resp->response_body, "OK") != 0) {
+    char *msg = nstrdup(resp->response_body);
 
-  return OK(NULL);
+    return ERR(msg);
+  } else {
+    nfree(resp->response_body);
+    sonic_free_response(resp);
+
+    return OK(NULL);
+  }
 }
 
 result_t shogdb_set_int(shogdb_ctx_t *ctx, char *key, s64 value) {
@@ -124,6 +127,46 @@ result_t shogdb_get(shogdb_ctx_t *ctx, char *key) {
   return OK(value);
 }
 
+result_t shogdb_print(shogdb_ctx_t *ctx) {
+  char url[256];
+  sprintf(url, "%s/print", ctx->address);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  sonic_response_t *resp = sonic_send_request(req);
+  sonic_free_request(req);
+
+  if (resp->failed) {
+    return ERR("request failed: %s \n", resp->error);
+  }
+
+  char *res = nstrdup(resp->response_body);
+
+  nfree(resp->response_body);
+  sonic_free_response(resp);
+
+  return OK(res);
+}
+
+result_t shogdb_delete(shogdb_ctx_t *ctx, char *key) {
+  char url[256];
+  sprintf(url, "%s/delete/%s", ctx->address, key);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  sonic_response_t *resp = sonic_send_request(req);
+  sonic_free_request(req);
+
+  if (resp->failed) {
+    return ERR("request failed: %s \n", resp->error);
+  }
+
+  nfree(resp->response_body);
+  sonic_free_response(resp);
+
+  return OK(NULL);
+}
+
 shogdb_ctx_t *new_shogdb(char *address) {
   shogdb_ctx_t *ctx = ncalloc(1, sizeof(shogdb_ctx_t));
   ctx->address = nstrdup(address);
@@ -150,6 +193,8 @@ db_value_t *new_db_value(value_type_t value_type) {
 value_type_t str_to_value_type(char *str) {
   if (strcmp(str, "STR") == 0) {
     return VALUE_STR;
+  } else if (strcmp(str, "ERR") == 0) {
+    return VALUE_ERR;
   } else if (strcmp(str, "BOOL") == 0) {
     return VALUE_BOOL;
   } else if (strcmp(str, "UINT") == 0) {
@@ -168,6 +213,8 @@ value_type_t str_to_value_type(char *str) {
 char *value_type_to_str(value_type_t value_type) {
   if (value_type == VALUE_STR) {
     return "STR";
+  } else if (value_type == VALUE_ERR) {
+    return "ERR";
   } else if (value_type == VALUE_BOOL) {
     return "BOOL";
   } else if (value_type == VALUE_UINT) {
@@ -189,6 +236,10 @@ char *value_type_to_str(value_type_t value_type) {
 void free_db_value(db_value_t *value) {
   if (value->value_type == VALUE_STR) {
     free(value->value_str);
+  }
+
+  if (value->value_type == VALUE_ERR) {
+    free(value->value_err);
   }
 
   if (value->value_type == VALUE_JSON) {
@@ -221,6 +272,8 @@ result_t shogdb_parse_message(char *msg) {
 
   if (value->value_type == VALUE_STR) {
     value->value_str = nstrdup(msg_value);
+  } else if (value->value_type == VALUE_ERR) {
+    value->value_err = nstrdup(msg_value);
   } else if (value->value_type == VALUE_BOOL) {
     bool result = false;
 

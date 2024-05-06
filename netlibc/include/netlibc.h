@@ -44,6 +44,12 @@ typedef size_t usize;
 #define S64_FORMAT_SPECIFIER "%ld"
 #endif
 
+#ifdef __APPLE__
+#define F64_FORMAT_SPECIFIER "%f"
+#else
+#define F64_FORMAT_SPECIFIER "%f"
+#endif
+
 #define LOOP()                                                                 \
   for (;;) {                                                                   \
   }

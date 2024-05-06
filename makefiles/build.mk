@@ -49,8 +49,8 @@ OBJS += $(TARGET_DIR)/args.o $(TARGET_DIR)/server.o $(TARGET_DIR)/manifest.o $(T
 OBJS += $(TARGET_DIR)/server_explorer.o
 
 # static libraries
-STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb.a
-STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/libshogdb-sanitized.a
+STATIC_LIBS = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/shogdb-client.a
+STATIC_LIBS_SANITIZED = $(TARGET_DIR)/libnetlibc.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/libhandlebazz.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a $(TARGET_DIR)/shogdb-client-sanitized.a
 
 .PHONY: target-dir shogdb model-server $(TARGET_DIR)/tuwi.a $(TARGET_DIR)/camel.a 
 .PHONY: $(TARGET_DIR)/sonic.a $(TARGET_DIR)/sonic-sanitized.a $(TARGET_DIR)/cjson.a $(TARGET_DIR)/tomlc.a
@@ -96,13 +96,13 @@ $(TARGET_DIR)/sonic.a:
 	cd ./sonic/ && make
 	cp ./sonic/target/libsonic.a $(TARGET_DIR)/sonic.a
 
-$(TARGET_DIR)/libshogdb.a:
-	cd ./shogdb/ && make lib
-	cp ./shogdb/target/libshogdb.a $(TARGET_DIR)/libshogdb.a
+$(TARGET_DIR)/shogdb-client.a:
+	cd ./shogdb/ && make client
+	cp ./shogdb/target/shogdb-client.a $(TARGET_DIR)/shogdb-client.a
 
-$(TARGET_DIR)/libshogdb-sanitized.a:
-	cd ./shogdb/ && make lib-sanitized
-	cp ./shogdb/target/libshogdb-sanitized.a $(TARGET_DIR)/libshogdb-sanitized.a
+$(TARGET_DIR)/shogdb-client-sanitized.a:
+	cd ./shogdb/ && make client-sanitized
+	cp ./shogdb/target/shogdb-client-sanitized.a $(TARGET_DIR)/shogdb-client-sanitized.a
 
 $(TARGET_DIR)/sonic-sanitized.a:
 	cd ./sonic/ && make build-sanitized

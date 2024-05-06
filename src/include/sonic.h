@@ -213,7 +213,7 @@ void sonic_add_header(sonic_client_request_t *req, char *key, char *value);
 void sonic_set_body(sonic_client_request_t *req, char *request_body,
                     u64 request_body_size);
 
-char *sonic_status_to_string(sonic_status_t status_code);
+result_t sonic_status_to_string(sonic_status_t status_code);
 
 // ===================================================================================================================
 

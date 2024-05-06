@@ -14,7 +14,7 @@
 #include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
-#include "../lib/lib.h"
+#include "../client/client.h"
 
 #include <netlibc.h>
 #include <netlibc/error.h>
@@ -26,6 +26,7 @@ typedef struct {
 } network_config_t;
 
 typedef struct {
+  bool enabled;
   char *path;
   u64 interval;
 } save_config_t;

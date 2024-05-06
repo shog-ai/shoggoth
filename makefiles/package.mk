@@ -55,7 +55,7 @@ generate-runtime: check-path-arg build-explorer shogdb tunnel
 	cp ./src/node/default-node-config.toml $(RP)/node/config.toml
 
 	cp $(TARGET_DIR)/shogdb $(RP)/bin/
-	cp ./shogdb/src/dbconfig.toml $(RP)/node/
+	cp ./src/node/dbconfig.toml $(RP)/node/
 
 	cp $(TARGET_DIR)/tunnel $(RP)/bin/shog_tunnel
 	

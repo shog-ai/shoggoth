@@ -23,29 +23,43 @@ build: ./target/shogdb
 	cp ./src/dbconfig.toml ./target/dbconfig.toml
 	
 
-lib: target-dir
-	echo "Building libshogdb..."
+client: target-dir
+	echo "Building shogdb client..."
 
-	$(CC) $(CFLAGS) -c ./src/lib/lib.c -o ./target/lib.o
-	ar rcs ./target/libshogdb.a ./target/lib.o
+	$(CC) $(CFLAGS) -c ./src/client/client.c -o ./target/client.o
+	ar rcs ./target/shogdb-client.a ./target/client.o
 
-lib-sanitized: target-dir
-	echo "Building libshogdb..."
-	$(CC) $(CFLAGS) $(CFLAGS_SANITIZED) -c ./src/lib/lib.c -o ./target/lib.o
-	ar rcs ./target/libshogdb-sanitized.a ./target/lib.o
+cli:
+	$(CC) -g $(CFLAGS) ./src/cli/cli.c ./src/client/client.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/cli
+
+install-cli:
+	cp ./target/cli ~/bin/shogdbcli
+
+run-cli: cli
+	./target/cli $(A) 
+
+client-sanitized: target-dir
+	echo "Building shogdb client (sanitized)..."
+	$(CC) $(CFLAGS) $(CFLAGS_SANITIZED) -c ./src/client/client.c -o ./target/client.o
+	ar rcs ./target/shogdb-client-sanitized.a ./target/client.o
 
 run: build
 	cd target && ./shogdb
 
+run-example: target-dir 
+	$(CC) -g $(CFLAGS) ./examples/$(E).c ./src/client/client.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/examples/$(E)
+	./target/examples/$(E)
+
+
 ./target/shogdb: target-dir
 	echo "Building shogdb..."
 	
-	$(CC) $(CFLAGS) ./src/main.c ./src/lib/lib.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
+	$(CC) $(CFLAGS) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 ./target/shogdb-sanitized: target-dir
 	echo "Building shogdb..."
 	
-	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/lib/lib.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
+	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 target-dir:
 	mkdir -p target

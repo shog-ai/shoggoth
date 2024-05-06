@@ -14,7 +14,7 @@
 #include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
-#include "../lib/lib.h"
+#include "../client/client.h"
 
 #include <netlibc.h>
 #include <netlibc/error.h>

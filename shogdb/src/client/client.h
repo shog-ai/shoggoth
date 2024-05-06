@@ -16,6 +16,10 @@
 
 #include <pthread.h>
 
+typedef struct {
+  char *address;
+} shogdb_ctx_t;
+
 typedef enum {
   VALUE_NULL,
 
@@ -43,6 +47,18 @@ typedef struct {
   bool value_bool;
   void *value_json;
 } db_value_t;
+
+result_t shogdb_set_int(shogdb_ctx_t *ctx, char *key, s64 value);
+result_t shogdb_set_uint(shogdb_ctx_t *ctx, char *key, u64 value);
+result_t shogdb_set_float(shogdb_ctx_t *ctx, char *key, f64 value);
+result_t shogdb_set_str(shogdb_ctx_t *ctx, char *key, char *value);
+result_t shogdb_set_bool(shogdb_ctx_t *ctx, char *key, bool value);
+result_t shogdb_set_json(shogdb_ctx_t *ctx, char *key, char *value);
+
+result_t shogdb_get(shogdb_ctx_t *ctx, char *key);
+
+shogdb_ctx_t *new_shogdb(char *address);
+void free_shogdb(shogdb_ctx_t *ctx);
 
 db_value_t *new_db_value(value_type_t value_type);
 

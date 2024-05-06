@@ -8,12 +8,134 @@
  *
  ****/
 
-#include "lib.h"
+#include "client.h"
 #include "../../include/cjson.h"
+#include "../../include/sonic.h"
 
 #include <netlibc/error.h>
 #include <netlibc/log.h>
+#include <netlibc/mem.h>
+#include <netlibc/string.h>
 #include <stdlib.h>
+
+result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
+  char url[256];
+  sprintf(url, "%s/set/%s", ctx->address, key);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  // char body[256];
+  // sprintf(body, "INT %d", value);
+
+  sonic_set_body(req, value, strlen(value));
+
+  sonic_response_t *resp = sonic_send_request(req);
+  sonic_free_request(req);
+
+  if (resp->failed) {
+    return ERR("request failed: %s \n", resp->error);
+  }
+
+  nfree(resp->response_body);
+  sonic_free_response(resp);
+
+  return OK(NULL);
+}
+
+result_t shogdb_set_int(shogdb_ctx_t *ctx, char *key, s64 value) {
+  char body[256];
+  sprintf(body, "INT " S64_FORMAT_SPECIFIER, value);
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  return res;
+}
+
+result_t shogdb_set_uint(shogdb_ctx_t *ctx, char *key, u64 value) {
+  char body[256];
+  sprintf(body, "UINT " U64_FORMAT_SPECIFIER, value);
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  return res;
+}
+
+result_t shogdb_set_float(shogdb_ctx_t *ctx, char *key, f64 value) {
+  char body[256];
+  sprintf(body, "FLOAT " F64_FORMAT_SPECIFIER, value);
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  return res;
+}
+
+result_t shogdb_set_str(shogdb_ctx_t *ctx, char *key, char *value) {
+  char *body = string_from("STR ", value, NULL);
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  nfree(body);
+
+  return res;
+}
+
+result_t shogdb_set_bool(shogdb_ctx_t *ctx, char *key, bool value) {
+  char body[256];
+  if (value == true) {
+    sprintf(body, "BOOL true");
+  } else {
+    sprintf(body, "BOOL false");
+  }
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  return res;
+}
+
+result_t shogdb_set_json(shogdb_ctx_t *ctx, char *key, char *value) {
+  char *body = string_from("JSON ", value, NULL);
+
+  result_t res = shogdb_set(ctx, key, body);
+
+  nfree(body);
+
+  return res;
+}
+
+result_t shogdb_get(shogdb_ctx_t *ctx, char *key) {
+  char url[256];
+  sprintf(url, "%s/get/%s", ctx->address, key);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  sonic_response_t *resp = sonic_send_request(req);
+  sonic_free_request(req);
+
+  if (resp->failed) {
+    return ERR("request failed: %s \n", resp->error);
+  }
+
+  result_t res = shogdb_parse_message(resp->response_body);
+  db_value_t *value = PROPAGATE(res);
+
+  nfree(resp->response_body);
+  sonic_free_response(resp);
+
+  return OK(value);
+}
+
+shogdb_ctx_t *new_shogdb(char *address) {
+  shogdb_ctx_t *ctx = ncalloc(1, sizeof(shogdb_ctx_t));
+  ctx->address = nstrdup(address);
+
+  return ctx;
+}
+
+void free_shogdb(shogdb_ctx_t *ctx) {
+  nfree(ctx->address);
+
+  nfree(ctx);
+}
 
 db_value_t *new_db_value(value_type_t value_type) {
   db_value_t *db_value = calloc(1, sizeof(db_value_t));
@@ -87,18 +209,18 @@ result_t shogdb_parse_message(char *msg) {
 
   size_t length = strcspn(msg, " ");
 
-  char *msg_type = strdup(msg);
+  char *msg_type = nstrdup(msg);
   msg_type[length] = '\0';
   // LOG(INFO, "TYPE: `%s`", msg_type);
 
-  char *msg_value = strdup(&msg[length + 1]);
+  char *msg_value = nstrdup(&msg[length + 1]);
   // LOG(INFO, "VALUE: `%s`", msg_value);
 
   value->value_type = str_to_value_type(msg_type);
-  free(msg_type);
+  nfree(msg_type);
 
   if (value->value_type == VALUE_STR) {
-    value->value_str = msg_value;
+    value->value_str = nstrdup(msg_value);
   } else if (value->value_type == VALUE_BOOL) {
     bool result = false;
 

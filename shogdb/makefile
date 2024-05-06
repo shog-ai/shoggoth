@@ -29,6 +29,15 @@ client: target-dir
 	$(CC) $(CFLAGS) -c ./src/client/client.c -o ./target/client.o
 	ar rcs ./target/shogdb-client.a ./target/client.o
 
+cli:
+	$(CC) -g $(CFLAGS) ./src/cli/cli.c ./src/client/client.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/cli
+
+install-cli:
+	cp ./target/cli ~/bin/shogdbcli
+
+run-cli: cli
+	./target/cli $(A) 
+
 client-sanitized: target-dir
 	echo "Building shogdb client (sanitized)..."
 	$(CC) $(CFLAGS) $(CFLAGS_SANITIZED) -c ./src/client/client.c -o ./target/client.o

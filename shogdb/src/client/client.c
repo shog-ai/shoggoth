@@ -18,6 +18,47 @@
 #include <netlibc/string.h>
 #include <stdlib.h>
 
+char *shogdb_print_value(db_value_t *value) {
+  char *value_type = value_type_to_str(value->value_type);
+
+  char *res = NULL;
+
+  if (value->value_type == VALUE_STR) {
+    res = string_from(value_type, " ", value->value_str, NULL);
+  } else if (value->value_type == VALUE_ERR) {
+    res = string_from(value_type, " ", value->value_err, NULL);
+  } else if (value->value_type == VALUE_BOOL) {
+    if (value->value_bool == 1) {
+      res = string_from(value_type, " true", NULL);
+    } else {
+      res = string_from(value_type, " false", NULL);
+    }
+  } else if (value->value_type == VALUE_UINT) {
+    char val[256];
+    sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_INT) {
+    char val[256];
+    sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_FLOAT) {
+    char val[256];
+    sprintf(val, F64_FORMAT_SPECIFIER, value->value_float);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_JSON) {
+    char *str = cJSON_Print(value->value_json);
+    res = string_from(value_type, " ", str, NULL);
+    free(str);
+  } else {
+    PANIC("unhandled type");
+  }
+
+  return res;
+}
+
 result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
   char url[256];
   sprintf(url, "%s/set/%s", ctx->address, key);
@@ -120,6 +161,10 @@ result_t shogdb_get(shogdb_ctx_t *ctx, char *key) {
 
   result_t res = shogdb_parse_message(resp->response_body);
   db_value_t *value = PROPAGATE(res);
+
+  if (value->value_type == VALUE_ERR) {
+    return ERR(value->value_err);
+  }
 
   nfree(resp->response_body);
   sonic_free_response(resp);

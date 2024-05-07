@@ -54,12 +54,12 @@ run-example: target-dir
 ./target/shogdb: target-dir
 	echo "Building shogdb..."
 	
-	$(CC) $(CFLAGS) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
+	$(CC) $(CFLAGS) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/db/json.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 ./target/shogdb-sanitized: target-dir
 	echo "Building shogdb..."
 	
-	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
+	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/db/json.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 target-dir:
 	mkdir -p target

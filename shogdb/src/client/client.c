@@ -86,6 +86,34 @@ result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
   }
 }
 
+result_t shogdb_json_append(shogdb_ctx_t *ctx, char *key, char *filter,
+                            char *value) {
+  char url[256];
+  sprintf(url, "%s/json_append/%s/%s", ctx->address, key, filter);
+
+  sonic_request_t *req = sonic_new_request(METHOD_GET, url);
+
+  sonic_set_body(req, value, strlen(value));
+
+  sonic_response_t *resp = sonic_send_request(req);
+  sonic_free_request(req);
+
+  if (resp->failed) {
+    return ERR("request failed: %s \n", resp->error);
+  }
+
+  if (strcmp(resp->response_body, "OK") != 0) {
+    char *msg = nstrdup(resp->response_body);
+
+    return ERR(msg);
+  } else {
+    nfree(resp->response_body);
+    sonic_free_response(resp);
+
+    return OK(NULL);
+  }
+}
+
 result_t shogdb_set_int(shogdb_ctx_t *ctx, char *key, s64 value) {
   char body[256];
   sprintf(body, "INT " S64_FORMAT_SPECIFIER, value);

@@ -59,6 +59,9 @@ result_t shogdb_set_bool(shogdb_ctx_t *ctx, char *key, bool value);
 result_t shogdb_set_json(shogdb_ctx_t *ctx, char *key, char *value);
 result_t shogdb_print(shogdb_ctx_t *ctx);
 
+result_t shogdb_json_append(shogdb_ctx_t *ctx, char *key, char *filter,
+                            char *value);
+
 char *shogdb_print_value(db_value_t *value);
 
 result_t shogdb_get(shogdb_ctx_t *ctx, char *key);

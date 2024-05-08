@@ -62,7 +62,7 @@ result_t shogdb_print(shogdb_ctx_t *ctx);
 result_t shogdb_json_append(shogdb_ctx_t *ctx, char *key, char *filter,
                             char *value);
 
-char *shogdb_print_value(db_value_t *value);
+result_t shogdb_json_get(shogdb_ctx_t *ctx, char *key, char *filter);
 
 result_t shogdb_get(shogdb_ctx_t *ctx, char *key);
 

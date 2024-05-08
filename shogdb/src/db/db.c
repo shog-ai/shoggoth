@@ -288,6 +288,47 @@ result_t db_update_float_value(db_ctx_t *ctx, char *key, f64 val) {
   return OK(NULL);
 }
 
+char *print_value(db_value_t *value) {
+  char *value_type = value_type_to_str(value->value_type);
+
+  char *res = NULL;
+
+  if (value->value_type == VALUE_STR) {
+    res = string_from(value_type, " ", value->value_str, NULL);
+  } else if (value->value_type == VALUE_ERR) {
+    res = string_from(value_type, " ", value->value_err, NULL);
+  } else if (value->value_type == VALUE_BOOL) {
+    if (value->value_bool == 1) {
+      res = string_from(value_type, " true", NULL);
+    } else {
+      res = string_from(value_type, " false", NULL);
+    }
+  } else if (value->value_type == VALUE_UINT) {
+    char val[256];
+    sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_INT) {
+    char val[256];
+    sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_FLOAT) {
+    char val[256];
+    sprintf(val, F64_FORMAT_SPECIFIER, value->value_float);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_JSON) {
+    char *str = cJSON_Print(value->value_json);
+    res = string_from(value_type, " ", str, NULL);
+    free(str);
+  } else {
+    PANIC("unhandled type");
+  }
+
+  return res;
+}
+
 void home_route(sonic_server_request_t *req) {
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -308,111 +349,16 @@ void get_route(sonic_server_request_t *req) {
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    if (value->value_type == VALUE_STR) {
-      char *str = value->value_str;
+    char *body = print_value(value);
 
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_STR), str);
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+    sonic_response_set_body(resp, body, strlen(body));
+    sonic_send_response(req, resp);
 
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
+    free(body);
 
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_BOOL) {
-      char str[256];
-
-      if (value->value_bool == true) {
-        sprintf(str, "true");
-      } else {
-        sprintf(str, "false");
-      }
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_BOOL), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_UINT) {
-      char str[256];
-      sprintf(str, U64_FORMAT_SPECIFIER, value->value_uint);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_UINT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_INT) {
-      char str[256];
-      sprintf(str, S64_FORMAT_SPECIFIER, value->value_int);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_INT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_FLOAT) {
-      char str[256];
-      sprintf(str, "%lf", value->value_float);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_FLOAT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_JSON) {
-      char *str = cJSON_Print(value->value_json);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_JSON), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(str);
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else {
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-      char err[256];
-      sprintf(err, "ERR unhandled value type");
-
-      sonic_response_set_body(resp, err, strlen(err));
-      sonic_send_response(req, resp);
-      sonic_free_server_response(resp);
-    }
+    sonic_free_server_response(resp);
 
   } else {
     sonic_server_response_t *resp =

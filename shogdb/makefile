@@ -15,7 +15,7 @@ CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan
 endif
 
-STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a
+STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a ./target/libjmespathimpl.a
 
 all: build
 
@@ -51,15 +51,20 @@ run-example: target-dir
 	./target/examples/$(E)
 
 
-./target/shogdb: target-dir
+./target/shogdb: target-dir $(STATIC_LIBS)
 	echo "Building shogdb..."
 	
 	$(CC) $(CFLAGS) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/db/json.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
-./target/shogdb-sanitized: target-dir
+./target/shogdb-sanitized: target-dir (STATIC_LIBS)
 	echo "Building shogdb..."
 	
 	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/db/json.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
+
+
+./target/libjmespathimpl.a:
+	cd ../lib/jmespath/impl/ && cargo build --release
+	cp ../lib/jmespath/impl/target/release/libjmespathimpl.a ./target/libjmespathimpl.a
 
 target-dir:
 	mkdir -p target

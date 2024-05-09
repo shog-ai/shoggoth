@@ -8,31 +8,30 @@
  *
  ****/
 
+#include "../../include/jansson.h"
+#include "../../include/janssonpath.h"
 #include "../../include/sonic.h"
 #include "db.h"
+#include "json.h"
 #include "pins.h"
 
 #include <netlibc/mem.h>
 
 db_ctx_t *json_ctx = NULL;
 
-extern char *jmespath_filter_json(char *json, char *filter);
-
-cJSON *filter_json(cJSON *json, char *filter) {
-  char *json_str = cJSON_Print(json);
-
-  char *value_str = jmespath_filter_json(json_str, filter);
-  free(json_str);
-
-  cJSON *value_json = cJSON_Parse(value_str);
-  free(value_str);
+void *filter_json(void *json, char *filter) {
+  void *value_json = json_path_get(json, filter);
 
   return value_json;
 }
 
+void add_item_to_array(void *json, void *item) {
+  json_array_append(json, item);
+}
+
 void json_append_route(sonic_server_request_t *req) {
   char *key = sonic_get_path_segment(req, "key");
-  // char *filter = sonic_get_path_segment(req, "filter");
+  char *filter = sonic_get_path_segment(req, "filter");
 
   char *new_value = nmalloc((req->request_body_size + 1) * sizeof(char));
   memcpy(new_value, req->request_body, req->request_body_size);
@@ -43,12 +42,12 @@ void json_append_route(sonic_server_request_t *req) {
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    // cJSON *filtered_value = filter_json(value->value_json, filter);
+    void *filtered_value = filter_json(value->value_json, filter);
 
-    cJSON *new_value_json = cJSON_Parse(new_value);
+    void *new_value_json = str_to_json(new_value);
     nfree(new_value);
 
-    cJSON_AddItemToArray(value->value_json, new_value_json);
+    add_item_to_array(filtered_value, new_value_json);
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -86,9 +85,9 @@ void json_get_route(sonic_server_request_t *req) {
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    cJSON *filtered_value = filter_json(value->value_json, filter);
+    void *filtered_value = filter_json(value->value_json, filter);
 
-    char *str = cJSON_Print(filtered_value);
+    char *str = json_to_str(filtered_value);
     char *body = string_from("JSON", " ", str, NULL);
     free(str);
 

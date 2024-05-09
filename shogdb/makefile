@@ -7,7 +7,7 @@ CC = gcc
 endif
 
 CFLAGS += -g -std=c11 -D_GNU_SOURCE -I ../netlibc/include $$(pkg-config --cflags openssl) 
-LDFLAGS += -pthread $$(pkg-config --libs openssl)
+LDFLAGS += -pthread $$(pkg-config --libs openssl) -ljansson
 
 # sanitizers (only on linux)
 ifeq ($(shell uname), Linux)
@@ -15,7 +15,9 @@ CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan
 endif
 
-STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a ./target/libjmespathimpl.a
+STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a ./target/janssonpath.o
+
+.PHONY: ./target/janssonpath.o
 
 all: build
 
@@ -62,9 +64,9 @@ run-example: target-dir
 	$(CC) $(CFLAGS_SANITIZED) $(CFLAGS) $(LDFLAGS_SANITIZED) ./src/main.c ./src/client/client.c ./src/db/db.c ./src/db/dht.c ./src/db/pins.c ./src/db/json.c ./src/hashmap/hashmap.c $(STATIC_LIBS) $(LDFLAGS) -o ./target/shogdb
 
 
-./target/libjmespathimpl.a:
-	cd ../lib/jmespath/impl/ && cargo build --release
-	cp ../lib/jmespath/impl/target/release/libjmespathimpl.a ./target/libjmespathimpl.a
+./target/janssonpath.o:
+	cd ../lib/janssonpath/ && make
+	cp ../lib/janssonpath/janssonpath.o ./target/janssonpath.o
 
 target-dir:
 	mkdir -p target

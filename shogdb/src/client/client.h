@@ -79,6 +79,8 @@ char *value_type_to_str(value_type_t value_type);
 
 void free_db_value(db_value_t *value);
 
+char *shogdb_print_value(db_value_t *value);
+
 result_t shogdb_parse_message(char *msg);
 
 #endif

@@ -19,4 +19,8 @@
 
 void add_json_routes(db_ctx_t *ctx, sonic_server_t *server);
 
+void *str_to_json(char *str);
+char *json_to_str(void *json);
+void free_json(void *json);
+
 #endif

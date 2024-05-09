@@ -9,6 +9,7 @@
  ****/
 
 #include "db.h"
+#include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
 #include "dht.h"
@@ -21,6 +22,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <netlibc/mem.h>
 
 db_ctx_t *global_ctx = NULL;
 
@@ -64,7 +67,7 @@ char *serialize_data(db_ctx_t *ctx) {
       cJSON_AddStringToObject(item_json, "value", val);
     } else if (value->value_type == VALUE_JSON) {
       assert(value->value_json != NULL);
-      char *val = cJSON_Print(value->value_json);
+      char *val = json_to_str(value->value_json);
 
       cJSON_AddStringToObject(item_json, "value", val);
 
@@ -179,9 +182,9 @@ void db_add_float_value(db_ctx_t *ctx, char *key, f64 val) {
   ctx->saved = false;
 }
 
-void db_add_json_value(db_ctx_t *ctx, char *key, cJSON *val) {
-  char *str = cJSON_Print(val);
-  cJSON *new_val = cJSON_Parse(str);
+void db_add_json_value(db_ctx_t *ctx, char *key, void *val) {
+  char *str = json_to_str(val);
+  void *new_val = str_to_json(str);
   free(str);
 
   db_value_t *value = new_db_value(VALUE_JSON);
@@ -288,47 +291,6 @@ result_t db_update_float_value(db_ctx_t *ctx, char *key, f64 val) {
   return OK(NULL);
 }
 
-char *print_value(db_value_t *value) {
-  char *value_type = value_type_to_str(value->value_type);
-
-  char *res = NULL;
-
-  if (value->value_type == VALUE_STR) {
-    res = string_from(value_type, " ", value->value_str, NULL);
-  } else if (value->value_type == VALUE_ERR) {
-    res = string_from(value_type, " ", value->value_err, NULL);
-  } else if (value->value_type == VALUE_BOOL) {
-    if (value->value_bool == 1) {
-      res = string_from(value_type, " true", NULL);
-    } else {
-      res = string_from(value_type, " false", NULL);
-    }
-  } else if (value->value_type == VALUE_UINT) {
-    char val[256];
-    sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
-
-    res = string_from(value_type, " ", val, NULL);
-  } else if (value->value_type == VALUE_INT) {
-    char val[256];
-    sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
-
-    res = string_from(value_type, " ", val, NULL);
-  } else if (value->value_type == VALUE_FLOAT) {
-    char val[256];
-    sprintf(val, F64_FORMAT_SPECIFIER, value->value_float);
-
-    res = string_from(value_type, " ", val, NULL);
-  } else if (value->value_type == VALUE_JSON) {
-    char *str = cJSON_Print(value->value_json);
-    res = string_from(value_type, " ", str, NULL);
-    free(str);
-  } else {
-    PANIC("unhandled type");
-  }
-
-  return res;
-}
-
 void home_route(sonic_server_request_t *req) {
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -349,7 +311,7 @@ void get_route(sonic_server_request_t *req) {
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    char *body = print_value(value);
+    char *body = shogdb_print_value(value);
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
@@ -650,11 +612,11 @@ result_t db_restore_data(db_ctx_t *ctx) {
         PANIC("invalid boolean value");
       }
     } else if (value_type == VALUE_JSON) {
-      cJSON *result = cJSON_Parse(value_str);
+      void *result = str_to_json(value_str);
 
       db_add_json_value(ctx, key, result);
 
-      cJSON_Delete(result);
+      free_json(result);
     } else {
       PANIC("unhandled value type");
     }

@@ -1,6 +1,6 @@
 #include <netlibc/log.h>
+#include <netlibc/string.h>
 
-#include "../../include/cjson.h"
 #include "../client/client.h"
 
 int main(int argc, char **argv) {
@@ -31,37 +31,57 @@ int main(int argc, char **argv) {
       continue;
     }
 
+    char *token = strtok(input, " ");
+
     // Check if the user wants to exit
-    if (strcmp(input, "exit") == 0) {
+    if (strcmp(token, "exit") == 0) {
       break;
-    } else if (strcmp(input, "help") == 0) {
+    } else if (strcmp(token, "help") == 0) {
       printf("Commands:\n");
       printf("help - show this screen\n");
       printf("exit - exit the program\n");
       printf("print - print all the keys and their values\n");
       printf("address - show the server address\n");
       printf("\n");
-    } else if (strcmp(input, "print") == 0) {
+    } else if (strcmp(token, "print") == 0) {
       char *res_all = UNWRAP(shogdb_print(db_ctx));
       printf("%s\n", res_all);
-    } else if (strcmp(input, "address") == 0) {
+    } else if (strcmp(token, "address") == 0) {
       printf("%s\n", address);
-    } else if (strncmp(input, "GET ", 4) == 0) {
-      char *key = &input[4];
+    } else if (strcmp(token, "GET") == 0) {
+      char *key = &token[4];
 
       db_value_t *res = UNWRAP(shogdb_get(db_ctx, key));
       char *res_str = shogdb_print_value(res);
 
       printf("%s\n", res_str);
-    } else if (strncmp(input, "SET ", 4) == 0) {
-      // char *key = &input[4];
+    } else if (strcmp(token, "JSON.GET") == 0) {
+      char *key = strtok(NULL, " ");
+      char *filter = strtok(NULL, " ");
 
-      // db_value_t *res = UNWRAP(shogdb_get(db_ctx, key));
-      // char *res_str = shogdb_print_value(res);
+      db_value_t *res = UNWRAP(shogdb_json_get(db_ctx, key, filter));
+      char *res_str = shogdb_print_value(res);
+
+      printf("%s\n", res_str);
+    } else if (strcmp(token, "JSON.SET") == 0) {
+      char *key = strtok(NULL, " ");
+      char *value = strtok(NULL, " ");
+
+      UNWRAP(shogdb_set_json(db_ctx, key, value));
+
+      printf("OK\n");
+    } else if (strcmp(token, "STR.SET") == 0) {
+      char *key = strtok(NULL, " ");
+      
+      char *value = nstrdup(strtok(NULL, " "));
+      value = &value[1];
+      value[strlen(value - 2)] = '\0';
+
+      UNWRAP(shogdb_set_str(db_ctx, key, value));
 
       printf("OK\n");
     } else {
-      printf("invalid command `%s`\n", input);
+      printf("invalid command `%s`\n", token);
     }
   } while (1);
 

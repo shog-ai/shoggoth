@@ -11,7 +11,6 @@
 #ifndef SHOGDB_H
 #define SHOGDB_H
 
-#include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
 #include "../client/client.h"
@@ -47,7 +46,7 @@ typedef struct {
 
 result_t db_get_value(db_ctx_t *ctx, char *key);
 
-void db_add_json_value(db_ctx_t *ctx, char *key, cJSON *val);
+void db_add_json_value(db_ctx_t *ctx, char *key, void *val);
 
 result_t start_db(db_ctx_t *ctx);
 

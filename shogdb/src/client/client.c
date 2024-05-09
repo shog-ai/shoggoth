@@ -9,7 +9,7 @@
  ****/
 
 #include "client.h"
-#include "../../include/cjson.h"
+#include "../../include/jansson.h"
 #include "../../include/sonic.h"
 
 #include <netlibc/error.h>
@@ -17,6 +17,21 @@
 #include <netlibc/mem.h>
 #include <netlibc/string.h>
 #include <stdlib.h>
+
+void *str_to_json(char *str) {
+  json_error_t error;
+  void *value = json_loads(str, 0, &error);
+
+  return value;
+};
+
+void free_json(void *json) { json_decref(json); }
+
+char *json_to_str(void *json) {
+  char *str = json_dumps(json, JSON_INDENT(0));
+
+  return str;
+}
 
 result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
   char url[256];
@@ -301,7 +316,7 @@ void free_db_value(db_value_t *value) {
   }
 
   if (value->value_type == VALUE_JSON) {
-    cJSON_Delete(value->value_json);
+    free_json(value->value_json);
   }
 
   pthread_mutex_destroy(&value->mutex);
@@ -369,7 +384,11 @@ result_t shogdb_parse_message(char *msg) {
 
     value->value_float = result;
   } else if (value->value_type == VALUE_JSON) {
-    value->value_json = cJSON_Parse(msg_value);
+    // LOG(INFO, "MSG: %s", msg_value);
+
+    value->value_json = str_to_json(msg_value);
+
+    // LOG(INFO, "HERE END!!!");
 
     if (value->value_json == NULL) {
       return ERR("could not parse JSON");
@@ -383,4 +402,45 @@ result_t shogdb_parse_message(char *msg) {
   free(msg_value);
 
   return OK(value);
+}
+
+char *shogdb_print_value(db_value_t *value) {
+  char *value_type = value_type_to_str(value->value_type);
+
+  char *res = NULL;
+
+  if (value->value_type == VALUE_STR) {
+    res = string_from(value_type, " ", value->value_str, NULL);
+  } else if (value->value_type == VALUE_ERR) {
+    res = string_from(value_type, " ", value->value_err, NULL);
+  } else if (value->value_type == VALUE_BOOL) {
+    if (value->value_bool == 1) {
+      res = string_from(value_type, " true", NULL);
+    } else {
+      res = string_from(value_type, " false", NULL);
+    }
+  } else if (value->value_type == VALUE_UINT) {
+    char val[256];
+    sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_INT) {
+    char val[256];
+    sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_FLOAT) {
+    char val[256];
+    sprintf(val, F64_FORMAT_SPECIFIER, value->value_float);
+
+    res = string_from(value_type, " ", val, NULL);
+  } else if (value->value_type == VALUE_JSON) {
+    char *str = json_to_str(value->value_json);
+    res = string_from(value_type, " ", str, NULL);
+    free(str);
+  } else {
+    PANIC("unhandled type");
+  }
+
+  return res;
 }

@@ -62,6 +62,8 @@ u64 get_timestamp_ms();
 
 u64 get_timestamp_s();
 
+char *gen_uuid();
+
 typedef struct {
   void *address;
   u64 size;

@@ -19,6 +19,6 @@
 
 result_t setup_pins(db_ctx_t *ctx);
 
-// void get_pins_route(sonic_server_request_t *req);
+void add_pins_routes(sonic_server_t *server);
 
 #endif

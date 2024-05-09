@@ -1,4 +1,4 @@
-/**** dht.h ****
+/**** json.h ****
  *
  *  Copyright (c) 2023 ShogAI - https://shog.ai
  *
@@ -8,8 +8,8 @@
  *
  ****/
 
-#ifndef SHOGDB_DHT_H
-#define SHOGDB_DHT_H
+#ifndef SHOGDB_JSON_H
+#define SHOGDB_JSON_H
 
 #include <netlibc/error.h>
 #include <netlibc/fs.h>
@@ -17,8 +17,6 @@
 #include "../../include/sonic.h"
 #include "db.h"
 
-result_t setup_dht(db_ctx_t *ctx);
-
-void add_dht_routes(sonic_server_t *server);
+void add_json_routes(db_ctx_t *ctx, sonic_server_t *server);
 
 #endif

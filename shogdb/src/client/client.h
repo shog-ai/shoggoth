@@ -51,6 +51,10 @@ typedef struct {
   void *value_json;
 } db_value_t;
 
+void *str_to_json(char *str);
+char *json_to_str(void *json);
+void free_json(void *json);
+
 result_t shogdb_set_int(shogdb_ctx_t *ctx, char *key, s64 value);
 result_t shogdb_set_uint(shogdb_ctx_t *ctx, char *key, u64 value);
 result_t shogdb_set_float(shogdb_ctx_t *ctx, char *key, f64 value);

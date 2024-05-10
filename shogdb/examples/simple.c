@@ -1,4 +1,4 @@
-#include "../include/cjson.h"
+#include "../include/jansson.h"
 #include "../src/client/client.h"
 
 int main() {
@@ -28,10 +28,10 @@ int main() {
 
   UNWRAP(shogdb_set_json(db_ctx, "my_json", "[1, 2, 4]"));
   db_value_t *res_json = UNWRAP(shogdb_get(db_ctx, "my_json"));
-  printf("JSON VALUE: %s\n", cJSON_Print(res_json->value_json));
+  printf("JSON VALUE: %s\n", json_dumps(res_json->value_json, JSON_INDENT(0)));
 
   // UNWRAP(shogdb_delete(db_ctx, "my_str"));
-  
+
   char *res_all = UNWRAP(shogdb_print(db_ctx));
   printf("ALL VALUES: %s\n", res_all);
 

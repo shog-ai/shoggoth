@@ -8,11 +8,11 @@
  *
  ****/
 
+#include "json.h"
 #include "../../include/jansson.h"
 #include "../../include/janssonpath.h"
 #include "../../include/sonic.h"
 #include "db.h"
-#include "json.h"
 #include "pins.h"
 
 #include <netlibc/mem.h>
@@ -26,7 +26,7 @@ void *filter_json(void *json, char *filter) {
 }
 
 void add_item_to_array(void *json, void *item) {
-  json_array_append(json, item);
+  json_array_append_new(json, item);
 }
 
 void json_append_route(sonic_server_request_t *req) {

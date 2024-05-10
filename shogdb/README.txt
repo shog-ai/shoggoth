@@ -2,7 +2,7 @@
 SHOGDB - Shoggoth Database
 ===============================================================================
 
-ShogDB is an in-memory, key-value database written in the C programming language, developed by ShogAI for use in the Shoggoth project.
+ShogDB is an in-memory, key-value database written in the C programming language, developed by ShogAI.
 ShogDB is the database used by Shoggoth Nodes to store information like DHTs and pins. ShogDB also persists data on disk by periodically saving data to a file.
 
 ShogDB uses string keys, with values of different types like:
@@ -39,7 +39,13 @@ Using the CLI
 Configuration
 ================================================
 
-ShogDB requires a TOML configuration file ./dbconfig.toml located in the current working directory, and stores data on disk in a ./save.sdb file.
+ShogDB requires a TOML configuration file ./dbconfig.toml located in the current working directory
+
+
+Persistence
+================================================
+
+ShogDB stores data on disk in a ./save.sdb file.
 
 
 
@@ -78,5 +84,5 @@ The above command will build a binary into ./target/shogdb
 CONTRIBUTING
 ===============================================================================
 
-Please follow the Shoggoth contribution guidelines at https://shoggoth.network/explorer/docs#contributing
+Please follow the Shoggoth contribution guidelines at https://node.shog.ai/explorer/docs#contributing
 

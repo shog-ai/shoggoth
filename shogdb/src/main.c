@@ -48,6 +48,9 @@ result_t parse_config(char *config_str) {
     return ERR("TOML: Could not parse save table \n");
   }
 
+  toml_datum_t save_enabled = toml_bool_in(save_table, "enabled");
+  config->save.enabled = save_enabled.u.b;
+
   toml_datum_t save_path = toml_string_in(save_table, "path");
   config->save.path = strdup(save_path.u.s);
   free(save_path.u.s);

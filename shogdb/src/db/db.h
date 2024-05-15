@@ -11,10 +11,9 @@
 #ifndef SHOGDB_H
 #define SHOGDB_H
 
-#include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
-#include "../lib/lib.h"
+#include "../client/client.h"
 
 #include <netlibc.h>
 #include <netlibc/error.h>
@@ -26,6 +25,7 @@ typedef struct {
 } network_config_t;
 
 typedef struct {
+  bool enabled;
   char *path;
   u64 interval;
 } save_config_t;
@@ -46,7 +46,7 @@ typedef struct {
 
 result_t db_get_value(db_ctx_t *ctx, char *key);
 
-void db_add_json_value(db_ctx_t *ctx, char *key, cJSON *val);
+void db_add_json_value(db_ctx_t *ctx, char *key, void *val);
 
 result_t start_db(db_ctx_t *ctx);
 

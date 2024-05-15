@@ -9,9 +9,11 @@
  ****/
 
 #include "db.h"
+#include "../../include/cjson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
 #include "dht.h"
+#include "json.h"
 #include "pins.h"
 
 #include <assert.h>
@@ -20,6 +22,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <netlibc/mem.h>
 
 db_ctx_t *global_ctx = NULL;
 
@@ -63,7 +67,7 @@ char *serialize_data(db_ctx_t *ctx) {
       cJSON_AddStringToObject(item_json, "value", val);
     } else if (value->value_type == VALUE_JSON) {
       assert(value->value_json != NULL);
-      char *val = cJSON_Print(value->value_json);
+      char *val = json_to_str(value->value_json);
 
       cJSON_AddStringToObject(item_json, "value", val);
 
@@ -178,9 +182,9 @@ void db_add_float_value(db_ctx_t *ctx, char *key, f64 val) {
   ctx->saved = false;
 }
 
-void db_add_json_value(db_ctx_t *ctx, char *key, cJSON *val) {
-  char *str = cJSON_Print(val);
-  cJSON *new_val = cJSON_Parse(str);
+void db_add_json_value(db_ctx_t *ctx, char *key, void *val) {
+  char *str = json_to_str(val);
+  void *new_val = str_to_json(str);
   free(str);
 
   db_value_t *value = new_db_value(VALUE_JSON);
@@ -307,111 +311,16 @@ void get_route(sonic_server_request_t *req) {
   if (is_ok(res)) {
     db_value_t *value = VALUE(res);
 
-    if (value->value_type == VALUE_STR) {
-      char *str = value->value_str;
+    char *body = shogdb_print_value(value);
 
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_STR), str);
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
+    sonic_response_set_body(resp, body, strlen(body));
+    sonic_send_response(req, resp);
 
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
+    free(body);
 
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_BOOL) {
-      char str[256];
-
-      if (value->value_bool == true) {
-        sprintf(str, "true");
-      } else {
-        sprintf(str, "false");
-      }
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_BOOL), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_UINT) {
-      char str[256];
-      sprintf(str, U64_FORMAT_SPECIFIER, value->value_uint);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_UINT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_INT) {
-      char str[256];
-      sprintf(str, S64_FORMAT_SPECIFIER, value->value_int);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_INT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_FLOAT) {
-      char str[256];
-      sprintf(str, "%lf", value->value_float);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_FLOAT), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else if (value->value_type == VALUE_JSON) {
-      char *str = cJSON_Print(value->value_json);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_JSON), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(str);
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else {
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-      char err[256];
-      sprintf(err, "ERR unhandled value type");
-
-      sonic_response_set_body(resp, err, strlen(err));
-      sonic_send_response(req, resp);
-      sonic_free_server_response(resp);
-    }
+    sonic_free_server_response(resp);
 
   } else {
     sonic_server_response_t *resp =
@@ -428,6 +337,27 @@ void get_route(sonic_server_request_t *req) {
 
 void set_route(sonic_server_request_t *req) {
   char *key = sonic_get_path_segment(req, "key");
+
+  result_t res_existing = db_get_value(global_ctx, key);
+
+  if (is_ok(res_existing)) {
+    sonic_server_response_t *resp =
+        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+    char err[256];
+    sprintf(err, "ERR key already exists");
+
+    sonic_response_set_body(resp, err, strlen(err));
+    sonic_send_response(req, resp);
+
+    sonic_free_server_response(resp);
+
+    free_result(res_existing);
+
+    return;
+  } else {
+    free_result(res_existing);
+  }
 
   if (req->request_body_size < 5) {
     sonic_server_response_t *resp =
@@ -682,11 +612,11 @@ result_t db_restore_data(db_ctx_t *ctx) {
         PANIC("invalid boolean value");
       }
     } else if (value_type == VALUE_JSON) {
-      cJSON *result = cJSON_Parse(value_str);
+      void *result = str_to_json(value_str);
 
       db_add_json_value(ctx, key, result);
 
-      cJSON_Delete(result);
+      free_json(result);
     } else {
       PANIC("unhandled value type");
     }
@@ -695,783 +625,6 @@ result_t db_restore_data(db_ctx_t *ctx) {
   cJSON_Delete(data_json);
 
   return OK_INT(0);
-}
-
-void get_pins_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "pins");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-
-    if (value->value_type == VALUE_JSON) {
-      char *str = cJSON_Print(value->value_json);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_JSON), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(str);
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else {
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-      char err[256];
-      sprintf(err, "ERR pins is not a JSON type");
-
-      sonic_response_set_body(resp, err, strlen(err));
-      sonic_send_response(req, resp);
-      sonic_free_server_response(resp);
-    }
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_add_item_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    free_result(res);
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    cJSON *item_json = cJSON_Parse(req_body);
-    if (item_json == NULL) {
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-      char err[256];
-      sprintf(err, "ERR could not parse JSON");
-
-      sonic_response_set_body(resp, err, strlen(err));
-      sonic_send_response(req, resp);
-      sonic_free_server_response(resp);
-
-      return;
-    }
-
-    free(req_body);
-
-    cJSON_AddItemToArray(value->value_json, item_json);
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-    char *body = "OK";
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
-    global_ctx->saved = false;
-
-    return;
-  } else {
-    free_result(res);
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-
-    return;
-  }
-}
-
-void pins_add_resource_route(sonic_server_request_t *req) {
-  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
-  char *label = sonic_get_path_segment(req, "label");
-
-  result_t res = db_get_value(global_ctx, "pins");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-
-    cJSON *pin_json = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(pin_json, "shoggoth_id", shoggoth_id);
-    cJSON_AddStringToObject(pin_json, "label", label);
-
-    cJSON_AddItemToArray(value->value_json, pin_json);
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-    char *body = "OK";
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
-    global_ctx->saved = false;
-
-    return;
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-
-    return;
-  }
-}
-
-void dht_remove_item_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *node_id = req_body;
-    int index = 0;
-
-    const cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(node_id, item_node_id) == 0) {
-        cJSON_DeleteItemFromArray(dht, index);
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        free(req_body);
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-
-      index++;
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR item with node_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_get_unreachable_count_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    free_result(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *node_id = req_body;
-
-    const cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(node_id, item_node_id) == 0) {
-        int unreachable_count =
-            cJSON_GetObjectItemCaseSensitive(item_json, "unreachable_count")
-                ->valueint;
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char body[256];
-        sprintf(body, "\"%d\"", unreachable_count);
-
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        free(req_body);
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR item with node_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    free_result(res);
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_increment_unreachable_count_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    free_result(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *node_id = req_body;
-
-    const cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(node_id, item_node_id) == 0) {
-        cJSON *unreachable_count =
-            cJSON_GetObjectItemCaseSensitive(item_json, "unreachable_count");
-
-        unreachable_count->valueint++;
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        free(req_body);
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR item with node_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    free_result(res);
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_reset_unreachable_count_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *node_id = req_body;
-
-    const cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(node_id, item_node_id) == 0) {
-        cJSON *unreachable_count =
-            cJSON_GetObjectItemCaseSensitive(item_json, "unreachable_count");
-
-        unreachable_count->valueint = 0;
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        free(req_body);
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR item with node_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void pins_remove_resource_route(sonic_server_request_t *req) {
-  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
-
-  result_t res = db_get_value(global_ctx, "pins");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *pins = value->value_json;
-
-    int index = 0;
-
-    const cJSON *pin_json = NULL;
-    cJSON_ArrayForEach(pin_json, pins) {
-      // char *pin_shoggoth_id = pin_json->valuestring;
-
-      char *pin_shoggoth_id =
-          cJSON_GetObjectItemCaseSensitive(pin_json, "shoggoth_id")
-              ->valuestring;
-
-      if (strcmp(shoggoth_id, pin_shoggoth_id) == 0) {
-        cJSON_DeleteItemFromArray(pins, index);
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-
-      index++;
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR pin with shoggoth_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void get_pin_label_route(sonic_server_request_t *req) {
-  char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
-
-  result_t res = db_get_value(global_ctx, "pins");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *pins = value->value_json;
-
-    const cJSON *pin_json = NULL;
-    cJSON_ArrayForEach(pin_json, pins) {
-
-      char *pin_shoggoth_id =
-          cJSON_GetObjectItemCaseSensitive(pin_json, "shoggoth_id")
-              ->valuestring;
-
-      if (strcmp(shoggoth_id, pin_shoggoth_id) == 0) {
-        char *label =
-            cJSON_GetObjectItemCaseSensitive(pin_json, "label")->valuestring;
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = label;
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        sonic_free_server_response(resp);
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR pin with shoggoth_id not found");
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void pins_clear_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "pins");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-
-    cJSON_Delete(value->value_json);
-
-    value->value_json = cJSON_CreateArray();
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-    char *body = "OK";
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
-    global_ctx->saved = false;
-
-    return;
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_peer_clear_pins_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(req_body, item_node_id) == 0) {
-        cJSON_ReplaceItemInObjectCaseSensitive(item_json, "pins",
-                                               cJSON_CreateArray());
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char *body = "ERR peer not found";
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
-    global_ctx->saved = false;
-
-    return;
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_get_peers_with_pin_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    cJSON *peers_with_pin = cJSON_CreateArray();
-
-    cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      cJSON *pins = cJSON_GetObjectItemCaseSensitive(item_json, "pins");
-
-      cJSON *pin_json = NULL;
-      cJSON_ArrayForEach(pin_json, pins) {
-        char *pin_shoggoth_id = pin_json->valuestring;
-
-        if (strcmp(pin_shoggoth_id, req_body) == 0) {
-          cJSON_AddItemReferenceToArray(peers_with_pin, item_json);
-          break;
-        }
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char *body = cJSON_Print(peers_with_pin);
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    free(body);
-    cJSON_Delete(peers_with_pin);
-    sonic_free_server_response(resp);
-
-    return;
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void dht_peer_pins_add_resource_route(sonic_server_request_t *req) {
-  char *node_id = sonic_get_path_segment(req, "node_id");
-
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-    cJSON *dht = value->value_json;
-
-    char *req_body = malloc((req->request_body_size + 1) * sizeof(char));
-    strncpy(req_body, req->request_body, req->request_body_size);
-    req_body[req->request_body_size] = '\0';
-
-    char *shoggoth_id = req_body;
-
-    cJSON *item_json = NULL;
-    cJSON_ArrayForEach(item_json, dht) {
-      char *item_node_id =
-          cJSON_GetObjectItemCaseSensitive(item_json, "node_id")->valuestring;
-
-      if (strcmp(node_id, item_node_id) == 0) {
-        cJSON *pins = cJSON_GetObjectItemCaseSensitive(item_json, "pins");
-
-        cJSON *pin_json = cJSON_CreateString(shoggoth_id);
-        cJSON_AddItemToArray(pins, pin_json);
-
-        sonic_server_response_t *resp =
-            sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-
-        char *body = "OK";
-        sonic_response_set_body(resp, body, strlen(body));
-        sonic_send_response(req, resp);
-
-        sonic_free_server_response(resp);
-
-        global_ctx->saved = false;
-
-        return;
-      }
-    }
-
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char *body = "ERR peer not found";
-    sonic_response_set_body(resp, body, strlen(body));
-    sonic_send_response(req, resp);
-
-    sonic_free_server_response(resp);
-
-    global_ctx->saved = false;
-
-    return;
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
-}
-
-void get_dht_route(sonic_server_request_t *req) {
-  result_t res = db_get_value(global_ctx, "dht");
-
-  if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
-
-    if (value->value_type == VALUE_JSON) {
-      char *str = cJSON_Print(value->value_json);
-
-      char *body = malloc((strlen(str) + 10) * sizeof(char));
-      sprintf(body, "%s %s", value_type_to_str(VALUE_JSON), str);
-
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);
-      sonic_response_set_body(resp, body, strlen(body));
-      sonic_send_response(req, resp);
-
-      free(str);
-      free(body);
-
-      sonic_free_server_response(resp);
-    } else {
-      sonic_server_response_t *resp =
-          sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-      char err[256];
-      sprintf(err, "ERR dht is not a JSON type");
-
-      sonic_response_set_body(resp, err, strlen(err));
-      sonic_send_response(req, resp);
-      sonic_free_server_response(resp);
-    }
-  } else {
-    sonic_server_response_t *resp =
-        sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-    char err[256];
-    sprintf(err, "ERR %s", res.error_message);
-
-    sonic_response_set_body(resp, err, strlen(err));
-    sonic_send_response(req, resp);
-    sonic_free_server_response(resp);
-  }
 }
 
 sonic_server_t *create_server(db_ctx_t *ctx) {
@@ -1484,31 +637,11 @@ sonic_server_t *create_server(db_ctx_t *ctx) {
   sonic_add_route(server, "/delete/{key}", METHOD_GET, delete_route);
   sonic_add_route(server, "/print/", METHOD_GET, print_route);
 
-  sonic_add_route(server, "/dht/get_dht", METHOD_GET, get_dht_route);
-  sonic_add_route(server, "/dht/add_item", METHOD_GET, dht_add_item_route);
-  sonic_add_route(server, "/dht/remove_item", METHOD_GET,
-                  dht_remove_item_route);
-  sonic_add_route(server, "/dht/peer_clear_pins", METHOD_GET,
-                  dht_peer_clear_pins_route);
-  sonic_add_route(server, "/dht/peer_pins_add_resource/{node_id}", METHOD_GET,
-                  dht_peer_pins_add_resource_route);
-  sonic_add_route(server, "/dht/get_peers_with_pin", METHOD_GET,
-                  dht_get_peers_with_pin_route);
-  sonic_add_route(server, "/dht/get_unreachable_count", METHOD_GET,
-                  dht_get_unreachable_count_route);
-  sonic_add_route(server, "/dht/reset_unreachable_count", METHOD_GET,
-                  dht_reset_unreachable_count_route);
-  sonic_add_route(server, "/dht/increment_unreachable_count", METHOD_GET,
-                  dht_increment_unreachable_count_route);
+  add_dht_routes(server);
 
-  sonic_add_route(server, "/pins/get_pins", METHOD_GET, get_pins_route);
-  sonic_add_route(server, "/pins/get_pin_label/{shoggoth_id}", METHOD_GET,
-                  get_pin_label_route);
-  sonic_add_route(server, "/pins/add_resource/{shoggoth_id}/{label}",
-                  METHOD_GET, pins_add_resource_route);
-  sonic_add_route(server, "/pins/remove_resource", METHOD_GET,
-                  pins_remove_resource_route);
-  sonic_add_route(server, "/pins/clear", METHOD_GET, pins_clear_route);
+  add_pins_routes(server);
+
+  add_json_routes(ctx, server);
 
   return server;
 }
@@ -1544,17 +677,20 @@ result_t start_db(db_ctx_t *ctx) {
   LOG(INFO, "Database running at http://%s:%d", ctx->config->network.host,
       ctx->config->network.port);
 
-  int restored = UNWRAP_INT(db_restore_data(ctx));
-
-  if (restored == 1) {
-    LOG(INFO, "Setting up DHT and PINS");
-    UNWRAP(setup_dht(ctx));
-    UNWRAP(setup_pins(ctx));
-  }
-
   pthread_t data_saver_thread;
-  if (pthread_create(&data_saver_thread, NULL, start_data_saver, NULL) != 0) {
-    PANIC("could not spawn server thread");
+
+  if (ctx->config->save.enabled) {
+    int restored = UNWRAP_INT(db_restore_data(ctx));
+
+    if (restored == 1) {
+      LOG(INFO, "Setting up DHT and PINS");
+      UNWRAP(setup_dht(ctx));
+      UNWRAP(setup_pins(ctx));
+    }
+
+    if (pthread_create(&data_saver_thread, NULL, start_data_saver, NULL) != 0) {
+      PANIC("could not spawn server thread");
+    }
   }
 
   ctx->server_started = true;
@@ -1564,7 +700,9 @@ result_t start_db(db_ctx_t *ctx) {
     exit(1);
   }
 
-  pthread_join(data_saver_thread, NULL);
+  if (ctx->config->save.enabled) {
+    pthread_join(data_saver_thread, NULL);
+  }
 
   return OK(NULL);
 }

@@ -19,6 +19,6 @@
 
 result_t setup_dht(db_ctx_t *ctx);
 
-// void get_dht_route(sonic_server_request_t *req);
+void add_dht_routes(sonic_server_t *server);
 
 #endif

@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
+#include <uuid/uuid.h>
 
 netlibc_ctx_t *__netlibc_ctx = NULL;
 
@@ -104,4 +105,23 @@ u64 random_number(u64 start, u64 end) {
   u64 random_num = (u64)start + (u64)rand() % (u64)(end - start + 1);
 
   return random_num;
+}
+
+#ifdef __APPLE__
+#define UUID_STR_LEN 37
+#endif
+
+char *gen_uuid() {
+  uuid_t binuuid;
+  uuid_generate_random(binuuid);
+
+  char *uuid = nmalloc(UUID_STR_LEN * sizeof(char));
+
+  /*
+   * Produces a UUID string at uuid consisting of letters
+   * whose case depends on the system's locale.
+   */
+  uuid_unparse(binuuid, uuid);
+
+  return uuid;
 }

@@ -16,7 +16,7 @@
 #include <netlibc/string.h>
 
 #include "../../include/cjson.h"
-#include "../../include/shogdb.h"
+#include "../../include/shogdb-client.h"
 #include "../../include/sonic.h"
 #include "../../json/json.h"
 #include "../../utils/utils.h"
@@ -163,7 +163,7 @@ void launch_db(node_ctx_t *ctx) {
   }
 }
 
-result_t shogdb_get(node_ctx_t *ctx, char *endpoint, char *body) {
+result_t shogdb_get_value(node_ctx_t *ctx, char *endpoint, char *body) {
   char url[256];
   sprintf(url, "http://%s:%d/%s", ctx->config->db.host, ctx->config->db.port,
           endpoint);
@@ -211,7 +211,7 @@ result_t shogdb_get(node_ctx_t *ctx, char *endpoint, char *body) {
  *
  ****/
 result_t db_get_dht_str(node_ctx_t *ctx) {
-  result_t res_str = shogdb_get(ctx, "dht/get_dht", NULL);
+  result_t res_str = shogdb_get_value(ctx, "dht/get_dht", NULL);
   char *str = PROPAGATE(res_str);
 
   // LOG(INFO, "DHT: %s", str);
@@ -224,7 +224,7 @@ result_t db_get_dht_str(node_ctx_t *ctx) {
  *
  ****/
 result_t db_get_pins_str(node_ctx_t *ctx) {
-  result_t res_str = shogdb_get(ctx, "pins/get_pins", NULL);
+  result_t res_str = shogdb_get_value(ctx, "pins/get_pins", NULL);
   char *str = PROPAGATE(res_str);
 
   // LOG(INFO, "PINS: %s", str);
@@ -235,7 +235,7 @@ result_t db_get_pins_str(node_ctx_t *ctx) {
 result_t db_get_pin_label(node_ctx_t *ctx, char *shoggoth_id) {
   char *path = string_from("pins/get_pin_label/", shoggoth_id, NULL);
 
-  result_t res_str = shogdb_get(ctx, path, NULL);
+  result_t res_str = shogdb_get_value(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
   nfree(path);
 
@@ -268,7 +268,7 @@ result_t db_dht_add_item(node_ctx_t *ctx, dht_item_t *item) {
   result_t res_item_str = dht_item_to_str(item);
   char *item_str = PROPAGATE(res_item_str);
 
-  result_t res_str = shogdb_get(ctx, "dht/add_item", item_str);
+  result_t res_str = shogdb_get_value(ctx, "dht/add_item", item_str);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -278,7 +278,7 @@ result_t db_dht_add_item(node_ctx_t *ctx, dht_item_t *item) {
 }
 
 result_t db_dht_remove_item(node_ctx_t *ctx, char *node_id) {
-  result_t res_str = shogdb_get(ctx, "dht/remove_item", node_id);
+  result_t res_str = shogdb_get_value(ctx, "dht/remove_item", node_id);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -287,7 +287,7 @@ result_t db_dht_remove_item(node_ctx_t *ctx, char *node_id) {
 
 result_t db_increment_unreachable_count(node_ctx_t *ctx, char *node_id) {
   result_t res_str =
-      shogdb_get(ctx, "dht/increment_unreachable_count", node_id);
+      shogdb_get_value(ctx, "dht/increment_unreachable_count", node_id);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -295,7 +295,7 @@ result_t db_increment_unreachable_count(node_ctx_t *ctx, char *node_id) {
 }
 
 result_t db_reset_unreachable_count(node_ctx_t *ctx, char *node_id) {
-  result_t res_str = shogdb_get(ctx, "dht/reset_unreachable_count", node_id);
+  result_t res_str = shogdb_get_value(ctx, "dht/reset_unreachable_count", node_id);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -303,7 +303,7 @@ result_t db_reset_unreachable_count(node_ctx_t *ctx, char *node_id) {
 }
 
 result_t db_get_unreachable_count(node_ctx_t *ctx, char *node_id) {
-  result_t res_str = shogdb_get(ctx, "dht/get_unreachable_count", node_id);
+  result_t res_str = shogdb_get_value(ctx, "dht/get_unreachable_count", node_id);
   char *str = PROPAGATE(res_str);
 
   return OK(str);
@@ -316,7 +316,7 @@ result_t db_get_unreachable_count(node_ctx_t *ctx, char *node_id) {
 result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id, char *label) {
   char *path = string_from("pins/add_resource/", shoggoth_id, "/", label, NULL);
 
-  result_t res_str = shogdb_get(ctx, path, NULL);
+  result_t res_str = shogdb_get_value(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
   nfree(str);
   nfree(path);
@@ -327,7 +327,7 @@ result_t db_pins_add_resource(node_ctx_t *ctx, char *shoggoth_id, char *label) {
 result_t db_pins_remove_resource(node_ctx_t *ctx, char *shoggoth_id) {
   char *path = string_from("pins/remove_resource/", shoggoth_id, NULL);
 
-  result_t res_str = shogdb_get(ctx, path, NULL);
+  result_t res_str = shogdb_get_value(ctx, path, NULL);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -335,7 +335,7 @@ result_t db_pins_remove_resource(node_ctx_t *ctx, char *shoggoth_id) {
 }
 
 result_t db_get_peers_with_pin(node_ctx_t *ctx, char *shoggoth_id) {
-  result_t res_str = shogdb_get(ctx, "dht/get_peers_with_pins", shoggoth_id);
+  result_t res_str = shogdb_get_value(ctx, "dht/get_peers_with_pins", shoggoth_id);
   char *str = PROPAGATE(res_str);
 
   // LOG(INFO, "PINS: %s", str);
@@ -344,7 +344,7 @@ result_t db_get_peers_with_pin(node_ctx_t *ctx, char *shoggoth_id) {
 }
 
 result_t db_clear_peer_pins(node_ctx_t *ctx, char *node_id) {
-  result_t res_str = shogdb_get(ctx, "dht/peer_clear_pins", node_id);
+  result_t res_str = shogdb_get_value(ctx, "dht/peer_clear_pins", node_id);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -357,7 +357,7 @@ result_t db_peer_pins_add_resource(node_ctx_t *ctx, char *node_id,
   char endpoint[256];
   sprintf(endpoint, "dht/peer_pins_add_resource/%s", node_id);
 
-  result_t res_str = shogdb_get(ctx, endpoint, shoggoth_id);
+  result_t res_str = shogdb_get_value(ctx, endpoint, shoggoth_id);
   char *str = PROPAGATE(res_str);
   nfree(str);
 
@@ -365,7 +365,7 @@ result_t db_peer_pins_add_resource(node_ctx_t *ctx, char *node_id,
 }
 
 result_t db_clear_local_pins(node_ctx_t *ctx) {
-  result_t res_str = shogdb_get(ctx, "pins/clear", NULL);
+  result_t res_str = shogdb_get_value(ctx, "pins/clear", NULL);
   char *str = PROPAGATE(res_str);
   nfree(str);
 

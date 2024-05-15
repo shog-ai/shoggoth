@@ -12,6 +12,8 @@ char *new_string();
 
 char *string_from(const char *str1, ...);
 
+char *string_lowercase(char *str);
+
 void free_string(char *str);
 
 char *remove_newlines_except_quotes(char *input);

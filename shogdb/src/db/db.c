@@ -9,7 +9,7 @@
  ****/
 
 #include "db.h"
-#include "../../include/cjson.h"
+#include "../../include/jansson.h"
 #include "../../include/sonic.h"
 #include "../hashmap/hashmap.h"
 #include "dht.h"
@@ -27,60 +27,59 @@
 
 db_ctx_t *global_ctx = NULL;
 
-// FIXME: serialize seems to not include the latest data from a DHT item's
-// unreachable_count
 char *serialize_data(db_ctx_t *ctx) {
-  cJSON *save_json = cJSON_CreateArray();
+  void *save_json = json_array();
 
   hashmap_t *hashmap = global_ctx->hashmap;
   hashmap_t *s;
   for (s = hashmap; s != NULL; s = s->hh.next) {
     db_value_t *value = s->value;
 
-    cJSON *item_json = cJSON_CreateObject();
-    cJSON_AddStringToObject(item_json, "key", s->key);
-    cJSON_AddStringToObject(item_json, "type",
-                            value_type_to_str(value->value_type));
+    void *item_json = json_object();
+
+    json_object_set_new(item_json, "key", json_string(s->key));
+    json_object_set_new(item_json, "type",
+                        json_string(value_type_to_str(value->value_type)));
 
     if (value->value_type == VALUE_STR) {
-      cJSON_AddStringToObject(item_json, "value", value->value_str);
+      json_object_set_new(item_json, "value", json_string(value->value_str));
     } else if (value->value_type == VALUE_BOOL) {
       if (value->value_bool == true) {
-        cJSON_AddStringToObject(item_json, "value", "true");
+        json_object_set_new(item_json, "value", json_string("true"));
       } else {
-        cJSON_AddStringToObject(item_json, "value", "false");
+        json_object_set_new(item_json, "value", json_string("false"));
       }
     } else if (value->value_type == VALUE_INT) {
       char val[256];
       sprintf(val, S64_FORMAT_SPECIFIER, value->value_int);
 
-      cJSON_AddStringToObject(item_json, "value", val);
+      json_object_set_new(item_json, "value", json_string(val));
     } else if (value->value_type == VALUE_UINT) {
       char val[256];
       sprintf(val, U64_FORMAT_SPECIFIER, value->value_uint);
 
-      cJSON_AddStringToObject(item_json, "value", val);
+      json_object_set_new(item_json, "value", json_string(val));
     } else if (value->value_type == VALUE_FLOAT) {
       char val[256];
       sprintf(val, "%lf", value->value_float);
 
-      cJSON_AddStringToObject(item_json, "value", val);
+      json_object_set_new(item_json, "value", json_string(val));
     } else if (value->value_type == VALUE_JSON) {
       assert(value->value_json != NULL);
       char *val = json_to_str(value->value_json);
 
-      cJSON_AddStringToObject(item_json, "value", val);
+      json_object_set_new(item_json, "value", json_string(val));
 
       free(val);
     } else {
       PANIC("unhandled value type");
     }
 
-    cJSON_AddItemToArray(save_json, item_json);
+    json_array_append_new(save_json, item_json);
   }
 
-  char *db_data = cJSON_Print(save_json);
-  cJSON_Delete(save_json);
+  char *db_data = json_to_str(save_json);
+  free_json(save_json);
 
   return db_data;
 }
@@ -562,18 +561,17 @@ result_t db_restore_data(db_ctx_t *ctx) {
   LOG(INFO, "restoring data from %s", ctx->config->save.path);
 
   char *data = UNWRAP(read_file_to_string(ctx->config->save.path));
-  cJSON *data_json = cJSON_Parse(data);
+  void *data_json = str_to_json(data);
   free(data);
 
-  const cJSON *item_json = NULL;
-  cJSON_ArrayForEach(item_json, data_json) {
-    char *key = cJSON_GetObjectItemCaseSensitive(item_json, "key")->valuestring;
-
+  void *item_json = NULL;
+  size_t index;
+  json_array_foreach(data_json, index, item_json) {
+    char *key = (char *)json_string_value(json_object_get(item_json, "key"));
     char *type_str =
-        cJSON_GetObjectItemCaseSensitive(item_json, "type")->valuestring;
-
+        (char *)json_string_value(json_object_get(item_json, "type"));
     char *value_str =
-        cJSON_GetObjectItemCaseSensitive(item_json, "value")->valuestring;
+        (char *)json_string_value(json_object_get(item_json, "value"));
 
     value_type_t value_type = str_to_value_type(type_str);
 
@@ -622,7 +620,7 @@ result_t db_restore_data(db_ctx_t *ctx) {
     }
   }
 
-  cJSON_Delete(data_json);
+  free_json(data_json);
 
   return OK_INT(0);
 }

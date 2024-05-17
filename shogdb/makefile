@@ -7,7 +7,7 @@ CC = gcc
 endif
 
 CFLAGS += -g -std=c11 -D_GNU_SOURCE -I ../netlibc/include $$(pkg-config --cflags openssl) 
-LDFLAGS += -pthread $$(pkg-config --libs openssl) -ljansson
+LDFLAGS += -pthread $$(pkg-config --libs openssl) -ljansson $$(pkg-config --cflags --libs uuid)
 
 # sanitizers (only on linux)
 ifeq ($(shell uname), Linux)
@@ -15,7 +15,7 @@ CFLAGS_SANITIZED += -fsanitize=address,undefined,leak
 LDFLAGS_SANITIZED += -lasan -lubsan
 endif
 
-STATIC_LIBS = ../target/cjson.a ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a ./target/janssonpath.o
+STATIC_LIBS = ../target/tomlc.a ../target/sonic.a ../target/libnetlibc.a ./target/janssonpath.o
 
 .PHONY: ./target/janssonpath.o
 

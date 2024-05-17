@@ -7,7 +7,7 @@ CC = gcc
 endif
 
 CFLAGS += -g -std=c11 -D_GNU_SOURCE -I ../netlibc/include $$(pkg-config --cflags openssl) 
-LDFLAGS += -pthread $$(pkg-config --libs openssl) -ljansson
+LDFLAGS += -pthread $$(pkg-config --libs openssl) -ljansson $$(pkg-config --cflags --libs uuid)
 
 # sanitizers (only on linux)
 ifeq ($(shell uname), Linux)

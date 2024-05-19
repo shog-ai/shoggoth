@@ -38,4 +38,6 @@ char *nstringify(char *str);
 
 char *nstrdup(char *str);
 
+char *nstrndup(char *str, u64 count);
+
 #endif

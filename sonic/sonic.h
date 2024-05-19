@@ -312,6 +312,8 @@ typedef struct {
   u64 middlewares_count;
 } sonic_server_t;
 
+// WARN: DO NOT use a function call as the parameter for PROPAGATE e.g
+// PROPAGATE(my_function());
 #define SERVER_PROPAGATE(res)                                                  \
   VALUE(res);                                                                  \
   do {                                                                         \

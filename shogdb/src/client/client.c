@@ -48,7 +48,7 @@ result_t shogdb_set(shogdb_ctx_t *ctx, char *key, char *value) {
     return ERR("request failed: %s \n", resp->error);
   }
 
-  if (strcmp(resp->response_body, "OK") != 0) {
+  if (strncmp(resp->response_body, "OK", 2) != 0) {
     char *msg = nstrdup(resp->response_body);
 
     return ERR(msg);
@@ -101,7 +101,11 @@ result_t shogdb_json_get(shogdb_ctx_t *ctx, char *key, char *filter) {
     return ERR("request failed: %s \n", resp->error);
   }
 
-  result_t res = shogdb_parse_message(resp->response_body);
+  char *body = nstrndup(resp->response_body, resp->response_body_size);
+
+  result_t res = shogdb_parse_message(body);
+  nfree(body);
+  
   db_value_t *value = PROPAGATE(res);
 
   if (value->value_type == VALUE_ERR) {
@@ -187,7 +191,10 @@ result_t shogdb_get(shogdb_ctx_t *ctx, char *key) {
     return ERR("request failed: %s \n", resp->error);
   }
 
-  result_t res = shogdb_parse_message(resp->response_body);
+  char *body = nstrndup(resp->response_body, resp->response_body_size);
+  result_t res = shogdb_parse_message(body);
+  nfree(body);
+  
   db_value_t *value = PROPAGATE(res);
 
   if (value->value_type == VALUE_ERR) {

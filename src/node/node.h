@@ -17,7 +17,7 @@
 #include <netlibc/log.h>
 #include <netlibc/string.h>
 
-#include "../include/sonic.h"
+#include "../../sonic/sonic.h"
 
 #include "../args/args.h"
 #include <pthread.h>

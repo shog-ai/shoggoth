@@ -70,12 +70,14 @@ typedef struct {
 
 #define VALUE_U64(res) res.ok_u64;
 
+// TODO: implement PROPAGATE_AND_FREE() {}
+
 // WARN: DO NOT use a function call as the parameter for PROPAGATE e.g
 // PROPAGATE(my_function());
 #define PROPAGATE(res)                                                         \
   res.ok_ptr;                                                                  \
   do {                                                                         \
-    if (!is_ok(res)) {                                                         \
+    if (is_err(res)) {                                                         \
       return res;                                                              \
     }                                                                          \
     free_result(res);                                                          \

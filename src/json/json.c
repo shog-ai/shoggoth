@@ -19,7 +19,7 @@
 
 #include <netlibc/mem.h>
 
-void free_json(json_t *json) {
+void free_json(void *json) {
   cJSON *cjson = (cJSON *)json;
 
   cJSON_Delete(cjson);

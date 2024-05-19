@@ -28,17 +28,6 @@ struct NODE_CTX;
 struct CLIENT_CTX;
 struct STUDIO_CTX;
 
-#define SERVER_ERR(res)                                                        \
-  do {                                                                         \
-    if (is_err(res)) {                                                         \
-      respond_error(req, res.error_message);                                   \
-      free_result(res);                                                        \
-      return;                                                                  \
-    }                                                                          \
-                                                                               \
-    free_result(res);                                                          \
-  } while (0)
-
 char *utils_gen_uuid();
 
 result_t utils_clear_dir_timestamps(char *dir_path);

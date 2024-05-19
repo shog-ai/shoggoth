@@ -29,6 +29,18 @@
 
 #include <netlibc/mem.h>
 
+void respond_error(sonic_server_request_t *req, char *error_message) {
+  sonic_server_response_t *resp =
+      sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
+
+  if (error_message != NULL) {
+    sonic_response_set_body(resp, error_message, strlen(error_message));
+  }
+
+  sonic_send_response(req, resp);
+  sonic_free_server_response(resp);
+}
+
 /****
  * frees a response and all its used memory
  *

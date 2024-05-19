@@ -25,7 +25,7 @@ void *str_to_json(char *str) {
   return value;
 };
 
-void free_json(void *json) { json_decref(json); }
+void shogdb_free_json(void *json) { json_decref(json); }
 
 char *json_to_str(void *json) {
   char *str = json_dumps(json, JSON_INDENT(0));
@@ -76,7 +76,7 @@ result_t shogdb_json_append(shogdb_ctx_t *ctx, char *key, char *filter,
     return ERR("request failed: %s \n", resp->error);
   }
 
-  if (strcmp(resp->response_body, "OK") != 0) {
+  if (strncmp(resp->response_body, "OK", 2) != 0) {
     char *msg = nstrdup(resp->response_body);
 
     return ERR(msg);
@@ -316,7 +316,7 @@ void free_db_value(db_value_t *value) {
   }
 
   if (value->value_type == VALUE_JSON) {
-    free_json(value->value_json);
+    shogdb_free_json(value->value_json);
   }
 
   pthread_mutex_destroy(&value->mutex);

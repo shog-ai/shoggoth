@@ -15,8 +15,7 @@
 #include <netlibc/string.h>
 
 #include "../../include/cjson.h"
-// #include "../../include/shogdb-client.h"
-#include "../../include/sonic.h"
+#include "../../sonic/sonic.h"
 #include "../../json/json.h"
 #include "../../utils/utils.h"
 #include "../db/db.h"

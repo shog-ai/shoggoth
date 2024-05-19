@@ -11,7 +11,7 @@
 #ifndef SHOG_NODE_SERVER_EXPLORER_H
 #define SHOG_NODE_SERVER_EXPLORER_H
 
-#include "../../include/sonic.h"
+#include "../../sonic/sonic.h"
 #include "../node.h"
 
 void add_explorer_routes(node_ctx_t *ctx, sonic_server_t *server);

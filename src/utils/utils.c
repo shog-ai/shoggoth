@@ -9,7 +9,7 @@
  ****/
 
 #include "utils.h"
-#include "../include/tuwi.h"
+#include "../../tuwi/tuwi.h"
 #include "../node/node.h"
 
 #include <assert.h>

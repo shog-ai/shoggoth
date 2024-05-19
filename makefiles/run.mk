@@ -10,6 +10,12 @@ run-node: dev
 	echo "\n\n"	
 	cd $(TARGET_DIR)/dev-$(VERSION)/ && ./bin/shog run -r $$(pwd) -c ../../deploy/2/2.toml
 
+run-node-flat: all
+	cp ./deploy/1/private.txt $(TARGET_DIR)/release-$(VERSION)/node/keys/private.txt && cp ./deploy/1/public.txt $(TARGET_DIR)/release-$(VERSION)/node/keys/public.txt
+	
+	echo "\n\n"	
+	cd $(TARGET_DIR)/release-$(VERSION)/ && ./bin/shog run -r $$(pwd) -c ../../deploy/2/2.toml
+
 # ============================================================================================================
 
 # STUDIO =======================================================================================================

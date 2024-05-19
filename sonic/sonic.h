@@ -312,6 +312,20 @@ typedef struct {
   u64 middlewares_count;
 } sonic_server_t;
 
+#define SERVER_PROPAGATE(res)                                                  \
+  VALUE(res);                                                                  \
+  do {                                                                         \
+    if (is_err(res)) {                                                         \
+      respond_error(req, res.error_message);                                   \
+      free_result(res);                                                        \
+      return;                                                                  \
+    }                                                                          \
+                                                                               \
+    free_result(res);                                                          \
+  } while (0)
+
+void respond_error(sonic_server_request_t *req, char *error_message);
+
 result_t sonic_send_response(sonic_server_request_t *req,
                              sonic_server_response_t *resp);
 

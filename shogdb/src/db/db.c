@@ -79,7 +79,7 @@ char *serialize_data(db_ctx_t *ctx) {
   }
 
   char *db_data = json_to_str(save_json);
-  free_json(save_json);
+  shogdb_free_json(save_json);
 
   return db_data;
 }
@@ -614,13 +614,13 @@ result_t db_restore_data(db_ctx_t *ctx) {
 
       db_add_json_value(ctx, key, result);
 
-      free_json(result);
+      shogdb_free_json(result);
     } else {
       PANIC("unhandled value type");
     }
   }
 
-  free_json(data_json);
+  shogdb_free_json(data_json);
 
   return OK_INT(0);
 }

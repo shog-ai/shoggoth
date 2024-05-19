@@ -27,7 +27,7 @@ result_t json_string_to_resource_fingerprint(char *fingerprint_str);
 
 result_t json_string_to_group_fingerprint(char *fingerprint_str);
 
-void free_json(json_t *json);
+void free_json(void *json);
 
 char *json_to_string(json_t *json);
 

@@ -478,13 +478,13 @@ result_t map_file(char *file_path) {
   file_mapping->fd = open(file_path, O_RDONLY);
   if (file_mapping->fd == -1) {
     perror("Error opening file");
-    PANIC("Error opening file");
+    return ERR("Error opening file");
   }
 
   if (fstat(file_mapping->fd, &file_mapping->info) == -1) {
     perror("Error getting file information");
     close(file_mapping->fd);
-    PANIC("Error getting file information");
+    return ERR("Error getting file information");
   }
 
   // Map the file into memory

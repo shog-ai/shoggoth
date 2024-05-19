@@ -26,8 +26,8 @@ void explorer_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -49,8 +49,8 @@ void stats_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -72,8 +72,8 @@ void docs_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -95,8 +95,8 @@ void docs_api_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -118,8 +118,8 @@ void docs_sonic_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -141,8 +141,8 @@ void docs_camel_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);
@@ -164,8 +164,8 @@ void docs_tuwi_route(sonic_server_request_t *req) {
 
   result_t res_file_mapping = map_file(file_path);
   nfree(file_path);
-  SERVER_ERR(res_file_mapping);
-  file_mapping_t *file_mapping = VALUE(res_file_mapping);
+
+  file_mapping_t *file_mapping = SERVER_PROPAGATE(res_file_mapping);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_TEXT_HTML);

@@ -25,18 +25,6 @@ typedef enum {
   RESOURCE,
 } request_target_t;
 
-void respond_error(sonic_server_request_t *req, char *error_message) {
-  sonic_server_response_t *resp =
-      sonic_new_response(STATUS_406, MIME_TEXT_PLAIN);
-
-  if (error_message != NULL) {
-    sonic_response_set_body(resp, error_message, strlen(error_message));
-  }
-
-  sonic_send_response(req, resp);
-  sonic_free_server_response(resp);
-}
-
 void api_download_route(sonic_server_request_t *req) {
   char *shoggoth_id = sonic_get_path_segment(req, "shoggoth_id");
   char *label = sonic_get_path_segment(req, "label");
@@ -54,12 +42,10 @@ void api_download_route(sonic_server_request_t *req) {
 
   if (!file_exists(pin_dir_path)) {
     result_t res_peers_with_pin = db_get_peers_with_pin(api_ctx, shoggoth_id);
-    SERVER_ERR(res_peers_with_pin);
-    char *peers_with_pin = VALUE(res_peers_with_pin);
+    char *peers_with_pin = SERVER_PROPAGATE(res_peers_with_pin);
 
     result_t res_peers = json_string_to_dht(peers_with_pin);
-    SERVER_ERR(res_peers);
-    dht_t *peers = VALUE(res_peers);
+    dht_t *peers = SERVER_PROPAGATE(res_peers);
 
     nfree(peers_with_pin);
 
@@ -126,8 +112,7 @@ void api_get_dht_route(sonic_server_request_t *req) {
   }
 
   result_t res_body = db_get_dht_str(api_ctx);
-  SERVER_ERR(res_body);
-  char *body = VALUE(res_body);
+  char *body = SERVER_PROPAGATE(res_body);
 
   sonic_server_response_t *resp =
       sonic_new_response(STATUS_200, MIME_APPLICATION_JSON);
@@ -143,8 +128,7 @@ void api_get_dht_route(sonic_server_request_t *req) {
 
 void api_get_pins_route(sonic_server_request_t *req) {
   result_t res_pins_str = db_get_pins_str(api_ctx);
-  SERVER_ERR(res_pins_str);
-  char *pins_str = VALUE(res_pins_str);
+  char *pins_str = SERVER_PROPAGATE(res_pins_str);
 
   char *body = pins_str;
 
@@ -171,8 +155,7 @@ void api_get_manifest_route(sonic_server_request_t *req) {
   }
 
   result_t res_manifest_json = json_node_manifest_to_json(*api_ctx->manifest);
-  SERVER_ERR(res_manifest_json);
-  json_t *manifest_json = VALUE(res_manifest_json);
+  json_t *manifest_json = SERVER_PROPAGATE(res_manifest_json);
 
   char *body = json_to_string(manifest_json);
   free_json(manifest_json);

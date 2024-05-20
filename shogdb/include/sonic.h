@@ -213,7 +213,7 @@ void sonic_add_header(sonic_client_request_t *req, char *key, char *value);
 void sonic_set_body(sonic_client_request_t *req, char *request_body,
                     u64 request_body_size);
 
-char *sonic_status_to_string(sonic_status_t status_code);
+result_t sonic_status_to_string(sonic_status_t status_code);
 
 // ===================================================================================================================
 
@@ -311,6 +311,22 @@ typedef struct {
   sonic_route_middleware_t **middlewares;
   u64 middlewares_count;
 } sonic_server_t;
+
+// WARN: DO NOT use a function call as the parameter for PROPAGATE e.g
+// PROPAGATE(my_function());
+#define SERVER_PROPAGATE(res)                                                  \
+  VALUE(res);                                                                  \
+  do {                                                                         \
+    if (is_err(res)) {                                                         \
+      respond_error(req, res.error_message);                                   \
+      free_result(res);                                                        \
+      return;                                                                  \
+    }                                                                          \
+                                                                               \
+    free_result(res);                                                          \
+  } while (0)
+
+void respond_error(sonic_server_request_t *req, char *error_message);
 
 result_t sonic_send_response(sonic_server_request_t *req,
                              sonic_server_response_t *resp);

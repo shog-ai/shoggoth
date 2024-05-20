@@ -11,10 +11,11 @@
 #include "json.h"
 #include "../../include/jansson.h"
 #include "../../include/janssonpath.h"
-#include "../../include/sonic.h"
+#include "../../sonic/sonic.h"
 #include "db.h"
 #include "pins.h"
 
+#include <netlibc/assert.h>
 #include <netlibc/mem.h>
 
 db_ctx_t *json_ctx = NULL;
@@ -33,21 +34,35 @@ void json_append_route(sonic_server_request_t *req) {
   char *key = sonic_get_path_segment(req, "key");
   char *filter = sonic_get_path_segment(req, "filter");
 
-  char *new_value = nmalloc((req->request_body_size + 1) * sizeof(char));
-  memcpy(new_value, req->request_body, req->request_body_size);
-  new_value[req->request_body_size] = '\0';
+  char *body = nstrndup(req->request_body, req->request_body_size);
+  // LOG(INFO, "FILTER: %s", filter);
+
+  result_t res_value = shogdb_parse_message(body);
+  db_value_t *value = SERVER_PROPAGATE(res_value);
 
   result_t res = db_get_value(json_ctx, key);
 
   if (is_ok(res)) {
-    db_value_t *value = VALUE(res);
+    db_value_t *parent = VALUE(res);
 
-    void *filtered_value = filter_json(value->value_json, filter);
+    void *filtered_value = filter_json(parent->value_json, filter);
+    ASSERT_TRUE(filtered_value != NULL, NULL);
 
-    void *new_value_json = str_to_json(new_value);
-    nfree(new_value);
+    if (value->value_type == VALUE_JSON) {
+      // void *new_value_json = str_to_json(value->value_json);
+      // ASSERT_TRUE(new_value_json != NULL, NULL);
 
-    add_item_to_array(filtered_value, new_value_json);
+      // free_db_value(value);
+
+      add_item_to_array(filtered_value, value->value_json);
+    } else if (value->value_type == VALUE_STR) {
+      void *new_value_json = json_string(value->value_str);
+      // ASSERT_TRUE(new_value_json != NULL, NULL);
+
+      add_item_to_array(filtered_value, new_value_json);
+    } else {
+      PANIC("append not implemented for type");
+    }
 
     sonic_server_response_t *resp =
         sonic_new_response(STATUS_200, MIME_TEXT_PLAIN);

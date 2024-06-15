@@ -1,8 +1,0 @@
-[network]
-host = "127.0.0.1"
-port = 5961
-
-[save]
-enabled = true
-path = "./save.sdb"
-interval = 2 # seconds

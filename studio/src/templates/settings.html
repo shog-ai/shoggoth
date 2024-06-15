@@ -1,0 +1,46 @@
+{{head}}
+    
+
+      <div class="main-content">
+        <div class="settings-title">General</div>
+
+        <div class="settings-item">
+          <div class="settings-subtitle">Shog Hub URL:</div>
+          <input class="settings-input" id="shog-hub-url" />
+        </div>
+
+        <div class="settings-title">Chat</div>
+
+        <div class="settings-item">
+          <div class="settings-subtitle">System prompt:</div>
+          <textarea class="settings-textarea" rows="5" id="system-prompt"></textarea>
+        </div>
+       
+        <div class="settings-title">Blockchain</div>
+
+        <div class="settings-item">
+          <div class="settings-subtitle">ETH RPC:</div>
+          <input class="settings-input" id="eth-rpc" />
+        </div>
+         
+        <div class="settings-item">
+          <div class="settings-subtitle">BASE RPC:</div>
+          <input class="settings-input" id="base-rpc" />
+        </div>
+        
+        <div class="btn save-btn" onclick="save_pressed()">Save</div>
+        
+        <div class="settings-title">Functions</div>
+
+        <div class="functions">
+          <div class="btn function-btn" onclick="open_seed_phrase()">show seed phrase</div>
+
+          <div class="btn function-btn" onclick="show_version()">show version</div>
+        
+          <div class="btn function-btn" onclick="force_exit()">force exit</div>
+        
+          <div class="btn function-btn" onclick="factory_reset()">factory reset</div>
+        </div>
+      </div>
+    
+{{end}}

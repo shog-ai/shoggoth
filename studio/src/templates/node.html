@@ -1,0 +1,82 @@
+{{head}}
+    
+<div class="main-content">
+  <div class="info-section">
+    <div class="info-section-left">
+      <div class="info-section-left-key">Node ID:</div>
+      <div id="node-id" class="info-section-left-value">SHOGN</div>
+    </div>
+    
+    <div class="info-section-right">
+      <div class="node-online">online</div>
+      <div class="node-offline">offline</div>
+    </div>
+  </div>
+
+  <div class="stats-section">
+    <div class="stats-item">
+      <div class="stats-title">
+        <div>Total Nodes: </div>
+        <div id="current-total-nodes">~</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="total-nodes"></canvas>
+      </div>
+    </div>
+     
+    <div class="stats-item">
+      <div class="stats-title">
+        <div>Online Nodes: </div>
+        <div id="current-online-nodes">~</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="online-nodes"></canvas>
+      </div>
+    </div>
+     
+    <div class="stats-item">
+      <div class="stats-title">
+        <div>Disk Usage: </div>
+        <div id="current-storage-used">~ GB</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="storage-used"></canvas>
+      </div>
+    </div>
+     
+    <div class="stats-item">
+      <div class="stats-title">
+        <div>Download Speed: </div>
+        <div id="current-download-bandwidth">~ kb/s</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="download-bandwidth"></canvas>
+      </div>
+    </div>
+     
+    <div class="stats-item">
+      <div class="stats-title">
+        <div>Upload Speed: </div>
+        <div id="current-upload-bandwidth">~ kb/s</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="upload-bandwidth"></canvas>
+      </div>
+    </div>
+    
+  </div>
+
+  <div id="nav-resources"></div>
+  <b class="page-subtitle">Pinned Resources</b>
+
+  <div class="node-items">
+    <img src="/static/img/loading.gif" class="loading" id="loading" />
+  </div>
+</div>
+    
+{{end}}

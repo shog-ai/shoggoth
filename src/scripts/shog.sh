@@ -1,1 +1,0 @@
-~/shoggoth/bin/shog "$@"

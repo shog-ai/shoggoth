@@ -1,0 +1,298 @@
+.main-content {
+  height: 80%;
+}
+
+.chat-view {
+  width: 80%;
+  height: 94%;
+
+  margin-bottom: 35px;
+  padding-bottom: 160px;
+  
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.chat-view-item {
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+
+  margin-top: 20px;
+}
+
+.chat-view-item-network-error {
+  color: #f55;
+  margin-left: 40px;
+}
+
+.chat-view-item-right {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  margin-left: 10px;
+}
+
+.chat-view-item-img {
+  width: 30px;
+  height: 30px;
+}
+
+.chat-view-item-right-name {
+  margin-top: 10px;
+}
+
+.chat-view-item-right-msg {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.chat-view-item-right-msg p {
+  margin-bottom: 25px;
+  line-height: 35px;
+  font-size: 20px; 
+}
+
+.chat-view-item-right-msg li {
+  line-height: 35px;
+}
+
+.chat-view-item-right-msg pre {
+ margin-bottom: 25px; 
+}
+
+.input-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  color: #848484;
+}
+
+
+.message-bar {
+  width: 65%;
+}
+
+
+.message-input {
+  background: #373737;
+
+  padding: 12px 20px;
+
+  width: 60%;
+  max-height: 150px;
+  max-width: 690px;
+  font-size: 16px;
+  border-radius: 15px;
+
+  border: none;
+  resize: none;
+  color: white;
+}
+
+.search-input:focus {
+  border: 2px solid gray;
+}
+
+.search-btn {
+  background: white;
+  width: 85px;
+  height: 40px;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+  font-size: 20px;
+  color: black;
+
+  cursor: pointer;
+
+  margin-left: 60px;
+}
+
+.send-btn {
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.send-btn-disabled {
+  cursor: not-allowed;
+  opacity: 40%;
+}
+
+.mount-btn {
+  background: white;
+  width: 85px;
+  min-height: 35px;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  font-size: 15px;
+  color: black;
+
+  cursor: pointer;
+
+  margin-bottom: 10px;
+}
+
+.unmount-btn {
+  background: #c10000;
+  color: white;
+  margin-bottom: 10px;
+
+  display: none;
+}
+
+.mounting-btn {
+  background: #a8a8a8;
+  cursor: not-allowed;
+  margin-bottom: 10px;
+
+  display: none;
+}
+
+.model-label {
+  margin-left: 10px;
+}
+
+.model-select {
+  margin-left: 10px;
+  width: 90%;
+  height: 35px;
+  background: #404040;
+  margin-bottom: 10px;
+  margin-top: 20px;
+  padding: 5px;
+  color: white;
+  
+  border: 2px solid #803c00;
+  border-radius: 8px;
+}
+
+.side-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  height: 88vh;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.chat-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  height: 100%;
+  width: 100%;
+}
+
+.chat-item {
+  width: 90%;
+  min-height: 30px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-left: 7px;
+  padding-right: 7px;
+
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-top: 15px;
+
+  background: #313131;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+}
+
+.add-chat-btn {
+  width: 90%;
+  min-height: 30px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+
+  background: #171717;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  border: 1px solid gray;
+}
+
+.add-icon {
+  width: 15px;
+  height: 15px;
+
+  margin-left: 8px;
+  margin-right: 10px;
+}
+
+.chat-item-active {
+  background: #717171;
+}
+
+.chat-item:hover {
+  background: #717171;
+}
+
+.chat-options {
+  width: 15px;
+  height: 15px;
+
+  opacity: 40%;
+}
+
+.chat-options:hover {
+  opacity: 100%;
+}
+
+.new-chat-view {
+  width: 100%;
+  height: 100%;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-chat-view-img {
+  width: 50px;
+  height: 50px;
+}
+
+.new-chat-view-txt {
+  font-size: 25px;
+  font-weight: bold;
+  margin-top: 20px;
+}

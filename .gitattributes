@@ -1,2 +1,5 @@
 makefile linguist-generated
 *.mk linguist-generated
+*.js linguist-generated
+*.css linguist-generated
+*.html linguist-generated

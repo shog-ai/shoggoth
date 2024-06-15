@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{title}}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/icon/favicon-16x16.png">
+  <link rel="manifest" href="/static/img/icon/site.webmanifest">
+
+  <link rel="stylesheet" href="/static/css/main.css" />
+  {{#if is_hub}}<link rel="stylesheet" href="/static/css/hub.css" />{{/if}}
+  
+  {{#if is_resource}}<link rel="stylesheet" href="/static/css/hub.css" />{{/if}}
+  {{#if is_resource}}<link rel="stylesheet" href="/static/css/hub_resource.css" />{{/if}}
+  
+  {{#if is_node}}<link rel="stylesheet" href="/static/css/node.css" />{{/if}}
+  
+  {{#if is_chat}}<link rel="stylesheet" href="/static/css/chat.css" />{{/if}}
+  
+  {{#if is_settings}}<link rel="stylesheet" href="/static/css/settings.css" />{{/if}}
+  
+  {{#if is_account}}<link rel="stylesheet" href="/static/css/account.css" />{{/if}}
+
+  {{#if is_leaderboards}}<link rel="stylesheet" href="/static/css/leaderboards.css" />{{/if}}
+  
+  <script src="/dynamic/const.js"></script>
+  <script src="/static/js/main.js"></script>
+  
+  {{#if is_hub}}<script src="/static/js/handlebars.js"></script>{{/if}}
+  {{#if is_hub}}<script src="/static/js/hub.js"></script>{{/if}}
+  
+  {{#if is_node}}<script src="/static/js/handlebars.js"></script>{{/if}}
+  {{#if is_node}}<script src="/static/js/chart.js"></script>{{/if}}
+  {{#if is_node}}<script src="/static/js/node.js"></script>{{/if}}
+  
+  {{#if is_resource}}<script src="/static/js/handlebars.js"></script>{{/if}}
+  {{#if is_resource}}<script src="/static/js/showdown.js"></script>{{/if}}
+  {{#if is_resource}}<script src="/static/js/chart.js"></script>{{/if}}
+  {{#if is_resource}}
+    <link rel="stylesheet" href="/static/highlightjs/styles/agate.min.css">
+    <script src="/static/highlightjs/highlight.min.js"></script>
+  {{/if}}
+  {{#if is_resource}}<script src="/static/js/hub_resource.js"></script>{{/if}}
+  
+  {{#if is_chat}}
+    <link rel="stylesheet" href="/static/highlightjs/styles/agate.min.css">
+    <script src="/static/highlightjs/highlight.min.js"></script>
+  {{/if}}
+  {{#if is_chat}}<script src="/static/js/showdown.js"></script>{{/if}}
+  {{#if is_chat}}<script src="/static/js/chat.js"></script>{{/if}}
+  
+  {{#if is_account}}<script src="/static/js/account.js"></script>{{/if}}
+  {{#if is_account}}<script src="/static/js/handlebars.js"></script>{{/if}}
+   
+  {{#if is_leaderboards}}<script src="/static/js/leaderboards.js"></script>{{/if}}
+  {{#if is_leaderboards}}<script src="/static/js/handlebars.js"></script>{{/if}}
+  
+  {{#if is_settings}}<script src="/static/js/settings.js"></script>{{/if}}
+</head>
+
+
+<body>
+  <div class="content" id="content">
+    <div class="toast-container"></div>
+  
+    <div class="side-menu">
+      <a title="Shog Hub" class="side-menu-item {{#if is_hub}}side-menu-item-active{{/if}} {{#if is_resource}}side-menu-item-active{{/if}} " href="/hub">
+        <img src="/static/img/icon.png" class="side-menu-item-img" />
+      </a>
+
+      <a title="Chat" class="side-menu-item {{#if is_chat}}side-menu-item-active{{/if}}" href="/chat">
+        <img src="/static/img/chat.svg" class="side-menu-item-img" />
+      </a>
+
+      <a title="Node" class="side-menu-item {{#if is_node}}side-menu-item-active{{/if}}" href="/node">
+        <img src="/static/img/node.svg" class="side-menu-item-img" />
+      </a>
+       
+      <a title="Leaderboards" class="side-menu-item {{#if is_leaderboards}}side-menu-item-active{{/if}}" href="/leaderboards">
+        <img src="/static/img/leaderboards.svg" class="side-menu-item-img" />
+      </a>
+      
+      <a title="Account" class="side-menu-item {{#if is_account}}side-menu-item-active{{/if}}" href="/account">
+        <img src="/static/img/account.svg" class="side-menu-item-img" />
+      </a>
+      
+      <a title="Settings" class="side-menu-item side-menu-item-down {{#if is_settings}}side-menu-item-active{{/if}}" href="/settings">
+        <img src="/static/img/gear.svg" class="side-menu-item-img" />
+      </a>
+    </div>
+
+    <div class="side">
+      <div class="side-nav">
+        <div class="navigation">
+          <img onclick="back_pressed()" title="go back" src="/static/img/back.svg" class="nav-left" />
+          <img onclick="forward_pressed()" title="go forward" src="/static/img/forward.svg" class="nav-right" />
+          
+          <img onclick="reload()" title="reload" src="/static/img/reload.svg" class="nav-reload" />
+        </div>
+
+      </div>
+
+      <div class="side-items"> 
+
+        {{#if is_hub}}
+
+        <input class="filter-search" placeholder="search models, datasets, papers, code" title="search models, datasets, papers, code" onkeyup="search_key_pressed(event)"/>
+        
+        <div class="filter-title">categories</div>
+        
+        <div class="filter-tags">
+          <div class="filter-tag" onclick="search_category('models')">
+            <img class="tag-icon" src="/static/img/model.svg"/>
+            <div class="tag-txt">Models</div>
+          </div>
+          <div class="filter-tag" onclick="search_category('code')">
+            <img class="tag-icon" src="/static/img/code.svg"/>
+            <div class="tag-txt">Code</div>
+          </div>
+          <div class="filter-tag" onclick="search_category('datasets')">
+            <img class="tag-icon" src="/static/img/dataset.svg"/>
+            <div class="tag-txt">Datasets</div>
+          </div>
+          <div class="filter-tag" onclick="search_category('papers')">
+            <img class="tag-icon" src="/static/img/paper.svg"/>
+            <div class="tag-txt">Papers</div>
+          </div>
+        </div>
+        
+        <div class="filter-title">tags</div>
+
+        <div class="filter-tags">
+          {{#each tags}}
+            <div onclick="search_tag('{{this}}')" class="filter-tag">{{this}}</div>
+          {{/each}}
+        </div>
+        
+        <div class="filter-title">publishers</div>
+
+        <div class="filter-tags">
+          {{#each publishers}}
+            <div class="filter-tag" onclick="search_string('{{this}}')">
+              <img class="tag-icon" src="{{../hub_url}}/static/img/users/{{this}}.png"/>
+              <div class="tag-txt">{{this}}</div>
+            </div>
+          {{/each}}
+        </div>
+        {{/if}}
+
+        {{#if is_chat}}
+          <select name="model-select" id="model-select" class="model-select">
+            <option value="">--choose a model--</option>
+          </select>
+        
+          <div class="mount-btn" id="mount-btn" onclick="mount_model_pressed()">Mount</div>
+          <div class="mount-btn unmount-btn" id="unmount-btn" onclick="unmount_model_pressed()">Unmount</div>
+          <div class="mount-btn mounting-btn" id="mounting-btn">Mounting</div>
+        
+          <div class="add-chat-btn" onclick="add_chat_pressed()">
+            <img src="/static/img/add.png" class="add-icon" />
+            New Chat
+          </div>
+
+          <div class="chat-items">
+          </div>
+        {{/if}}
+        
+        {{#if is_node}}
+          <div class="side-btn" onclick="open_downloads_folder()">
+            <img class="side-btn-icon" src="/static/img/folder.svg"/>
+            <div class="side-btn-txt">show downloads</div>
+          </div>
+          
+        {{/if}}
+
+        {{#if is_settings}}
+        {{/if}}
+
+      </div>
+    </div>
+
+    <div class="main">
+    
+    <div class="top-nav">    
+        <div class="navbar-brand">
+          <div class="navbar-title"><b>
+          {{#if is_hub}}Shog Hub{{/if}}
+          {{#if is_chat}}Shog Chat{{/if}}
+          {{#if is_node}}Shog Node{{/if}}
+          {{#if is_account}}Account{{/if}}
+          {{#if is_leaderboards}}Leaderboards{{/if}}
+          {{#if is_settings}}Settings{{/if}}
+          {{#if is_resource}}Shog Hub{{/if}}
+          </b></div>
+        </div>
+    </div>
+
+

@@ -494,8 +494,8 @@ impl Settings {
             chat_system_prompt: String::from("You are a helpful assistant."),
             shog_hub_url: String::from("https://hub.shog.ai"),
 
-            eth_rpc: String::from("https://eth.llamarpc.com"),
-            base_rpc: String::from("https://base.llamarpc.com"),
+            eth_rpc: String::from("https://eth.drpc.org"),
+            base_rpc: String::from("https://base.drpc.org"),
 
             shog_contract_eth: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
             shog_contract_base: String::from("0x6a4F69Da1E2fb2a9b11D1AAD60d03163fE567732"),

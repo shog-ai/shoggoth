@@ -24,13 +24,11 @@ let template_str = `
     <div class="balance-row-item">
       <div class="balance-row-item-title">$SHOG Balance (MAINNET)</div>
       <div class="balance-row-item-value shog-balance-main"><img class="balance-loading" src="/static/img/loading.gif"/></div>
-      <div class="buy-btn" onclick="buy_shog('MAINNET')">Buy $SHOG</div>
     </div>
 
     <div class="balance-row-item">
       <div class="balance-row-item-title">$SHOG Balance (BASE)</div>
       <div class="balance-row-item-value shog-balance-base"><img class="balance-loading" src="/static/img/loading.gif"/></div>
-      <div class="buy-btn" onclick="buy_shog('BASE')">Buy $SHOG</div>
     </div>
   </div>
 

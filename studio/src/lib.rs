@@ -1,4 +1,5 @@
 use actix_web::rt::task::spawn_blocking;
+use actix_web::Error;
 use actix_web::{HttpRequest, HttpResponse};
 use colored::Colorize;
 use ethers::core::k256::ecdsa;
@@ -11,6 +12,8 @@ use include_dir::{include_dir, Dir};
 use std::io::Write;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::sync::Mutex;
+use tokio::sync::mpsc;
 use LogType::*;
 
 static STATIC_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/src/static");
@@ -65,7 +68,7 @@ const HUB_URL: &str = "https://hub.shog.ai";
 const NODE_REFRESH_RATE: u64 = 100;
 
 const ERC20_ABI: &str = r#"[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"sender","type":"address"},{"name":"recipient","type":"address"},{"name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"value","type":"uint256"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"recipient","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"name","type":"string"},{"name":"symbol","type":"string"},{"name":"decimals","type":"uint8"},{"name":"totalSupply","type":"uint256"},{"name":"feeReceiver","type":"address"},{"name":"tokenOwnerAddress","type":"address"}],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"}]"#;
-const CROWDSALE_ABI: &str = r#"[{"constant": true,"inputs": [],"name": "rate","outputs": [{	"name": "",	"type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},	{"constant": true,"inputs": [],"name": "weiRaised","outputs": [	{"name": "","type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": true,"inputs": [],"name": "wallet","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": false,"inputs": [{"name": "beneficiary","type": "address"}],"name": "buyTokens","outputs": [],"payable": true,"stateMutability": "payable","type": "function"},{"constant": true,"inputs": [],"name": "token","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"inputs": [{"name": "rate","type": "uint256"},{"name": "wallet","type": "address"},{"name": "token","type": "address"}],"payable": false,"stateMutability": "nonpayable","type": "constructor"},{"payable": true,"stateMutability": "payable","type": "fallback"},{"anonymous": false,"inputs": [{"indexed": true,"name": "purchaser","type": "address"},{"indexed": true,"name": "beneficiary","type": "address"},{"indexed": false,"name": "value","type": "uint256"},{"indexed": false,"name": "amount","type": "uint256"}],"name": "TokensPurchased","type": "event"}]"#;
+// const CROWDSALE_ABI: &str = r#"[{"constant": true,"inputs": [],"name": "rate","outputs": [{	"name": "",	"type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},	{"constant": true,"inputs": [],"name": "weiRaised","outputs": [	{"name": "","type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": true,"inputs": [],"name": "wallet","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": false,"inputs": [{"name": "beneficiary","type": "address"}],"name": "buyTokens","outputs": [],"payable": true,"stateMutability": "payable","type": "function"},{"constant": true,"inputs": [],"name": "token","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"inputs": [{"name": "rate","type": "uint256"},{"name": "wallet","type": "address"},{"name": "token","type": "address"}],"payable": false,"stateMutability": "nonpayable","type": "constructor"},{"payable": true,"stateMutability": "payable","type": "fallback"},{"anonymous": false,"inputs": [{"indexed": true,"name": "purchaser","type": "address"},{"indexed": true,"name": "beneficiary","type": "address"},{"indexed": false,"name": "value","type": "uint256"},{"indexed": false,"name": "amount","type": "uint256"}],"name": "TokensPurchased","type": "event"}]"#;
 
 const MAINNET_CHAIN_ID: u64 = 1u64;
 const BASE_CHAIN_ID: u64 = 8453u64;
@@ -181,8 +184,8 @@ struct Settings {
     base_rpc: String,
     shog_contract_eth: String,
     shog_contract_base: String,
-    crowdsale_contract_eth: String,
-    crowdsale_contract_base: String,
+    // crowdsale_contract_eth: String,
+    // crowdsale_contract_base: String,
 }
 
 struct Ctx {
@@ -191,7 +194,7 @@ struct Ctx {
     args: Option<Args>,
     runtime_path: String,
     config: Config,
-    model_server_process: Option<std::process::Child>,
+    model_server: Option<SafeLLama>,
     version_outdated: bool,
 }
 
@@ -237,6 +240,18 @@ struct SaveState {
     chat: ChatState,
     settings: Settings,
 }
+
+lazy_static::lazy_static! {
+    static ref CTX: Mutex<Ctx> = Mutex::new(Ctx::new());
+}
+
+use llama_cpp_rs::LLama;
+
+// Define a wrapper type for LLama with unsafe Send and Sync implementations
+struct SafeLLama(LLama);
+
+unsafe impl Send for SafeLLama {}
+unsafe impl Sync for SafeLLama {}
 
 impl Args {
     pub fn new() -> Self {
@@ -499,9 +514,8 @@ impl Settings {
 
             shog_contract_eth: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
             shog_contract_base: String::from("0x6a4F69Da1E2fb2a9b11D1AAD60d03163fE567732"),
-
-            crowdsale_contract_eth: String::from("0x043f7B954Cde1D3AB6607890F85500591bDf0200"),
-            crowdsale_contract_base: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
+            // crowdsale_contract_eth: String::from("0x043f7B954Cde1D3AB6607890F85500591bDf0200"),
+            // crowdsale_contract_base: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
         }
     }
 }
@@ -514,14 +528,10 @@ impl Ctx {
             args: None,
             config: Config::new(),
             runtime_path: String::new(),
-            model_server_process: None,
+            model_server: None,
             version_outdated: false,
         }
     }
-}
-
-lazy_static::lazy_static! {
-    static ref CTX: std::sync::Mutex<Ctx> = std::sync::Mutex::new(Ctx::new());
 }
 
 impl NodeStats {
@@ -554,7 +564,7 @@ impl NodeCtx {
 }
 
 lazy_static::lazy_static! {
-    static ref NODE_CTX: std::sync::Mutex<NodeCtx> = std::sync::Mutex::new(NodeCtx::new());
+    static ref NODE_CTX: Mutex<NodeCtx> = Mutex::new(NodeCtx::new());
 }
 
 impl SaveState {
@@ -1207,6 +1217,8 @@ async fn api_get_node_stats_route(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Ok().json(stats)
 }
 
+use llama_cpp_rs::options::{ModelOptions, PredictOptions};
+
 fn mount_model() {
     let ctx = CTX.lock().unwrap();
     let runtime_path = ctx.runtime_path.clone();
@@ -1216,25 +1228,86 @@ fn mount_model() {
     );
     drop(ctx);
 
-    let child_process = std::process::Command::new("python3")
-        .arg("-m")
-        .arg("llama_cpp.server")
-        .arg("--model")
-        .arg(model_path)
-        .current_dir(runtime_path)
-        .stdout(std::process::Stdio::piped()) // Redirect child process's stdout to a pipe
-        .spawn()
-        .expect("Failed to start child process");
+    let model_options = ModelOptions::default();
 
-    sleep_ms(2000);
+    let llama = LLama::new(model_path.into(), &model_options).unwrap();
 
-    // if let Some(mut stdout) = child_process.stdout.take() {
-    // std::io::copy(&mut stdout, &mut std::io::stdout())
-    // .expect("Failed to read child process stdout");
-    // }
+    println!("MODEL READY");
 
     let mut ctx = CTX.lock().unwrap();
-    ctx.model_server_process = Some(child_process);
+    ctx.model_server = Some(SafeLLama(llama));
+    drop(ctx);
+}
+
+async fn api_chat_model_route(_req: HttpRequest) -> Result<HttpResponse, Error> {
+    // Create a channel to send tokens
+    let (tx, mut rx) = mpsc::channel::<String>(32);
+
+    // Define the token callback to send tokens through the channel
+    let predict_options = PredictOptions {
+        token_callback: Some(Box::new(move |token| {
+            print!("{}", token);
+
+            let tx = tx.clone(); // Clone the transmitter
+            let _ = tx.send(token.to_string()); // Send the token
+            true // Continue the prediction
+        })),
+        stop_prompts: vec!["User:".to_string()],
+        ..Default::default()
+    };
+
+    // Spawn a task to perform the prediction
+    tokio::spawn(async move {
+        let mut ctx = CTX.lock().unwrap();
+        let llama = &ctx.model_server.as_mut().unwrap().0.clone();
+        drop(ctx);
+
+        // let llama = &model;
+        if let Err(e) = llama.predict(
+            r#"User: What’s your favorite movie?
+                Model: I think "Inception" is fascinating with its complex narrative.
+                User: Why do you think it's complex?
+                Model:
+                "#
+            .into(),
+            predict_options,
+        ) {
+            eprintln!("Error during prediction: {}", e);
+        }
+    });
+
+    // Create a stream from the receiver side of the channel
+    let stream = async_stream::stream! {
+        while let Some(token) = rx.recv().await {
+    let data = format!("data: {}\n\n", token);
+            yield Ok::<bytes::Bytes, Error>(bytes::Bytes::from(data)); // Convert to Bytes
+        }
+    };
+
+    // Create the streaming response
+    let response = HttpResponse::Ok()
+        .content_type("text/event-stream") // Set content type for SSE
+        .streaming(stream); // Use the stream
+
+    Ok(response)
+}
+
+async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
+    let mut ctx = CTX.lock().unwrap();
+
+    log(INFO, &format!("unmounting model: {}", ctx.chat.name));
+
+    // FIXME: memory leak here. the model seems to still be loaded into memory
+
+    // ctx.model_server.as_mut().unwrap().0.free_model();
+
+    // drop(ctx.model_server);
+
+    ctx.model_server = None;
+
+    ctx.chat.mount_status = ChatMountStatus::Unmounted;
+
+    HttpResponse::Ok().body("OK")
 }
 
 async fn api_mount_model_route(req: HttpRequest) -> HttpResponse {
@@ -1392,104 +1465,104 @@ async fn get_token_balance(
     }
 }
 
-async fn crowdsale_buy(
-    rpc_url: &str,
-    crowdsale_contract: &str,
-    wallet_address: &str,
-    wallet: Wallet<ecdsa::SigningKey>,
-    eth_value: U256,
-) -> Result<u64, String> {
-    let contract_address = H160::from_str(&crowdsale_contract).unwrap();
+// async fn crowdsale_buy(
+//     rpc_url: &str,
+//     crowdsale_contract: &str,
+//     wallet_address: &str,
+//     wallet: Wallet<ecdsa::SigningKey>,
+//     eth_value: U256,
+// ) -> Result<u64, String> {
+//     let contract_address = H160::from_str(&crowdsale_contract).unwrap();
 
-    let wallet_address = H160::from_str(&wallet_address).unwrap();
+//     let wallet_address = H160::from_str(&wallet_address).unwrap();
 
-    let provider = ethers::providers::Provider::<ethers::providers::Http>::try_from(rpc_url)
-        .expect("could not instantiate HTTP Provider");
+//     let provider = ethers::providers::Provider::<ethers::providers::Http>::try_from(rpc_url)
+//         .expect("could not instantiate HTTP Provider");
 
-    let client = SignerMiddleware::new(provider.clone(), wallet);
+//     let client = SignerMiddleware::new(provider.clone(), wallet);
 
-    let abi: ethers::core::abi::Abi = serde_json::from_str(CROWDSALE_ABI).unwrap();
+//     let abi: ethers::core::abi::Abi = serde_json::from_str(CROWDSALE_ABI).unwrap();
 
-    let contract = ethers::contract::Contract::new(contract_address, abi, Arc::new(client));
+//     let contract = ethers::contract::Contract::new(contract_address, abi, Arc::new(client));
 
-    let tx = contract
-        .method::<_, H256>("buyTokens", wallet_address)
-        .unwrap()
-        .value(eth_value);
+//     let tx = contract
+//         .method::<_, H256>("buyTokens", wallet_address)
+//         .unwrap()
+//         .value(eth_value);
 
-    let pending_tx = tx.send().await;
-    if !pending_tx.is_ok() {
-        return Err("crowdsale buy failed".to_string());
-    }
+//     let pending_tx = tx.send().await;
+//     if !pending_tx.is_ok() {
+//         return Err("crowdsale buy failed".to_string());
+//     }
 
-    // Wait for the transaction receipt
-    let tx_receipt = pending_tx.unwrap().await;
-    if !tx_receipt.is_ok() {
-        return Err("crowdsale buy failed".to_string());
-    }
+//     // Wait for the transaction receipt
+//     let tx_receipt = pending_tx.unwrap().await;
+//     if !tx_receipt.is_ok() {
+//         return Err("crowdsale buy failed".to_string());
+//     }
 
-    if tx_receipt.unwrap().is_some() {
-        return Ok(0);
-    } else {
-        return Err("crowdsale buy failed".to_string());
-    }
-}
+//     if tx_receipt.unwrap().is_some() {
+//         return Ok(0);
+//     } else {
+//         return Err("crowdsale buy failed".to_string());
+//     }
+// }
 
-async fn api_buy_shog_route(req: HttpRequest) -> HttpResponse {
-    let chain: String = req.match_info().get("chain").unwrap().parse().unwrap();
-    let eth_value: String = req.match_info().get("eth_value").unwrap().parse().unwrap();
+// async fn api_buy_shog_route(req: HttpRequest) -> HttpResponse {
+//     let chain: String = req.match_info().get("chain").unwrap().parse().unwrap();
+//     let eth_value: String = req.match_info().get("eth_value").unwrap().parse().unwrap();
 
-    let ctx = CTX.lock().unwrap();
+//     let ctx = CTX.lock().unwrap();
 
-    let eth_rpc = ctx.settings.eth_rpc.clone();
-    let base_rpc = ctx.settings.base_rpc.clone();
+//     let eth_rpc = ctx.settings.eth_rpc.clone();
+//     let base_rpc = ctx.settings.base_rpc.clone();
 
-    let crowdsale_contract_eth = ctx.settings.crowdsale_contract_eth.clone();
-    let crowdsale_contract_base = ctx.settings.crowdsale_contract_base.clone();
+//     let crowdsale_contract_eth = ctx.settings.crowdsale_contract_eth.clone();
+//     let crowdsale_contract_base = ctx.settings.crowdsale_contract_base.clone();
 
-    drop(ctx);
+//     drop(ctx);
 
-    let nctx = NODE_CTX.lock().unwrap();
-    let wallet_address = nctx.wallet_address.clone();
+//     let nctx = NODE_CTX.lock().unwrap();
+//     let wallet_address = nctx.wallet_address.clone();
 
-    let wallet = nctx.wallet.as_ref().unwrap().clone();
+//     let wallet = nctx.wallet.as_ref().unwrap().clone();
 
-    drop(nctx);
+//     drop(nctx);
 
-    let eth_value = ethers::utils::parse_ether(eth_value).unwrap();
+//     let eth_value = ethers::utils::parse_ether(eth_value).unwrap();
 
-    if chain == "mainnet" {
-        let res = crowdsale_buy(
-            &eth_rpc,
-            &crowdsale_contract_eth,
-            &wallet_address,
-            wallet.with_chain_id(MAINNET_CHAIN_ID),
-            eth_value,
-        )
-        .await;
+//     if chain == "mainnet" {
+//         let res = crowdsale_buy(
+//             &eth_rpc,
+//             &crowdsale_contract_eth,
+//             &wallet_address,
+//             wallet.with_chain_id(MAINNET_CHAIN_ID),
+//             eth_value,
+//         )
+//         .await;
 
-        if res.is_ok() {
-            return HttpResponse::Ok().finish();
-        } else {
-            return HttpResponse::InternalServerError().finish();
-        }
-    } else {
-        let res = crowdsale_buy(
-            &base_rpc,
-            &crowdsale_contract_base,
-            &wallet_address,
-            wallet.with_chain_id(BASE_CHAIN_ID),
-            eth_value,
-        )
-        .await;
+//         if res.is_ok() {
+//             return HttpResponse::Ok().finish();
+//         } else {
+//             return HttpResponse::InternalServerError().finish();
+//         }
+//     } else {
+//         let res = crowdsale_buy(
+//             &base_rpc,
+//             &crowdsale_contract_base,
+//             &wallet_address,
+//             wallet.with_chain_id(BASE_CHAIN_ID),
+//             eth_value,
+//         )
+//         .await;
 
-        if res.is_ok() {
-            return HttpResponse::Ok().finish();
-        } else {
-            return HttpResponse::InternalServerError().finish();
-        }
-    }
-}
+//         if res.is_ok() {
+//             return HttpResponse::Ok().finish();
+//         } else {
+//             return HttpResponse::InternalServerError().finish();
+//         }
+//     }
+// }
 
 fn wallet_address_to_node_id(address: &str) -> String {
     return format!("SHOGN{}", &address[2..]);
@@ -1548,18 +1621,6 @@ async fn api_get_crypto_balance_route(req: HttpRequest) -> HttpResponse {
     });
 
     return HttpResponse::Ok().json(res_json);
-}
-
-async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
-    let mut ctx = CTX.lock().unwrap();
-
-    log(INFO, &format!("unmounting model: {}", ctx.chat.name));
-
-    ctx.model_server_process.as_mut().unwrap().kill().unwrap();
-
-    ctx.chat.mount_status = ChatMountStatus::Unmounted;
-
-    HttpResponse::Ok().body("OK")
 }
 
 async fn dynamic_const_route(_req: HttpRequest) -> HttpResponse {
@@ -1733,6 +1794,10 @@ async fn start_frontend_server() -> std::io::Result<()> {
                 actix_web::web::get().to(api_unmount_model_route),
             )
             .route(
+                "/api/chat_model",
+                actix_web::web::post().to(api_chat_model_route),
+            )
+            .route(
                 "/api/update_settings",
                 actix_web::web::post().to(api_update_settings_route),
             )
@@ -1764,10 +1829,10 @@ async fn start_frontend_server() -> std::io::Result<()> {
                 "/api/get_node_stats",
                 actix_web::web::get().to(api_get_node_stats_route),
             )
-            .route(
-                "/api/buy_shog/{chain}/{eth_value}",
-                actix_web::web::get().to(api_buy_shog_route),
-            )
+            // .route(
+            // "/api/buy_shog/{chain}/{eth_value}",
+            // actix_web::web::get().to(api_buy_shog_route),
+            // )
             //
             .route(
                 "/dynamic/const.js",

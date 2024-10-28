@@ -21,3 +21,6 @@ opener = "0.7.1"
 ethers = "2.0.14"
 colored = "2.1.0"
 include_dir = "0.7.3"
+llama_cpp_rs = { path="./rust-llama.cpp" }
+async-stream = "0.3"
+bytes = "1.1" 

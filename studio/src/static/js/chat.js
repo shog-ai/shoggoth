@@ -10,8 +10,6 @@ let first_run = true;
 let waiting = false;
 let accumulated = "";
 
-let model_server_url = "http://127.0.0.1:8000";
-
 async function update_models_ui() { 
   if(!arraysAreEqual(old_state.models, new_state.models) || first_run) {
     console.log("models changed");
@@ -291,7 +289,7 @@ async function send_message_pressed() {
     let messages = new_state.state.sessions[active_chat].messages;
     console.log(messages);
     
-    const response =  await fetch(model_server_url + "/v1/chat/completions", {
+    const response =  await fetch(api_url + "/chat_model", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -321,7 +319,7 @@ async function send_message_pressed() {
 
         for (const line of lines) {
           let line_stripped = line.replace('data: ', '');
-          // console.log("LINE: " + line_stripped);
+          console.log("LINE: " + line_stripped);
 
           if (line_stripped[0] == '{') {
             let line_json = JSON.parse(line_stripped);

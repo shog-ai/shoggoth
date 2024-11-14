@@ -7,8 +7,6 @@ let old_active_chat = 0;
 let active_chat = 0;
 
 let first_run = true;
-let waiting = false;
-let accumulated = "";
 
 async function update_models_ui() { 
   if(!arraysAreEqual(old_state.models, new_state.models) || first_run) {
@@ -95,15 +93,32 @@ let new_chat_str = `
   </div>
 `;
 
+let download_model_str = `
+  <div class="new-chat-view">
+    <div class="new-chat-view-txt">You have not downloaded any models</div>
+    <div class="download-models-btn" onclick="download_models()">Download Models</div>
+  </div>
+`;
+
+function download_models() {
+  console.log("download models pressed");
+
+  window.location = "/hub?tag=gguf";
+}
+
 async function update_chat_view() {
-  if (new_state.state.sessions.length == 0) {
+  if (new_state.models.length == 0) {
+    document.getElementById('chat-view').innerHTML = download_model_str;
+    
+    return;
+  } else if (new_state.state.sessions.length == 0) {
     document.getElementById('chat-view').innerHTML = new_chat_str;
     
     return;
   }
  
   if(!deepEqual(old_state.state, new_state.state) || first_run || old_active_chat != active_chat) {
-    if(!waiting) {
+    // if(!new_state.state.sessions[active_chat].responding) {
   
       document.querySelector(".chat-view").innerHTML = "";
   
@@ -122,7 +137,7 @@ async function update_chat_view() {
       }
       
       hljs.highlightAll();
-    }
+    // }
   }
 }
 
@@ -169,7 +184,7 @@ function view_add_msg(from, msg_str) {
   let new_div = document.createElement("div");
   new_div.classList.add("chat-view-item");
 
-  if (from == "AI" && waiting) {
+  if (from == "AI" && new_state.state.sessions[active_chat].responding) {
     new_div.classList.add("pending-response");
   }
 
@@ -196,7 +211,7 @@ function view_add_msg(from, msg_str) {
   </div>
   `
 
-  if (from == "AI" && waiting) {
+  if (from == "AI" && new_state.state.sessions[active_chat].responding) {
     new_div.innerHTML =
     ` 
     <img src=\"/static/img/` + img + `\" class=\"chat-view-item-img\" />
@@ -257,12 +272,14 @@ async function send_message_pressed() {
     return;
   }   
   
-  if (waiting) {
-    return;
-  }
-
   if (new_state.state.sessions.length == 0) {
     await add_session("new chat");
+  
+    await sleep(1000);
+  }
+
+  if (new_state.state.sessions[active_chat].responding) {
+    return;
   }
 
   let msg_str = document.getElementById('message-input').value;
@@ -279,8 +296,6 @@ async function send_message_pressed() {
 
   await sleep(1000);
   
-  // waiting = true;
-
   let failed = false;
 
   try {
@@ -314,19 +329,12 @@ async function send_message_pressed() {
   }
 
   if (failed) {
-    waiting = false;
-
     document.querySelector('.send-btn').classList.remove("send-btn-disabled");
     
     await update_ui();
 
     return;
   } else { 
-    waiting = false;
-  
-    // document.querySelector(".pending-response").classList.remove("pending-response");
-    // document.querySelector(".pending-response-msg").classList.remove("pending-response-msg");
-
     await sleep(1000);
 
     document.querySelector('.send-btn').classList.remove("send-btn-disabled");

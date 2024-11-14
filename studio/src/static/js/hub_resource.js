@@ -36,7 +36,7 @@ let template_str = `
       {{#if is_pinned}}
         <a href="/node" class="download-btn">Show in node</a>
       {{else}}
-        <div onclick="download_resource_pressed('{{shoggoth_id}}')" class="download-btn">Get</div>
+        <div onclick="download_resource_pressed('{{shoggoth_id}}')" class="download-btn">Download</div>
       {{/if}}
     </div>
 

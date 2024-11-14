@@ -2,8 +2,10 @@ window.onload = async function() {
   await main_load();
   
   document.getElementById("system-prompt").value = settings.chat_system_prompt;
+  document.getElementById("chat-temperature").value = settings.chat_temperature;
   
   document.getElementById("shog-hub-url").value = settings.shog_hub_url;
+  document.getElementById("enable-metrics").checked = settings.enable_metrics;
   
   document.getElementById("eth-rpc").value = settings.eth_rpc;
   document.getElementById("base-rpc").value = settings.base_rpc;
@@ -30,8 +32,11 @@ async function open_seed_phrase() {
 
 async function save_pressed() {
   settings.chat_system_prompt = document.getElementById("system-prompt").value;
+  settings.chat_temperature = parseFloat(document.getElementById("chat-temperature").value);
   
   settings.shog_hub_url = document.getElementById("shog-hub-url").value;
+  settings.enable_metrics = document.getElementById("enable-metrics").checked;
+
   
   settings.eth_rpc = document.getElementById("eth-rpc").value;
   settings.base_rpc = document.getElementById("base-rpc").value;

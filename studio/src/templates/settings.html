@@ -8,9 +8,22 @@
           <div class="settings-subtitle">Shog Hub URL:</div>
           <input class="settings-input" id="shog-hub-url" />
         </div>
+        
+        <div class="settings-item">
+          <div class="settings-subtitle">Send metrics to Shog Hub:</div>
+          <div class="checkbox-wrapper-7 metrics-toggle">
+            <input class="tgl tgl-ios" id="enable-metrics" type="checkbox" checked/>
+            <label class="tgl-btn" for="enable-metrics">
+          </div>
+        </div>
 
         <div class="settings-title">Chat</div>
 
+        <div class="settings-item">
+          <div class="settings-subtitle">Temperature:</div>
+          <input class="settings-input" id="chat-temperature" />
+        </div>
+        
         <div class="settings-item">
           <div class="settings-subtitle">System prompt:</div>
           <textarea class="settings-textarea" rows="5" id="system-prompt"></textarea>
@@ -30,10 +43,10 @@
         
         <div class="btn save-btn" onclick="save_pressed()">Save</div>
         
-        <div class="settings-title">Functions</div>
+        <div class="settings-title functions-title">Advanced</div>
 
         <div class="functions">
-          <div class="btn function-btn" onclick="open_seed_phrase()">show seed phrase</div>
+          <div class="btn function-btn function-btn-first" onclick="open_seed_phrase()">show seed phrase</div>
 
           <div class="btn function-btn" onclick="show_version()">show version</div>
         

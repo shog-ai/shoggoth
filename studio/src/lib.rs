@@ -155,6 +155,7 @@ struct ChatSession {
     name: String,
     messages: Vec<ChatMessage>,
     buffer: String,
+    responding: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -176,7 +177,10 @@ enum ChatMountStatus {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct Settings {
     chat_system_prompt: String,
+    chat_temperature: f32,
+    
     shog_hub_url: String,
+    enable_metrics: bool,
     eth_rpc: String,
     base_rpc: String,
     shog_contract_eth: String,
@@ -249,7 +253,7 @@ impl ModelCtx {
 }
 
 lazy_static::lazy_static! {
-    static ref MODEL_CTX: Mutex<ModelCtx> = Mutex::new(ModelCtx::new());
+    static ref MODEL_CTX: Mutex<Option<ModelCtx>> = Mutex::new(Some(ModelCtx::new()));
 }
 
 use llama_cpp_rs::LLama;
@@ -513,8 +517,11 @@ impl ChatState {
 impl Settings {
     fn new() -> Self {
         Self {
-            chat_system_prompt: String::from("You are a helpful assistant."),
+            chat_system_prompt: String::from("You are a highly knowledgeable and friendly assistant. Your goal is to provide accurate, clear, and helpful responses that address the user's needs. Be concise but thorough, adapt to the user's tone, and clarify when needed. Answer questions, offer creative ideas, and provide thoughtful advice with empathy and respect for the user’s goals. If you’re uncertain, acknowledge it and propose ways to find the answer. Always enclose code blocks in markdown backticks."),
+            chat_temperature: 0.65,
+            
             shog_hub_url: String::from("https://hub.shog.ai"),
+            enable_metrics: true,
 
             eth_rpc: String::from("https://eth.drpc.org"),
             base_rpc: String::from("https://base.drpc.org"),
@@ -971,6 +978,9 @@ async fn api_node_delete_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_delete_resource(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -993,6 +1003,9 @@ async fn api_node_pause_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_pause_download(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -1020,6 +1033,9 @@ async fn api_node_unpause_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_resume_download(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -1040,7 +1056,11 @@ async fn api_node_add_resource_route(req: HttpRequest, _req_body: String) -> Htt
         &format!("adding resource: {}/{}", resource.namespace, resource.name),
     );
 
+    let ctx = CTX.lock().unwrap();
     let mut nctx = NODE_CTX.lock().unwrap();
+    metric_download_start(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
+
     nctx.resources.push(resource);
     drop(nctx);
 
@@ -1085,6 +1105,12 @@ async fn api_leaderboard_register_vote_route(req: HttpRequest) -> HttpResponse {
         return HttpResponse::BadRequest().body(err);
     }
 
+    let ctx = CTX.lock().unwrap();
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_voted(&ctx, &nctx).await;
+    drop(nctx);
+    drop(ctx);
+
     HttpResponse::Ok().body("OK")
 }
 
@@ -1107,7 +1133,8 @@ async fn api_get_chat_state_route(_req: HttpRequest) -> HttpResponse {
 
     for resource in resources {
         if resource.category == ResourceCategory::Model
-            && resource.status == ResourceStatus::Seeding
+            && (resource.status == ResourceStatus::Seeding
+                || resource.download_progress == "100.00%")
         {
             for tag in &resource.tags {
                 if tag == "gguf" {
@@ -1138,6 +1165,7 @@ async fn api_chat_add_session_route(_req: HttpRequest, body: String) -> HttpResp
         name,
         messages: vec![],
         buffer: "".to_string(),
+        responding: false,
     });
 
     HttpResponse::Ok().finish()
@@ -1215,23 +1243,33 @@ async fn api_get_node_stats_route(_req: HttpRequest) -> HttpResponse {
 
 use llama_cpp_rs::options::{ModelOptions, PredictOptions};
 
-fn mount_model() {
+async fn mount_model() {
     let ctx = CTX.lock().unwrap();
     let runtime_path = ctx.runtime_path.clone();
     let model_path = format!(
-        "{}/resources/{}-{}/{}",
-        runtime_path, ctx.chat.namespace, ctx.chat.name, ctx.chat.name
+        "{}/resources/{}-{}/2.gguf",
+        runtime_path, ctx.chat.namespace, ctx.chat.name,
     );
     drop(ctx);
 
-    let model_options = ModelOptions::default();
+    let model_options = ModelOptions {
+        n_gpu_layers: 50,
+        context_size: 4096,
+        ..Default::default()
+    };
 
     let llama = LLama::new(model_path.into(), &model_options).unwrap();
 
     log(INFO, "MODEL READY");
 
+    let nctx = NODE_CTX.lock().unwrap();
+    let ctx = CTX.lock().unwrap();
+    metric_model_mounted(&ctx, &nctx, &ctx.chat.namespace, &ctx.chat.name).await;
+    drop(ctx);
+    drop(nctx);
+
     let mut model_ctx = MODEL_CTX.lock().unwrap();
-    model_ctx.llama = Some(SafeLLama(llama));
+    model_ctx.as_mut().unwrap().llama = Some(SafeLLama(llama));
 }
 
 async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
@@ -1244,6 +1282,8 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
 
     let mut ctx = CTX.lock().unwrap();
 
+    ctx.chat.sessions[index as usize].responding = true;
+
     let new_msg = ChatMessage {
         role: "assistant".to_string(),
         content: "".to_string(),
@@ -1252,6 +1292,8 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
     ctx.chat.sessions[index as usize].messages.push(new_msg);
 
     let chat_history = ctx.chat.sessions[index as usize].messages.clone();
+
+    let temperature = ctx.settings.chat_temperature;
 
     drop(ctx);
 
@@ -1267,9 +1309,11 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
                 if ctx.chat.sessions[index as usize].buffer.contains(" ") {
                     let len = ctx.chat.sessions[index as usize].messages.len();
 
+                    let buf = ctx.chat.sessions[index as usize].buffer.clone();
+
                     ctx.chat.sessions[index as usize].messages[len - 1]
                         .content
-                        .push_str(&token);
+                        .push_str(&buf);
 
                     ctx.chat.sessions[index as usize].buffer = "".to_string();
                 }
@@ -1277,6 +1321,8 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
                 true // Continue the prediction
             })),
             debug_mode: false,
+            temperature,
+            tokens: -1,
             stop_prompts: vec!["user:".to_string()],
             ..Default::default()
         };
@@ -1294,7 +1340,7 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
         }
 
         let mut model_ctx = MODEL_CTX.lock().unwrap();
-        let llama = &model_ctx.llama.as_mut().unwrap().0;
+        let llama = &model_ctx.as_mut().unwrap().llama.as_mut().unwrap().0;
 
         if let Err(e) = llama.predict(prompt.into(), predict_options) {
             eprintln!("Error during prediction: {}", e);
@@ -1321,6 +1367,12 @@ async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
         ctx.chat.sessions[index as usize].buffer = "".to_string();
     }
 
+    ctx.chat.sessions[index as usize].responding = false;
+
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_chat_sent(&ctx, &nctx).await;
+    drop(nctx);
+
     HttpResponse::Ok().body("OK")
 }
 
@@ -1329,17 +1381,15 @@ async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
 
     log(INFO, &format!("unmounting model: {}", ctx.chat.name));
 
-    // FIXME: memory leak here. the model seems to still be loaded into memory
-
-    let mut model_ctx = MODEL_CTX.lock().unwrap();
-
-    model_ctx.llama.as_mut().unwrap().0.free_model();
-
-    // drop(model_ctx.llama.as_mut().unwrap().0);
-
-    model_ctx.llama = None;
+    // FIXME: re-mounting does not work properly
 
     ctx.chat.mount_status = ChatMountStatus::Unmounted;
+
+    let ctx = CTX.lock().unwrap();
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_model_unmounted(&ctx, &nctx, &ctx.chat.namespace, &ctx.chat.name).await;
+    drop(ctx);
+    drop(nctx);
 
     HttpResponse::Ok().body("OK")
 }
@@ -1368,7 +1418,7 @@ async fn api_mount_model_route(req: HttpRequest) -> HttpResponse {
 
     drop(ctx);
 
-    mount_model();
+    mount_model().await;
 
     log(INFO, &format!("model mounted"));
 
@@ -1594,7 +1644,7 @@ async fn dynamic_const_route(_req: HttpRequest) -> HttpResponse {
 
 async fn index_route(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Found()
-        .append_header(("Location", "/hub"))
+        .append_header(("Location", "/chat"))
         .finish()
 }
 
@@ -1871,6 +1921,140 @@ async fn begin_downloading(session: Arc<librqbit::Session>, resource: Resource) 
     }
 }
 
+async fn metric_download_complete(ctx: &Ctx, node_id: String, id: &str) {
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/download_complete/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_delete_resource(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/delete_resource/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_pause_download(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/pause_download/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_resume_download(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/resume_download/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_download_start(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/download_start/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_model_mounted(ctx: &Ctx, nctx: &NodeCtx, namespace: &str, name: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/model_mounted/{}/{}",
+            namespace, name
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_model_unmounted(ctx: &Ctx, nctx: &NodeCtx, namespace: &str, name: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/model_unmounted/{}/{}",
+            namespace, name
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_chat_sent(ctx: &Ctx, nctx: &NodeCtx) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!("{HUB_URL}/api/metrics/{node_id}/chat_sent")).await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_voted(ctx: &Ctx, nctx: &NodeCtx) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!("{HUB_URL}/api/metrics/{node_id}/voted")).await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
 async fn poll_resources(nctx: &mut NodeCtx) {
     for resource in &mut nctx.resources {
         if resource.status == ResourceStatus::Pending {
@@ -1899,15 +2083,10 @@ async fn poll_resources(nctx: &mut NodeCtx) {
                 {
                     resource.status = ResourceStatus::Seeding;
 
-                    let resp = reqwest::get(format!(
-                        "{HUB_URL}/api/download_complete/{}",
-                        resource.shoggoth_id
-                    ))
-                    .await;
-
-                    if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
-                        log(ERROR, "Hub unreachable");
-                    }
+                    let ctx = CTX.lock().unwrap();
+                    metric_download_complete(&ctx, nctx.node_id.clone(), &resource.shoggoth_id)
+                        .await;
+                    drop(ctx);
                 }
             }
         }
@@ -2305,6 +2484,10 @@ fn restore_data() {
 
         for resource in &mut nctx.resources {
             resource.status = ResourceStatus::Pending;
+        }
+
+        for session in &mut ctx.chat.sessions {
+            session.responding = false;
         }
 
         ctx.chat.mount_status = ChatMountStatus::Unmounted;

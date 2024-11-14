@@ -1247,8 +1247,8 @@ async fn mount_model() {
     let ctx = CTX.lock().unwrap();
     let runtime_path = ctx.runtime_path.clone();
     let model_path = format!(
-        "{}/resources/{}-{}/2.gguf",
-        runtime_path, ctx.chat.namespace, ctx.chat.name,
+        "{}/resources/{}-{}/{}",
+        runtime_path, ctx.chat.namespace, ctx.chat.name,ctx.chat.name,
     );
     drop(ctx);
 
@@ -1381,11 +1381,13 @@ async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
 
     log(INFO, &format!("unmounting model: {}", ctx.chat.name));
 
-    // FIXME: re-mounting does not work properly
+    // FIXME: unmount does not free model memory
+    let mut model_ctx = MODEL_CTX.lock().unwrap();
+    model_ctx.as_mut().unwrap().llama = None;
+    drop(model_ctx);
 
     ctx.chat.mount_status = ChatMountStatus::Unmounted;
 
-    let ctx = CTX.lock().unwrap();
     let nctx = NODE_CTX.lock().unwrap();
     metric_model_unmounted(&ctx, &nctx, &ctx.chat.namespace, &ctx.chat.name).await;
     drop(ctx);

@@ -1,7 +1,6 @@
 use actix_web::rt::task::spawn_blocking;
 use actix_web::{HttpRequest, HttpResponse};
 use colored::Colorize;
-use ethers::core::k256::ecdsa;
 use ethers::core::rand::thread_rng;
 use ethers::middleware::Middleware;
 use ethers::prelude::*;
@@ -11,6 +10,7 @@ use include_dir::{include_dir, Dir};
 use std::io::Write;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::sync::Mutex;
 use LogType::*;
 
 static STATIC_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/src/static");
@@ -65,10 +65,9 @@ const HUB_URL: &str = "https://hub.shog.ai";
 const NODE_REFRESH_RATE: u64 = 100;
 
 const ERC20_ABI: &str = r#"[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"sender","type":"address"},{"name":"recipient","type":"address"},{"name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"value","type":"uint256"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"recipient","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"name","type":"string"},{"name":"symbol","type":"string"},{"name":"decimals","type":"uint8"},{"name":"totalSupply","type":"uint256"},{"name":"feeReceiver","type":"address"},{"name":"tokenOwnerAddress","type":"address"}],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"}]"#;
-const CROWDSALE_ABI: &str = r#"[{"constant": true,"inputs": [],"name": "rate","outputs": [{	"name": "",	"type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},	{"constant": true,"inputs": [],"name": "weiRaised","outputs": [	{"name": "","type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": true,"inputs": [],"name": "wallet","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"constant": false,"inputs": [{"name": "beneficiary","type": "address"}],"name": "buyTokens","outputs": [],"payable": true,"stateMutability": "payable","type": "function"},{"constant": true,"inputs": [],"name": "token","outputs": [{"name": "","type": "address"}],"payable": false,"stateMutability": "view","type": "function"},{"inputs": [{"name": "rate","type": "uint256"},{"name": "wallet","type": "address"},{"name": "token","type": "address"}],"payable": false,"stateMutability": "nonpayable","type": "constructor"},{"payable": true,"stateMutability": "payable","type": "fallback"},{"anonymous": false,"inputs": [{"indexed": true,"name": "purchaser","type": "address"},{"indexed": true,"name": "beneficiary","type": "address"},{"indexed": false,"name": "value","type": "uint256"},{"indexed": false,"name": "amount","type": "uint256"}],"name": "TokensPurchased","type": "event"}]"#;
 
-const MAINNET_CHAIN_ID: u64 = 1u64;
-const BASE_CHAIN_ID: u64 = 8453u64;
+// const MAINNET_CHAIN_ID: u64 = 1u64;
+// const BASE_CHAIN_ID: u64 = 8453u64;
 
 const HUB_PING_RATE: u64 = 60000; // 1 minute
 
@@ -145,7 +144,7 @@ struct Resource {
     should_unpause: bool,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 struct ChatMessage {
     role: String,
     content: String,
@@ -155,6 +154,8 @@ struct ChatMessage {
 struct ChatSession {
     name: String,
     messages: Vec<ChatMessage>,
+    buffer: String,
+    responding: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -176,13 +177,14 @@ enum ChatMountStatus {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct Settings {
     chat_system_prompt: String,
+    chat_temperature: f32,
+    
     shog_hub_url: String,
+    enable_metrics: bool,
     eth_rpc: String,
     base_rpc: String,
     shog_contract_eth: String,
     shog_contract_base: String,
-    crowdsale_contract_eth: String,
-    crowdsale_contract_base: String,
 }
 
 struct Ctx {
@@ -191,7 +193,6 @@ struct Ctx {
     args: Option<Args>,
     runtime_path: String,
     config: Config,
-    model_server_process: Option<std::process::Child>,
     version_outdated: bool,
 }
 
@@ -203,7 +204,6 @@ enum NodeStatus {
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct NodeStats {
-    // vec<timestamp, value>
     total_nodes: Vec<(u64, u64)>,
     online_nodes: Vec<(u64, u64)>,
     storage_used: Vec<(u64, u64)>,
@@ -237,6 +237,32 @@ struct SaveState {
     chat: ChatState,
     settings: Settings,
 }
+
+lazy_static::lazy_static! {
+    static ref CTX: Mutex<Ctx> = Mutex::new(Ctx::new());
+}
+
+struct ModelCtx {
+    llama: Option<SafeLLama>,
+}
+
+impl ModelCtx {
+    fn new() -> Self {
+        Self { llama: None }
+    }
+}
+
+lazy_static::lazy_static! {
+    static ref MODEL_CTX: Mutex<Option<ModelCtx>> = Mutex::new(Some(ModelCtx::new()));
+}
+
+use llama_cpp_rs::LLama;
+
+// Define a wrapper type for LLama with unsafe Send and Sync implementations
+struct SafeLLama(LLama);
+
+unsafe impl Send for SafeLLama {}
+unsafe impl Sync for SafeLLama {}
 
 impl Args {
     pub fn new() -> Self {
@@ -491,17 +517,17 @@ impl ChatState {
 impl Settings {
     fn new() -> Self {
         Self {
-            chat_system_prompt: String::from("You are a helpful assistant."),
+            chat_system_prompt: String::from("You are a highly knowledgeable and friendly assistant. Your goal is to provide accurate, clear, and helpful responses that address the user's needs. Be concise but thorough, adapt to the user's tone, and clarify when needed. Answer questions, offer creative ideas, and provide thoughtful advice with empathy and respect for the user’s goals. If you’re uncertain, acknowledge it and propose ways to find the answer. Always enclose code blocks in markdown backticks."),
+            chat_temperature: 0.65,
+            
             shog_hub_url: String::from("https://hub.shog.ai"),
+            enable_metrics: true,
 
             eth_rpc: String::from("https://eth.drpc.org"),
             base_rpc: String::from("https://base.drpc.org"),
 
             shog_contract_eth: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
             shog_contract_base: String::from("0x6a4F69Da1E2fb2a9b11D1AAD60d03163fE567732"),
-
-            crowdsale_contract_eth: String::from("0x043f7B954Cde1D3AB6607890F85500591bDf0200"),
-            crowdsale_contract_base: String::from("0xc8388e437031B09B2c61FC4277469091382A1B13"),
         }
     }
 }
@@ -514,14 +540,9 @@ impl Ctx {
             args: None,
             config: Config::new(),
             runtime_path: String::new(),
-            model_server_process: None,
             version_outdated: false,
         }
     }
-}
-
-lazy_static::lazy_static! {
-    static ref CTX: std::sync::Mutex<Ctx> = std::sync::Mutex::new(Ctx::new());
 }
 
 impl NodeStats {
@@ -554,7 +575,7 @@ impl NodeCtx {
 }
 
 lazy_static::lazy_static! {
-    static ref NODE_CTX: std::sync::Mutex<NodeCtx> = std::sync::Mutex::new(NodeCtx::new());
+    static ref NODE_CTX: Mutex<NodeCtx> = Mutex::new(NodeCtx::new());
 }
 
 impl SaveState {
@@ -714,8 +735,6 @@ fn verify_wallet(runtime_path: &String) {
 
     let address = nctx.wallet.clone().unwrap().address();
     let address_str = format!("0x{:x}", address);
-
-    // log(INFO, &format!("ADDRESS: {}", address_str));
 
     nctx.wallet_address = address_str.clone();
 
@@ -959,6 +978,9 @@ async fn api_node_delete_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_delete_resource(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -981,6 +1003,9 @@ async fn api_node_pause_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_pause_download(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -1008,6 +1033,9 @@ async fn api_node_unpause_resource_route(req: HttpRequest) -> HttpResponse {
         }
     }
 
+    let ctx = CTX.lock().unwrap();
+    metric_resume_download(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
     drop(nctx);
 
     HttpResponse::Ok().body("OK")
@@ -1028,7 +1056,11 @@ async fn api_node_add_resource_route(req: HttpRequest, _req_body: String) -> Htt
         &format!("adding resource: {}/{}", resource.namespace, resource.name),
     );
 
+    let ctx = CTX.lock().unwrap();
     let mut nctx = NODE_CTX.lock().unwrap();
+    metric_download_start(&ctx, &nctx, &shoggoth_id).await;
+    drop(ctx);
+
     nctx.resources.push(resource);
     drop(nctx);
 
@@ -1040,11 +1072,6 @@ async fn api_leaderboard_register_vote_route(req: HttpRequest) -> HttpResponse {
     let namespace: String = req.match_info().get("namespace").unwrap().parse().unwrap();
     let name: String = req.match_info().get("name").unwrap().parse().unwrap();
 
-    // log(
-    // INFO,
-    // &format!("registering vote for {category} category -> {namespace}/{name}"),
-    // );
-
     let mut nctx = NODE_CTX.lock().unwrap();
 
     let node_id = nctx.node_id.clone();
@@ -1054,8 +1081,6 @@ async fn api_leaderboard_register_vote_route(req: HttpRequest) -> HttpResponse {
     let signature = wallet_sign_string(&mut nctx, &payload).await;
 
     drop(nctx);
-
-    // log(INFO, &format!("SIGNATURE: {signature}"));
 
     let body = serde_json::json!(
         {
@@ -1080,6 +1105,12 @@ async fn api_leaderboard_register_vote_route(req: HttpRequest) -> HttpResponse {
         return HttpResponse::BadRequest().body(err);
     }
 
+    let ctx = CTX.lock().unwrap();
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_voted(&ctx, &nctx).await;
+    drop(nctx);
+    drop(ctx);
+
     HttpResponse::Ok().body("OK")
 }
 
@@ -1102,7 +1133,8 @@ async fn api_get_chat_state_route(_req: HttpRequest) -> HttpResponse {
 
     for resource in resources {
         if resource.category == ResourceCategory::Model
-            && resource.status == ResourceStatus::Seeding
+            && (resource.status == ResourceStatus::Seeding
+                || resource.download_progress == "100.00%")
         {
             for tag in &resource.tags {
                 if tag == "gguf" {
@@ -1132,6 +1164,8 @@ async fn api_chat_add_session_route(_req: HttpRequest, body: String) -> HttpResp
     ctx.chat.sessions.push(ChatSession {
         name,
         messages: vec![],
+        buffer: "".to_string(),
+        responding: false,
     });
 
     HttpResponse::Ok().finish()
@@ -1207,34 +1241,159 @@ async fn api_get_node_stats_route(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Ok().json(stats)
 }
 
-fn mount_model() {
+use llama_cpp_rs::options::{ModelOptions, PredictOptions};
+
+async fn mount_model() {
     let ctx = CTX.lock().unwrap();
     let runtime_path = ctx.runtime_path.clone();
     let model_path = format!(
         "{}/resources/{}-{}/{}",
-        runtime_path, ctx.chat.namespace, ctx.chat.name, ctx.chat.name
+        runtime_path, ctx.chat.namespace, ctx.chat.name,ctx.chat.name,
     );
     drop(ctx);
 
-    let child_process = std::process::Command::new("python3")
-        .arg("-m")
-        .arg("llama_cpp.server")
-        .arg("--model")
-        .arg(model_path)
-        .current_dir(runtime_path)
-        .stdout(std::process::Stdio::piped()) // Redirect child process's stdout to a pipe
-        .spawn()
-        .expect("Failed to start child process");
+    let model_options = ModelOptions {
+        n_gpu_layers: 50,
+        context_size: 4096,
+        ..Default::default()
+    };
 
-    sleep_ms(2000);
+    let llama = LLama::new(model_path.into(), &model_options).unwrap();
 
-    // if let Some(mut stdout) = child_process.stdout.take() {
-    // std::io::copy(&mut stdout, &mut std::io::stdout())
-    // .expect("Failed to read child process stdout");
-    // }
+    log(INFO, "MODEL READY");
+
+    let nctx = NODE_CTX.lock().unwrap();
+    let ctx = CTX.lock().unwrap();
+    metric_model_mounted(&ctx, &nctx, &ctx.chat.namespace, &ctx.chat.name).await;
+    drop(ctx);
+    drop(nctx);
+
+    let mut model_ctx = MODEL_CTX.lock().unwrap();
+    model_ctx.as_mut().unwrap().llama = Some(SafeLLama(llama));
+}
+
+async fn api_chat_model_route(req: HttpRequest) -> HttpResponse {
+    let index: u64 = req
+        .match_info()
+        .get("session_index")
+        .unwrap()
+        .parse()
+        .unwrap();
 
     let mut ctx = CTX.lock().unwrap();
-    ctx.model_server_process = Some(child_process);
+
+    ctx.chat.sessions[index as usize].responding = true;
+
+    let new_msg = ChatMessage {
+        role: "assistant".to_string(),
+        content: "".to_string(),
+    };
+
+    ctx.chat.sessions[index as usize].messages.push(new_msg);
+
+    let chat_history = ctx.chat.sessions[index as usize].messages.clone();
+
+    let temperature = ctx.settings.chat_temperature;
+
+    drop(ctx);
+
+    let inference_thread = std::thread::spawn(move || {
+        let predict_options = PredictOptions {
+            token_callback: Some(Box::new(move |token| {
+                // println!("{}", token);
+
+                let mut ctx = CTX.lock().unwrap();
+
+                ctx.chat.sessions[index as usize].buffer.push_str(&token);
+
+                if ctx.chat.sessions[index as usize].buffer.contains(" ") {
+                    let len = ctx.chat.sessions[index as usize].messages.len();
+
+                    let buf = ctx.chat.sessions[index as usize].buffer.clone();
+
+                    ctx.chat.sessions[index as usize].messages[len - 1]
+                        .content
+                        .push_str(&buf);
+
+                    ctx.chat.sessions[index as usize].buffer = "".to_string();
+                }
+
+                true // Continue the prediction
+            })),
+            debug_mode: false,
+            temperature,
+            tokens: -1,
+            stop_prompts: vec!["user:".to_string()],
+            ..Default::default()
+        };
+
+        let mut prompt = "".to_string();
+
+        for (i, msg) in chat_history.iter().enumerate() {
+            prompt.push_str(&msg.role);
+            prompt.push_str(": ");
+            prompt.push_str(&msg.content);
+
+            if i != chat_history.len() - 1 {
+                prompt.push_str("\n");
+            }
+        }
+
+        let mut model_ctx = MODEL_CTX.lock().unwrap();
+        let llama = &model_ctx.as_mut().unwrap().llama.as_mut().unwrap().0;
+
+        if let Err(e) = llama.predict(prompt.into(), predict_options) {
+            eprintln!("Error during prediction: {}", e);
+        }
+    });
+
+    inference_thread.join().unwrap();
+
+    let mut ctx = CTX.lock().unwrap();
+
+    if ctx.chat.sessions[index as usize].buffer != "" {
+        let len = ctx.chat.sessions[index as usize].messages.len();
+
+        let mut buf = ctx.chat.sessions[index as usize].buffer.clone();
+
+        if buf.ends_with("user:") {
+            buf = buf.strip_suffix("user:").unwrap().to_string();
+        }
+
+        ctx.chat.sessions[index as usize].messages[len - 1]
+            .content
+            .push_str(&buf);
+
+        ctx.chat.sessions[index as usize].buffer = "".to_string();
+    }
+
+    ctx.chat.sessions[index as usize].responding = false;
+
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_chat_sent(&ctx, &nctx).await;
+    drop(nctx);
+
+    HttpResponse::Ok().body("OK")
+}
+
+async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
+    let mut ctx = CTX.lock().unwrap();
+
+    log(INFO, &format!("unmounting model: {}", ctx.chat.name));
+
+    // FIXME: unmount does not free model memory
+    let mut model_ctx = MODEL_CTX.lock().unwrap();
+    model_ctx.as_mut().unwrap().llama = None;
+    drop(model_ctx);
+
+    ctx.chat.mount_status = ChatMountStatus::Unmounted;
+
+    let nctx = NODE_CTX.lock().unwrap();
+    metric_model_unmounted(&ctx, &nctx, &ctx.chat.namespace, &ctx.chat.name).await;
+    drop(ctx);
+    drop(nctx);
+
+    HttpResponse::Ok().body("OK")
 }
 
 async fn api_mount_model_route(req: HttpRequest) -> HttpResponse {
@@ -1261,7 +1420,7 @@ async fn api_mount_model_route(req: HttpRequest) -> HttpResponse {
 
     drop(ctx);
 
-    mount_model();
+    mount_model().await;
 
     log(INFO, &format!("model mounted"));
 
@@ -1392,105 +1551,6 @@ async fn get_token_balance(
     }
 }
 
-async fn crowdsale_buy(
-    rpc_url: &str,
-    crowdsale_contract: &str,
-    wallet_address: &str,
-    wallet: Wallet<ecdsa::SigningKey>,
-    eth_value: U256,
-) -> Result<u64, String> {
-    let contract_address = H160::from_str(&crowdsale_contract).unwrap();
-
-    let wallet_address = H160::from_str(&wallet_address).unwrap();
-
-    let provider = ethers::providers::Provider::<ethers::providers::Http>::try_from(rpc_url)
-        .expect("could not instantiate HTTP Provider");
-
-    let client = SignerMiddleware::new(provider.clone(), wallet);
-
-    let abi: ethers::core::abi::Abi = serde_json::from_str(CROWDSALE_ABI).unwrap();
-
-    let contract = ethers::contract::Contract::new(contract_address, abi, Arc::new(client));
-
-    let tx = contract
-        .method::<_, H256>("buyTokens", wallet_address)
-        .unwrap()
-        .value(eth_value);
-
-    let pending_tx = tx.send().await;
-    if !pending_tx.is_ok() {
-        return Err("crowdsale buy failed".to_string());
-    }
-
-    // Wait for the transaction receipt
-    let tx_receipt = pending_tx.unwrap().await;
-    if !tx_receipt.is_ok() {
-        return Err("crowdsale buy failed".to_string());
-    }
-
-    if tx_receipt.unwrap().is_some() {
-        return Ok(0);
-    } else {
-        return Err("crowdsale buy failed".to_string());
-    }
-}
-
-async fn api_buy_shog_route(req: HttpRequest) -> HttpResponse {
-    let chain: String = req.match_info().get("chain").unwrap().parse().unwrap();
-    let eth_value: String = req.match_info().get("eth_value").unwrap().parse().unwrap();
-
-    let ctx = CTX.lock().unwrap();
-
-    let eth_rpc = ctx.settings.eth_rpc.clone();
-    let base_rpc = ctx.settings.base_rpc.clone();
-
-    let crowdsale_contract_eth = ctx.settings.crowdsale_contract_eth.clone();
-    let crowdsale_contract_base = ctx.settings.crowdsale_contract_base.clone();
-
-    drop(ctx);
-
-    let nctx = NODE_CTX.lock().unwrap();
-    let wallet_address = nctx.wallet_address.clone();
-
-    let wallet = nctx.wallet.as_ref().unwrap().clone();
-
-    drop(nctx);
-
-    let eth_value = ethers::utils::parse_ether(eth_value).unwrap();
-
-    if chain == "mainnet" {
-        let res = crowdsale_buy(
-            &eth_rpc,
-            &crowdsale_contract_eth,
-            &wallet_address,
-            wallet.with_chain_id(MAINNET_CHAIN_ID),
-            eth_value,
-        )
-        .await;
-
-        if res.is_ok() {
-            return HttpResponse::Ok().finish();
-        } else {
-            return HttpResponse::InternalServerError().finish();
-        }
-    } else {
-        let res = crowdsale_buy(
-            &base_rpc,
-            &crowdsale_contract_base,
-            &wallet_address,
-            wallet.with_chain_id(BASE_CHAIN_ID),
-            eth_value,
-        )
-        .await;
-
-        if res.is_ok() {
-            return HttpResponse::Ok().finish();
-        } else {
-            return HttpResponse::InternalServerError().finish();
-        }
-    }
-}
-
 fn wallet_address_to_node_id(address: &str) -> String {
     return format!("SHOGN{}", &address[2..]);
 }
@@ -1550,18 +1610,6 @@ async fn api_get_crypto_balance_route(req: HttpRequest) -> HttpResponse {
     return HttpResponse::Ok().json(res_json);
 }
 
-async fn api_unmount_model_route(_req: HttpRequest) -> HttpResponse {
-    let mut ctx = CTX.lock().unwrap();
-
-    log(INFO, &format!("unmounting model: {}", ctx.chat.name));
-
-    ctx.model_server_process.as_mut().unwrap().kill().unwrap();
-
-    ctx.chat.mount_status = ChatMountStatus::Unmounted;
-
-    HttpResponse::Ok().body("OK")
-}
-
 async fn dynamic_const_route(_req: HttpRequest) -> HttpResponse {
     let ctx = CTX.lock().unwrap();
     let settings = serde_json::to_string(&ctx.settings).unwrap();
@@ -1598,7 +1646,7 @@ async fn dynamic_const_route(_req: HttpRequest) -> HttpResponse {
 
 async fn index_route(_req: HttpRequest) -> HttpResponse {
     HttpResponse::Found()
-        .append_header(("Location", "/hub"))
+        .append_header(("Location", "/chat"))
         .finish()
 }
 
@@ -1733,6 +1781,10 @@ async fn start_frontend_server() -> std::io::Result<()> {
                 actix_web::web::get().to(api_unmount_model_route),
             )
             .route(
+                "/api/chat_model/{session_index}",
+                actix_web::web::post().to(api_chat_model_route),
+            )
+            .route(
                 "/api/update_settings",
                 actix_web::web::post().to(api_update_settings_route),
             )
@@ -1764,11 +1816,6 @@ async fn start_frontend_server() -> std::io::Result<()> {
                 "/api/get_node_stats",
                 actix_web::web::get().to(api_get_node_stats_route),
             )
-            .route(
-                "/api/buy_shog/{chain}/{eth_value}",
-                actix_web::web::get().to(api_buy_shog_route),
-            )
-            //
             .route(
                 "/dynamic/const.js",
                 actix_web::web::get().to(dynamic_const_route),
@@ -1876,6 +1923,140 @@ async fn begin_downloading(session: Arc<librqbit::Session>, resource: Resource) 
     }
 }
 
+async fn metric_download_complete(ctx: &Ctx, node_id: String, id: &str) {
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/download_complete/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_delete_resource(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/delete_resource/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_pause_download(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/pause_download/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_resume_download(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/resume_download/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_download_start(ctx: &Ctx, nctx: &NodeCtx, id: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/download_start/{}",
+            id
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_model_mounted(ctx: &Ctx, nctx: &NodeCtx, namespace: &str, name: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/model_mounted/{}/{}",
+            namespace, name
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_model_unmounted(ctx: &Ctx, nctx: &NodeCtx, namespace: &str, name: &str) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!(
+            "{HUB_URL}/api/metrics/{node_id}/model_unmounted/{}/{}",
+            namespace, name
+        ))
+        .await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_chat_sent(ctx: &Ctx, nctx: &NodeCtx) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!("{HUB_URL}/api/metrics/{node_id}/chat_sent")).await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
+async fn metric_voted(ctx: &Ctx, nctx: &NodeCtx) {
+    let node_id = nctx.node_id.clone();
+
+    if ctx.settings.enable_metrics {
+        let resp = reqwest::get(format!("{HUB_URL}/api/metrics/{node_id}/voted")).await;
+
+        if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
+            log(ERROR, "Hub unreachable");
+        }
+    }
+}
+
 async fn poll_resources(nctx: &mut NodeCtx) {
     for resource in &mut nctx.resources {
         if resource.status == ResourceStatus::Pending {
@@ -1904,15 +2085,10 @@ async fn poll_resources(nctx: &mut NodeCtx) {
                 {
                     resource.status = ResourceStatus::Seeding;
 
-                    let resp = reqwest::get(format!(
-                        "{HUB_URL}/api/download_complete/{}",
-                        resource.shoggoth_id
-                    ))
-                    .await;
-
-                    if resp.is_err() || !resp.as_ref().unwrap().status().is_success() {
-                        log(ERROR, "Hub unreachable");
-                    }
+                    let ctx = CTX.lock().unwrap();
+                    metric_download_complete(&ctx, nctx.node_id.clone(), &resource.shoggoth_id)
+                        .await;
+                    drop(ctx);
                 }
             }
         }
@@ -2143,8 +2319,6 @@ fn ping_hub() {
         .block_on(wallet_sign_string(&mut nctx, &payload));
     drop(nctx);
 
-    // log(INFO, &format!("SIGNATURE: {signature}"));
-
     let body = serde_json::json!(
         {
             "payload": payload,
@@ -2240,16 +2414,6 @@ fn ping_hub() {
 }
 
 fn start_node_hub_ping() {
-    // let mut nctx = NODE_CTX.lock().unwrap();
-
-    // let timestamp = get_timestamp_ms();
-
-    // nctx.node_stats.total_nodes.push((timestamp, 1));
-
-    // nctx.node_stats.online_nodes.push((timestamp, 1));
-
-    // drop(nctx);
-
     ping_hub();
 
     loop {
@@ -2322,6 +2486,10 @@ fn restore_data() {
 
         for resource in &mut nctx.resources {
             resource.status = ResourceStatus::Pending;
+        }
+
+        for session in &mut ctx.chat.sessions {
+            session.responding = false;
         }
 
         ctx.chat.mount_status = ChatMountStatus::Unmounted;

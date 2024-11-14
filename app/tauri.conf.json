@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Shog Studio",
-    "version": "1.0.2"
+    "version": "1.6.7"
   },
   "tauri": {
     "allowlist": {

@@ -90,3 +90,6 @@ run-app:
 	# make clear-home-runtime
 	cd ./app && cargo tauri dev
 	cd ./app/target/release && ./shog-studio
+
+setup:
+	cd ./studio/ && git clone https://github.com/mdrokz/rust-llama.cpp --recursive

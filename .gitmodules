@@ -1,0 +1,3 @@
+[submodule "studio/rust-llama.cpp"]
+	path = studio/rust-llama.cpp
+	url = https://github.com/mdrokz/rust-llama.cpp

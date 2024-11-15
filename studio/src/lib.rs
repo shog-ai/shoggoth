@@ -60,7 +60,7 @@ pub struct Args {
     pub subcommand_arg: Option<String>,
 }
 
-const VERSION: &str = "1.0.2";
+const VERSION: &str = "1.6.7";
 const HUB_URL: &str = "https://hub.shog.ai";
 const NODE_REFRESH_RATE: u64 = 100;
 

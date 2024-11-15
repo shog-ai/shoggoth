@@ -2474,25 +2474,30 @@ fn restore_data() {
     if utils_file_exists(&save_path) {
         let save_str = std::fs::read_to_string(save_path).unwrap();
 
-        let state: SaveState = serde_json::from_str(&save_str).unwrap();
+        let state: Result<SaveState, serde_json::Error> = serde_json::from_str(&save_str);
 
-        nctx.resources = state.resources;
-        nctx.node_status = state.node_status;
-        nctx.node_stats = state.node_stats;
+        if state.is_ok() {
 
-        ctx.config = state.config;
-        ctx.chat = state.chat;
-        ctx.settings = state.settings;
+            let state = state.unwrap();
 
-        for resource in &mut nctx.resources {
-            resource.status = ResourceStatus::Pending;
+            nctx.resources = state.resources;
+            nctx.node_status = state.node_status;
+            nctx.node_stats = state.node_stats;
+
+            ctx.config = state.config;
+            ctx.chat = state.chat;
+            ctx.settings = state.settings;
+
+            for resource in &mut nctx.resources {
+                resource.status = ResourceStatus::Pending;
+            }
+
+            for session in &mut ctx.chat.sessions {
+                session.responding = false;
+            }
+
+            ctx.chat.mount_status = ChatMountStatus::Unmounted;
         }
-
-        for session in &mut ctx.chat.sessions {
-            session.responding = false;
-        }
-
-        ctx.chat.mount_status = ChatMountStatus::Unmounted;
     }
 }
 
